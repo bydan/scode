@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">False</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">True</property>
+      <property name="A03_ConGroupBy">False</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">False</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="TablaReporteCreada">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Facturacion</owner>
+      <name>FacturasDescuentosLineas</name>
+    </table>
+      </property>
+      <property name="A01_Tabla1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Facturacion</owner>
+      <name>Factura</name>
+    </table>
+      </property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>idEmpresa</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>idSucursal</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>idVendedor</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A01_Esquema">Facturacion</property>
+      <property name="A02_NombreTabla">FacturasDescuentosLineas</property>
+      <property name="ColumnsParametrosDesdeHasta">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>FechaEmision</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="B03_Prefijo2" />
+      <property name="A02_TablaColumns1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>idCliente</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>idTipoFactura</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>FechaEmision</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>FechaVencimiento</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>NumeroPreImpreso</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>TotalDescuento</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>TotalOtro</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>SubTotal</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>Total</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Factura</tableName>
+        <name>Iva</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Comisiones</owner>
+      <name>Vendedor</name>
+    </table>
+      </property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="A02_TablaPrincipalColumns">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Comisiones</tableOwner>
+        <tableName>Vendedor</tableName>
+        <name>Nombre</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo1">f</property>
+      <property name="A03_Prefijo">v</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

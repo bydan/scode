@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=2014_Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="UtilTemplate.cs" output="UtilTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\UtilTemplate.cst">
+      <property name="GeneracionNuevaOpcion">True</property>
+      <property name="GeneracionNuevaOpcionSql">True</property>
+      <property name="GeneracionNuevaOpcionSqlDefinicionStandard">False</property>
+      <property name="GeneracionNuevoGrupoOpcion">False</property>
+      <property name="GeneracionTest">False</property>
+      <property name="GeneracionSobreEscribirAdditional">False</property>
+      <property name="GeneracionXmlCodeSmithTables">False</property>
+      <property name="GeneracionVerificarNuevaOpcionRelacionada">False</property>
+      <property name="GeneracionPorTablas">True</property>
+      <property name="GeneracionTodos">False</property>
+      <property name="GeneracionPorModulo">False</property>
+      <property name="GeneracionPorEsquema">False</property>
+      <property name="GeneracionReportes">False</property>
+      <property name="IdSistema">14</property>
+      <property name="IdOpcion">1101</property>
+      <property name="IdOpcionPadre">null</property>
+      <property name="IdGrupoOpcion">34</property>
+      <property name="IdModulo">15</property>
+      <property name="EsOpcionPadre">False</property>
+      <property name="EsOpcionInterna">True</property>
+      <property name="ConReemplazarNombre">False</property>
+      <property name="NombreEmpresa">ME</property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>Cartera</owner>
+        <name>SubPreguntaEvaluacion</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceEsquemaForGenerate">Tesoreria</property>
+      <property name="ModuloMenu">CuentasPorPagar</property>
+      <property name="OpcionPadreCodigo">EVALUACION</property>
+      <property name="OpcionPadreNombre">EVALUACION</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

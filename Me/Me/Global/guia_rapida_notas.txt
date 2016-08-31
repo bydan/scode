@@ -1,0 +1,29 @@
+TIPOS TABLAS
+
+Tablas AutoReferenciadas
+Opcion,CuentaContable,etc
+esAutoReferenciadaFk=true;
+
+Tablas Nodulo
+Nomina
+Tesoreria,et
+blnEstablaModulo=true
+
+Tabla Uno A Uno
+blnEsTablaUnoAUnoFk
+
+Tabla Reporte
+blnEsReporte
+
+Tabla Proceso
+blnEsProceso
+
+TIPOS TABLAS DINAMICOS
+	* Relaciones
+	* Relacionado
+	
+EXTRA
+TIENE IDENTITY
+TieneIdentityColumnC
+
+

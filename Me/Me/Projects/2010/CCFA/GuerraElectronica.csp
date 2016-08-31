@@ -1,0 +1,253 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=GuerraElectronica;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBase.cst">
+      <property name="GeneracionPorTablas">False</property>
+      <property name="TiposGeneracion">GX</property>
+      <property name="GeneracionReportes">False</property>
+      <property name="Ip">127.0.0.1</property>
+      <property name="Package">guerraelectronica</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="GenerarFilesCompleteAdditional">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConFuncionesSqlNativas">False</property>
+      <property name="ConJSInclude">False</property>
+      <property name="ConValidaciones">True</property>
+      <property name="ConCompuestos">False</property>
+      <property name="CodigoEmpresa">CCFA</property>
+      <property name="NombreEmpresa">CCFFAA - COMANDO CONJUNTO DE LAS FUERZAS ARMADAS</property>
+      <property name="Empresa">ec.mil.gruge</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">True</property>
+      <property name="PackageSeguridad">seguridad</property>
+      <property name="ConSessionBeans">True</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConRMI">False</property>
+      <property name="ConServlets">False</property>
+      <property name="SinLogicReferenceServletJsf">True</property>
+      <property name="Aplicacion">SISTEMA DE GUERRA ELECTRONICA</property>
+      <property name="ConFaces">False</property>
+      <property name="ConRichFaces">True</property>
+      <property name="ConSwing">True</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">guerraelectronica</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">seguridad</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">auditoria</property>
+      <property name="OutputDirectory">C:\o\Me\guerraelectronica\</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="Puerto">80</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Actividad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Aeropuerto</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AnalisisEspectral</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Armamento</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Auditoria</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuditoriaDetalle</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Avion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>BaseEc</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CodigoEncriptacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CorreoElectronico</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>DirectionFinder</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>EquipoComunicacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>EquipoGe</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Frecuencia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Grado</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>GradoEc</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Interceptacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Ivc</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Modulacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelCinco</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelCuatro</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelDos</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelNueve</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelOcho</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelSeis</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelSiete</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelTres</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>NivelUno</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Nominativo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Operador</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Pais</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilNivelUno</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Personal</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Piloto</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Pista</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Radar</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Red</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TelefonoRegistrado</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Tipo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoActividad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoAvion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoInformacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoPista</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Unidad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadFrecuencia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

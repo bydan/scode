@@ -1,0 +1,51 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII" %>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="ConStoreProcedures" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+	
+public static string Test(TableSchema table)
+{
+	bool blnEsReporte=GetEsReporteFromPropertiesC(table);
+		
+	System.Windows.Forms.MessageBox.Show(blnEsReporte.ToString());
+	
+	return blnEsReporte.ToString();
+}
+</script>
+<%=GetByDanLicence()%>
+
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene todos los Accesos a BDD de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+
+	
+ */
+
+package <%=Empresa%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>;
+
+import ByDan.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.GeneralEntity;
+import ByDan.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.Mensajes;
+import ByDan.<%=strPackageFramework%>.<%= Package%>.<%=strPackageUtils%>.*;
+import java.util.ArrayList;
+import java.sql.*;
+import java.io.Serializable;
+
+public class <%=GetNombreClaseC(TablaBase.ToString())%> extends GeneralEntity implements Serializable
+{
+	<%=Test(TablaBase)%>
+}

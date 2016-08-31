@@ -1,0 +1,28 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="html" Type="System.String" Default="NONE" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context" Optional="true"%>
+
+
+
+<script runat="template">
+public String GetTableName() {
+	String strExtendClase=string.Empty;
+	
+	strExtendClase=TablaBase.Name;
+	
+	//<%=GetTableName()%>
+	return strExtendClase;
+}
+
+public int GetTotalTables() {
+	String strExtendClase=string.Empty;
+	
+	//<%=GetTotalTables()%>
+	
+	return TablaBase.Database.Tables.Count;		
+}
+</script>
+<%=html%>

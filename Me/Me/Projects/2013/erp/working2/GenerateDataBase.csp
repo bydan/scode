@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBase.cst">
+      <property name="GeneracionTodos">False</property>
+      <property name="GeneracionPorTablas">True</property>
+      <property name="GeneracionPorTablasMemoria">False</property>
+      <property name="GeneracionPorModulos">False</property>
+      <property name="GeneracionPorEsquema">False</property>
+      <property name="GeneracionPorModuloUnico">False</property>
+      <property name="GeneracionCargar">False</property>
+      <property name="TiposGeneracion">GX</property>
+      <property name="GeneracionReportes">False</property>
+      <property name="GeneracionGuardarRelaciones">False</property>
+      <property name="GeneracionProcesos">False</property>
+      <property name="GeneracionReportesTablasModulo">False</property>
+      <property name="PaqueteGenerar">ENTITIES</property>
+      <property name="TipoGeneracionGrupo">TODOS</property>
+      <property name="TipoGeneracionRelaciones">NINGUNO</property>
+      <property name="Ip">127.0.0.1</property>
+      <property name="Package">erp</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="GenerarFilesAdditionalQuitar">False</property>
+      <property name="GenerarFilesCompleteAdditional">False</property>
+      <property name="GenerarLabels">False</property>
+      <property name="GenerarMe">True</property>
+      <property name="ConRelacionesPersistencia">True</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConSqlInsertSeguridad">False</property>
+      <property name="ConFuncionesSqlNativas">False</property>
+      <property name="ConJSInclude">False</property>
+      <property name="ConValidaciones">True</property>
+      <property name="ConCompuestos">False</property>
+      <property name="ConPaqueteJavaGlobal">False</property>
+      <property name="ConReporteArchivoTextoPaths">False</property>
+      <property name="CodigoEmpresa">ME</property>
+      <property name="NombreEmpresa">ME</property>
+      <property name="Empresa">com.bydan</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">False</property>
+      <property name="PackageSeguridad">erp.seguridad</property>
+      <property name="ConSessionBeans">True</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConRMI">False</property>
+      <property name="ConServlets">False</property>
+      <property name="SinLogicReferenceServletJsf">False</property>
+      <property name="ConPersistenciaAnotaciones">False</property>
+      <property name="Aplicacion">SISTEMA OPEN SOURCE</property>
+      <property name="ConFaces">False</property>
+      <property name="ConRichFaces">False</property>
+      <property name="ConSwing">True</property>
+      <property name="ConCamposGlobalesOcultos">True</property>
+      <property name="ConSwingCombosTabla">True</property>
+      <property name="JBoss_Version">8.1</property>
+      <property name="RichFaces_Version">4.3</property>
+      <property name="JasperReports_Version">5.5</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">bydan</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">seguridad</property>
+      <property name="ConexionSeguridadIdSistema">0</property>
+      <property name="ConexionSeguridadIdPerfil">0</property>
+      <property name="ConexionSeguridadIdOpcionInicial">0</property>
+      <property name="ConexionSeguridadIdOpcionFinal">0</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">auditoria</property>
+      <property name="OutputDirectory">C:\o\Me\ME\erp\</property>
+      <property name="SourceModuloForGenerate">seguridad</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="Puerto">8080</property>
+      <property name="SourceDatabaseReportes">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>ActivosFijos</owner>
+        <name>ActivosFijos</name>
+      </table>
+      <table>
+        <owner>Cartera</owner>
+        <name>Cartera</name>
+      </table>
+      <table>
+        <owner>Comisiones</owner>
+        <name>Comisiones</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>Facturacion</name>
+      </table>
+      <table>
+        <owner>Importaciones</owner>
+        <name>Importaciones</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Inventario</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>Nomina</name>
+      </table>
+      <table>
+        <owner>Produccion</owner>
+        <name>Produccion</name>
+      </table>
+      <table>
+        <owner>Seguridad</owner>
+        <name>Seguridad</name>
+      </table>
+      <table>
+        <owner>Tesoreria</owner>
+        <name>Tesoreria</name>
+      </table>
+    </tableList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

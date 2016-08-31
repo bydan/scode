@@ -1,0 +1,127 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+
+<script runat="template">
+public string GetParameterClase()
+{
+	int posicion=-1;
+	String strValorParametroReporte="";
+	
+	foreach (ColumnSchema column in TablaBase.Columns)
+	{
+		if(column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired||column.Name==strVersionRow)
+		{
+			continue;
+		}
+		
+		posicion++;
+		
+		string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoColumnaClaseC(column);
+		
+		
+		
+		
+		if(posicion.Equals(0))
+		{
+			strValorParametroReporte+="\r\n\t\tif (\""+GetNombreClaseObjetoC(TablaBase.ToString())+"_"+strNombre.ToLower()+"\".equals(fieldName))";
+			strValorParametroReporte+="\r\n\t\t{";
+			strValorParametroReporte+="\r\n\t\t\tvalue = "+GetNombreClaseObjetoC(TablaBase.ToString())+"s.get(index).get"+strPrefijo+"();";
+			strValorParametroReporte+="\r\n\t\t}";
+		}
+		else
+		{
+			strValorParametroReporte+="\r\n\t\telse if (\""+GetNombreClaseObjetoC(TablaBase.ToString())+"_"+strNombre.ToLower()+"\".equals(fieldName))";
+			strValorParametroReporte+="\r\n\t\t{";
+			strValorParametroReporte+="\r\n\t\t\tvalue = "+GetNombreClaseObjetoC(TablaBase.ToString())+"s.get(index).get"+strPrefijo+"();";
+			strValorParametroReporte+="\r\n\t\t}";
+		}
+	}
+	
+	return strValorParametroReporte;
+}
+
+</script>
+<%=GetByDanLicence()%>
+package <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackagePresentation%>.<%=strPackageReporte%>.<%=strPackageSource%>;
+
+import java.util.List;
+import java.util.ArrayList;
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRField;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>.*;
+/**
+ * @author Teodor Danciu (teodord@users.sourceforge.net)
+ * @version $Id: CustomDataSource.java 1229 2006-04-19 10:27:35Z teodord $
+ */
+public class <%=GetNombreClaseC(TablaBase.ToString())%>SourceReporte implements JRDataSource
+{
+
+	ArrayList<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s;
+	
+	public ArrayList<<%=GetNombreClaseC(TablaBase.ToString())%>> getData() 
+	{
+		return <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s;
+	}
+
+
+	public void setData(ArrayList<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) 
+	{
+		this.<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s;
+	}
+	
+	private int index = -1;
+	
+
+	/**
+	 *
+	 */
+	public <%=GetNombreClaseC(TablaBase.ToString())%>SourceReporte(ArrayList<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s)
+	{
+		this.<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s;
+	}
+
+
+	/**
+	 *
+	 */
+	public boolean next() throws JRException
+	{
+		index++;
+
+		return (index < <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s.size());
+	}
+
+
+	/**
+	 *
+	 */
+	public Object getFieldValue(JRField field) throws JRException
+	{
+		Object value = null;
+		
+		String fieldName = field.getName();
+		
+		<%= GetParameterClase() %>
+		
+	
+				
+		return value;
+	}
+}

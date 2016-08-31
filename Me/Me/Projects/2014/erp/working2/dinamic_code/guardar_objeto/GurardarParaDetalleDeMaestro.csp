@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=2014_Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="DynamicCodeTemplate.cs" output="DynamicCodeTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Base\DynamicCodeTemplate.cst">
+      <property name="GeneracionOutputArchivo">False</property>
+      <property name="UsarCodigoTest">False</property>
+      <property name="ArchivoOutputSobreEscribir">False</property>
+      <property name="ArchivoNombre">archivo1</property>
+      <property name="NumTabs">0</property>
+      <property name="EsIncluyente">True</property>
+      <property name="AAA_ClaseTransaccion">False</property>
+      <property name="AAB_ForBasico">False</property>
+      <property name="AAC_GetEntityBasico">False</property>
+      <property name="AAC_GetEntitiesBasico">False</property>
+      <property name="AAD_SetCampoEntityBasico">False</property>
+      <property name="AAD_SetCamposEntityBasico">True</property>
+      <property name="AAE_SaveEntityBasico">False</property>
+      <property name="AAE_SaveEntitiesBasico">True</property>
+      <property name="AAF_DefFuncion">False</property>
+      <property name="AAG_CompararLista">False</property>
+      <property name="AAH_IfExisteLista">False</property>
+      <property name="AAI_DeepLoad">False</property>
+      <property name="AAJ_IfBasico">False</property>
+      <property name="AAK_CrearLogic">True</property>
+      <property name="AAL_CrearLista">True</property>
+      <property name="AAF_A_Static">True</property>
+      <property name="AAF_C_ConParametro">True</property>
+      <property name="AAF_C_ConParametroProceso">True</property>
+      <property name="AAD_A_Con_NuevoObjeto">True</property>
+      <property name="AAD_B_Con_AddObjetoLista">True</property>
+      <property name="AAD_C_Con_AddObjetoLogic">False</property>
+      <property name="AAD_D_Con_AddListaLogic">True</property>
+      <property name="AAC_A_Con_CrearLogic">True</property>
+      <property name="AAB_A_Con_LogicObjetos">False</property>
+      <property name="AAC_B_Con_DefinirVariableGeneral">True</property>
+      <property name="AAC_D_Con_SufijoAux">False</property>
+      <property name="AAC1E1_A_Con_WithConnection">False</property>
+      <property name="AAC1K1_C_Con_SetConnexion">True</property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="AAF_B_Nombre">aa</property>
+      <property name="TablaBase2">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Cartera</owner>
+      <name>DetalleProve</name>
+    </table>
+      </property>
+      <property name="TablaBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Cartera</owner>
+      <name>DetalleRecap</name>
+    </table>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

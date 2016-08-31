@@ -1,0 +1,1787 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Collections.Generic" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="GenerarParaGroupGenerico" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarParaGroupGenericoSoloTotales" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarRelacionesDetalle" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarRelacionesMaestro" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarReporteVertical" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarParaReporte" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarParaReporteDinamico" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarParaGroupReporte" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="totalWidthInicial" Type="System.Int32" Default="0" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="JasperReports_Version" Type="System.String" Default="3.5" Category="5.1 Versiones" Description="Nombre de la Entidad" %>
+
+<script runat="template">
+/*
+<!-- Created with iReport - A designer for JasperReports -->
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+*/
+
+//<%@ Property Name="GenerarConImagen" Type="System.Boolean" Default="false" Category="General" Description="Solo Auxiliar" %>
+//OJO AHORA SI GetEsReporteColumnFromPropertiesC NO TOMA EN CUENTA, (PERO TANTO PARA REPORTE Y NO REPORTE NO TIENE ESTE ATRIBUTO EN LA COLUMNA), POR LO QUE SIEMPRE MUESTRA
+//bool blnConImagenEnreporte=false;
+
+/*
+<%for (int i = 0, j=-1,totalWidth=totalWidthInicial; i < TablaBase.Columns.Count; i++){ %>
+			<%if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])){continue; }else{j++;} %>
+			<%= GetTipoXmlReporteColumnaClaseC(TablaBase.Columns[i],totalWidth,valorSobrante,blnNormalOrientation,GenerarRelacionesMaestro,j) %> //,GenerarConImagen
+			<% totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i]);%>
+			<%}%>
+*/
+
+public string GetFinBandDetail(bool esParaMaestroEspeciall) {
+	String strReturn="";
+	
+	
+	if(!esParaMaestroEspeciall) {
+		strReturn="</band>";
+		
+		//<font fontName="Helvetica" pdfFontName="Helvetica" size="10" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="CP1252" isStrikeThrough="false" />
+		
+		if(GenerarRelacionesMaestro && JasperReports_Version.Equals("5.5")){
+			strReturn="";
+			//strReturn="paragraph=\"Single\"";
+		}
+	} else {
+		if(GenerarRelacionesMaestro && JasperReports_Version.Equals("5.5")){
+			strReturn="</band>";
+			//strReturn="paragraph=\"Single\"";
+		}
+	}
+	
+	return strReturn;
+}
+
+public string GetFontName() {
+	String strReturn=GetFontName("");
+	
+	return strReturn;
+}
+
+public string GetFontName(String strTipo) {
+	String strReturn="<font pdfFontName=\"Helvetica-Bold\" size=\"10\" isBold=\"true\"/>";
+	//<font fontName="Helvetica" pdfFontName="Helvetica" size="10" isBold="false" isItalic="false" isUnderline="false" isPdfEmbedded ="false" pdfEncoding ="CP1252" isStrikeThrough="false" />
+	
+	if(JasperReports_Version.Equals("5.5")){
+		if(strTipo.Equals("TITULO")) {
+			strReturn="<font size=\"28\" isBold=\"true\" isItalic=\"false\" pdfFontName=\"Helvetica-Bold\"/>";
+			
+		} else if(strTipo.Equals("SUBTITULO")) {
+			strReturn="<font size=\"22\" isBold=\"true\" isItalic=\"false\" pdfFontName=\"Helvetica-Bold\"/>";
+		
+		} else if(strTipo.Equals("BUSQUEDA")) {
+			strReturn="<font size=\"12\"/>";
+			
+		} else if(strTipo.Equals("CABECERA")) {
+			strReturn="<font size=\"11\" isBold=\"true\"/>";
+			
+		} else if(strTipo.Equals("DATE")) {
+			strReturn="<font fontName=\"SansSerif\" size=\"10\"/>";
+		}
+		//strReturn="";
+		//strReturn="paragraph=\"Single\"";
+	}
+	
+	return strReturn;
+}
+
+
+public string GetLineSpacingVersion() {
+	String strReturn="lineSpacing=\"Single\"";
+		
+	if(JasperReports_Version.Equals("5.5")){
+		strReturn="";
+		//strReturn="paragraph=\"Single\"";
+	}
+	
+	return strReturn;
+}
+
+public string GetIsSplitVersion() {
+	String strReturn="isSplitAllowed=\"true\"";
+		
+	if(JasperReports_Version.Equals("5.5")){
+		strReturn="splitType=\"Stretch\"";
+	}
+	
+	return strReturn;
+}
+
+public string GetSummaryHeigh() {
+	String strReturn="30";
+	
+	if(GenerarParaReporteDinamico) {
+		strReturn="colancho_summary_colancho";
+		
+	} else if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales || GenerarParaGroupReporte){		
+		if(blnTieneCampoTotalizar){
+			if(!GenerarParaGroupReporte) {
+				strReturn="280";
+			} else {
+				strReturn="20";
+			}
+		}
+	}	
+	
+	return strReturn;
+}
+		
+public string GetGraficoReporte() {
+	String strReturn="";
+	String strTitulo="";
+	String strTabBase="\t\t\t\t";
+	
+	strReturn+="\r\n"+strTabBase+"<barChart>";
+	strReturn+="\r\n"+strTabBase+"\t<chart>";
+	strReturn+="\r\n"+strTabBase+"\t\t<reportElement x=\"2\" y=\"40\" width=\""+GetAnchoBusquedaPor()+"\" height=\"220\">";
+	strReturn+="\r\n"+strTabBase+"\t\t\t<printWhenExpression><![CDATA[($P{con_grafico}==Boolean.TRUE)?Boolean.TRUE:Boolean.FALSE]]></printWhenExpression>";
+	strReturn+="\r\n"+strTabBase+"\t\t</reportElement>";
+	strReturn+="\r\n"+strTabBase+"\t\t<chartTitle/>";
+	strReturn+="\r\n"+strTabBase+"\t\t<chartSubtitle/>";
+	strReturn+="\r\n"+strTabBase+"\t\t<chartLegend/>";
+	strReturn+="\r\n"+strTabBase+"\t</chart>";
+	strReturn+="\r\n\r\n"+strTabBase+"\t<categoryDataset>";
+	
+	//GetTituloNombreTableFromPropertiesC
+	
+	foreach(ColumnSchema column in TablaBase.Columns) {
+		if(GenerarParaGroupGenericoVerificacionNegacion(column)) {
+			continue;
+		}
+		
+		strTitulo=GetWebNombreTituloColumnFromPropertiesC(column);
+		
+		string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC().ToLower();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoReporteColumnaClaseC(column);
+		
+		strReturn+="\r\n"+strTabBase+"\t\t<categorySeries>";
+		strReturn+="\r\n"+strTabBase+"\t\t\t<seriesExpression><![CDATA[\""+strTitulo.ToLower()+"\"]]></seriesExpression>";
+		strReturn+="\r\n"+strTabBase+"\t\t\t<categoryExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></categoryExpression>";
+		strReturn+="\r\n"+strTabBase+"\t\t\t<valueExpression><![CDATA[$V{vg_total_"+strPrefijo+"}]]></valueExpression>";
+		strReturn+="\r\n"+strTabBase+"\t\t\t<labelExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></labelExpression>";
+		strReturn+="\r\n"+strTabBase+"\t\t\t<itemHyperlink/>";
+		strReturn+="\r\n"+strTabBase+"\t\t</categorySeries>";
+	}
+	
+	/*
+	strReturn+="<categorySeries>";
+	strReturn+="<seriesExpression><![CDATA[\"Credito\"]]></seriesExpression>";
+	strReturn+="<categoryExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></categoryExpression>";
+	strReturn+="<valueExpression><![CDATA[$V{v_total_credito_local}]]></valueExpression>";
+	strReturn+="<labelExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></labelExpression>";
+	strReturn+="<itemHyperlink/>";
+	strReturn+="</categorySeries>";
+	
+	strReturn+="<categorySeries>";
+	strReturn+="<seriesExpression><![CDATA[\"Valor\"]]></seriesExpression>";
+	strReturn+="<categoryExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></categoryExpression>";
+	strReturn+="<valueExpression><![CDATA[$V{v_total_valor}]]></valueExpression>";
+	strReturn+="<labelExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></labelExpression>";
+	strReturn+="<itemHyperlink/>";
+	strReturn+="</categorySeries>";
+	*/
+	
+	strReturn+="\r\n"+strTabBase+"\t</categoryDataset>";
+	strReturn+="\r\n\r\n"+strTabBase+"\t<barPlot>";
+	strReturn+="\r\n"+strTabBase+"\t\t<plot/>";
+	strReturn+="\r\n"+strTabBase+"\t\t<categoryAxisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t<axisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t\t<labelFont/>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t\t<tickLabelFont/>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t</axisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t</categoryAxisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t<valueAxisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t<axisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t\t<labelFont/>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t\t<tickLabelFont/>";
+	strReturn+="\r\n"+strTabBase+"\t\t\t</axisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t\t</valueAxisFormat>";
+	strReturn+="\r\n"+strTabBase+"\t</barPlot>";
+	strReturn+="\r\n"+strTabBase+"</barChart>";
+			
+	return strReturn;
+}
+
+public String GetTiposXmlReporteColumnaClase(bool esParaTotalGroup,bool esParaTotalTotal,bool GenerarParaReporteDinamico,bool esParaGroupReporte) {
+	String strCabecerasColumnsReporte="";
+	
+	strCabecerasColumnsReporte=GetTiposXmlReporteColumnaClase(esParaTotalGroup,esParaTotalTotal,GenerarParaReporteDinamico,esParaGroupReporte,false,"",1);
+	
+	return strCabecerasColumnsReporte;
+}	
+
+//TOTALES GRUPO GroupReporte
+//GetTiposXmlReporteColumnaClase(true,false,GenerarParaReporteDinamico,GenerarParaGroupReporte,false,sNombreGrupo,1);	
+
+public String GetTiposXmlReporteColumnaClase(bool esParaTotalGroup,bool esParaTotalTotal,bool GenerarParaReporteDinamico,bool esParaGroupReporte,bool esParaGroupReporteDetalle,String strNombreGrupo,int intYInicial) {
+	String strCabecerasColumnsReporte="";
+	String sNombreGrupoActual="";
+	String sNombreGrupo="";
+	
+	if(!esParaTotalGroup && !esParaTotalTotal) {
+		//ES PARA QUE MUESTRE EL DETALLE STRING DE LOS ELEMENTOS DEL GROUP
+		strCabecerasColumnsReporte+=GetDetailGenerarParaGroupGenerico(true);	
+	} 
+	
+	for (int i = 0, j=-1,totalWidth=totalWidthInicial,totalHeight=totalHeightInicial; i < TablaBase.Columns.Count; i++){ 
+		if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i]) || GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])
+			||TablaBase.Columns[i].Name==strIsActive || TablaBase.Columns[i].Name==strIsExpired || TablaBase.Columns[i].Name==strId || TablaBase.Columns[i].Name==strVersionRow ||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])){
+			continue; 
+			
+		} else{
+			//SI ES PARA GRUPO REPORTE DEBE AGRUPAR LAS CABECERAS QUE COINCIDAD CON EL NOMBRE DEL GRUPO
+			if(esParaGroupReporte) {
+				sNombreGrupoActual=GetReporteGrupoTableFromPropertiesC(TablaBase.Columns[i]);
+				
+				if(esParaTotalGroup || esParaTotalTotal) {
+					//ES TOTALIZAR REPORTE GROUP					
+					if(!ValidacionCampoTotalizarC(TablaBase.Columns[i])) {
+						//SE ADICIONA totalWidth PARA QUE X DE TOTAL COINCIDA CON COLUMNA
+						sNombreGrupo=GetReporteGrupoTableFromPropertiesC(TablaBase.Columns[i]);
+						
+						if(sNombreGrupo.Equals("")) {
+							totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical,true);
+						}
+						
+						continue;	
+					}
+				} else {
+					//ES NORMAL REPORTE GROUP
+					if(!esParaGroupReporteDetalle) {
+						if(!sNombreGrupoActual.Equals(strNombreGrupo)) {
+							continue;				
+						}
+					} else {
+						/*
+						if(sNombreGrupoActual.Equals(strNombreGrupo)) {
+							continue;				
+						}
+						*/
+					}
+				}
+			}
+			
+			j++;
+		} 
+		
+		strCabecerasColumnsReporte+= GetTipoXmlReporteColumnaClaseC(TablaBase.Columns[i],totalWidth,valorSobrante,blnNormalOrientation,GenerarRelacionesMaestro,j/*,GenerarConImagen*/,esParaTotalGroup,esParaTotalTotal,GenerarParaReporteDinamico,intYInicial,totalHeight,GenerarReporteVertical);
+				
+		totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical,false);		
+		
+		if(GenerarReporteVertical) {
+			totalHeight+=GetHeightXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical);
+		}
+	}
+			
+	return strCabecerasColumnsReporte;	
+}
+			
+/*
+<%for (int i = 0, j=-1,totalWidth=totalWidthInicial; i < TablaBase.Columns.Count; i++){ %>
+			<%if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])){continue; }else{j++;} %>
+			<%= GetTipoXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],(totalWidth),valorSobrante,blnNormalOrientation,j) %>//+ totalWidthInicial
+			<%totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i]); %>
+			<%}%>
+*/
+
+public String GetCabecerasColumnsReporte() {
+	String strCabecerasColumnsReporte="";
+	
+	strCabecerasColumnsReporte=GetCabecerasColumnsReporte(false,false,"",1);
+	
+	return strCabecerasColumnsReporte; 
+}
+
+public String GetCabecerasColumnsReporte(bool esParaGroupReporte,bool esParaGroupReporteDetalle,String strNombreGrupo,int intYInicial) {
+	String strCabecerasColumnsReporte="";
+	String sNombreGrupoActual="";
+	
+	for (int i = 0, j=-1,totalWidth=totalWidthInicial,totalHeight=totalHeightInicial; i < TablaBase.Columns.Count; i++){ 
+		
+		if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow
+			|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])) {
+			continue; 
+			
+		} else{
+			j++;
+		} 
+		
+		//SI ES PARA GRUPO REPORTE DEBE AGRUPAR LAS CABECERAS QUE COINCIDAD CON EL NOMBRE DEL GRUPO
+		if(esParaGroupReporte) {
+			sNombreGrupoActual=GetReporteGrupoTableFromPropertiesC(TablaBase.Columns[i]);
+			
+			if(!esParaGroupReporteDetalle) {
+				if(!sNombreGrupoActual.Equals(strNombreGrupo)) {
+					continue;				
+				}
+			} else {
+				if(sNombreGrupoActual.Equals(strNombreGrupo)) {
+					continue;				
+				}
+			}
+		}
+		
+		strCabecerasColumnsReporte+=GetTipoXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],(totalWidth/*+ totalWidthInicial*/),valorSobrante,blnNormalOrientation,j,GenerarParaReporteDinamico,intYInicial,JasperReports_Version,totalHeight,GenerarReporteVertical);
+		
+		totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical,true);
+		
+		if(GenerarReporteVertical) {
+			totalHeight+=GetHeightXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical);
+		}
+	}
+	
+	return strCabecerasColumnsReporte;
+}
+
+public String GetNombreArchivo() {
+	String strNombreArchivo=GetNombreClaseC(TablaBase.ToString());
+	
+	if(GenerarParaGroupGenerico) {
+		strNombreArchivo+="GroupGenerico";
+	
+	} else if(GenerarParaGroupGenericoSoloTotales) {
+		strNombreArchivo+="GroupTotalesGenerico";
+	
+	} else if(GenerarParaGroupReporte) {
+		strNombreArchivo+="GroupReporte";
+	
+	} else if(GenerarReporteVertical) {
+		strNombreArchivo+="Vertical";
+	}
+	
+	if(GenerarParaReporteDinamico) {
+		strNombreArchivo+="Base";
+	}
+	
+	strNombreArchivo+="Design";		
+	
+	return strNombreArchivo;
+}
+
+public String GetDetailGenerarParaGroupGenerico(bool esParaDetalleDatos) {
+	String strDetalleTitle="";
+	String strData="sDescripcionGeneralEntityReporte1";
+	String strY="20";
+	
+	if(esParaDetalleDatos) {
+		strData="sDetalleGeneralEntityReporte";
+		strY="1";
+	}
+	
+	if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales || GenerarReporteVertical) {
+		if(GenerarParaGroupGenericoSoloTotales) {
+			strY="1";
+		}
+				strDetalleTitle+="\r\n\t\t\t\t<textField isStretchWithOverflow=\"false\" isBlankWhenNull=\"false\" evaluationTime=\"Now\" hyperlinkType=\"None\"  hyperlinkTarget=\"Self\" >";
+				strDetalleTitle+="\r\n\t\t\t\t\t<reportElement";
+				strDetalleTitle+="\r\n\t\t\t\t\t\tx=\"0\"";
+				strDetalleTitle+="\r\n\t\t\t\t\t\ty=\""+strY+"\"";
+				
+				if(!GenerarReporteVertical) {
+					strDetalleTitle+="\r\n\t\t\t\t\t\twidth=\"100\"";
+					
+				} else {
+					int intWidthLocal=intReportWidthLabel * 4;
+					
+					strDetalleTitle+="\r\n\t\t\t\t\t\twidth=\""+intWidthLocal+"\"";
+				}
+				
+				strDetalleTitle+="\r\n\t\t\t\t\t\theight=\"15\"";
+				
+				if(GenerarReporteVertical) {
+					strDetalleTitle+="\r\n\t\t\t\t\t\tmode=\"Opaque\"";
+					strDetalleTitle+="\r\n\t\t\t\t\t\tbackcolor=\"#C0C0C0\"";
+				}
+				
+				strDetalleTitle+="\r\n\t\t\t\t\t\tkey=\"textField\"/>";
+				strDetalleTitle+="\r\n\t\t\t\t\t<box>";
+				strDetalleTitle+="\r\n\t\t\t\t\t\t<topPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+				strDetalleTitle+="\r\n\t\t\t\t\t\t<leftPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+				strDetalleTitle+="\r\n\t\t\t\t\t\t<bottomPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+				strDetalleTitle+="\r\n\t\t\t\t\t\t<rightPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+				strDetalleTitle+="\r\n\t\t\t\t\t</box>";
+				strDetalleTitle+="\r\n\t\t\t\t\t<textElement>";
+				
+				if(!GenerarReporteVertical) {
+					strDetalleTitle+="\r\n\t\t\t\t\t\t<font/>";
+					
+				} else {
+					strDetalleTitle+="\r\n\t\t\t\t\t\t<font size=\"11\" isBold=\"true\"/>";				
+				}
+				
+				strDetalleTitle+="\r\n\t\t\t\t\t</textElement>";
+				strDetalleTitle+="\r\n\t\t\t\t\t<textFieldExpression   class=\"java.lang.String\"><![CDATA[$F{"+strData+"}]]></textFieldExpression>";
+				strDetalleTitle+="\r\n\t\t\t\t</textField>";
+	}
+	
+	return strDetalleTitle;
+}
+
+public void InicializarWidthInicial() {
+	//totalWidthInicial=0;
+}
+
+public String GetHeaderTitleGenerarParaGroupGenerico(bool esTotales,bool esTotalesFinal) {
+	String strHeaderTitle="";
+	String strStaticText="staticText";
+	String strLabel="DESCRIPCION";
+	String strTextFieldExpression="text";
+	
+	if(esTotales) {
+		strLabel="TOTALES";
+	}
+	
+	if(esTotalesFinal) {
+		strLabel="TOTALES REPORTE";
+	}
+	
+	if(JasperReports_Version.Equals("5.5")) {
+		//strStaticText="textField";
+		//strTextFieldExpression="textFieldExpression";
+	}
+	
+	if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales) {
+		totalWidthInicial=100;
+				
+		strHeaderTitle="\r\n\t\t\t\t<"+strStaticText+">";
+		strHeaderTitle+="\r\n\t\t\t\t\t<reportElement";
+		strHeaderTitle+="\r\n\t\t\t\t\t\tx=\"0\"";
+		strHeaderTitle+="\r\n\t\t\t\t\t\ty=\"1\"";
+		strHeaderTitle+="\r\n\t\t\t\t\t\twidth=\"100\"";
+		strHeaderTitle+="\r\n\t\t\t\t\t\theight=\"15\"";
+		strHeaderTitle+="\r\n\t\t\t\t\t\tforecolor=\"#000000\"";
+		strHeaderTitle+="\r\n\t\t\t\t\t\tkey=\"element-90\"/>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<box leftPadding=\"2\" rightPadding=\"2\">";
+		strHeaderTitle+="\r\n\t\t\t\t\t<topPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<leftPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<bottomPen lineWidth=\"0.0\" lineColor=\"#000000\"/>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<rightPen lineWidth=\"0.0\" lineStyle=\"Solid\" lineColor=\"#000000\"/>";
+		strHeaderTitle+="\r\n\t\t\t\t\t</box>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<textElement>";
+		strHeaderTitle+="\r\n\t\t\t\t\t\t"+GetFontName();
+		strHeaderTitle+="\r\n\t\t\t\t\t</textElement>";
+		strHeaderTitle+="\r\n\t\t\t\t\t<"+strTextFieldExpression+"><![CDATA["+strLabel+"]]></"+strTextFieldExpression+">";
+		strHeaderTitle+="\r\n\t\t\t\t</"+strStaticText+">";
+				
+	} else {
+		totalWidthInicial=0;
+	}	
+	
+	//Trace.WriteLine("Width Inicial="+totalWidthInicial);
+	
+	return strHeaderTitle;
+}
+				
+				
+public bool GenerarParaGroupGenericoVerificacionNegacion(ColumnSchema column) {
+	bool verifica=false;
+	bool esParaGroupGenerico=false;
+	
+	if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales) {
+		esParaGroupGenerico=true;
+	}
+	
+	verifica=GenerarParaGroupGenericoVerificacionNegacionC(column,esParaGroupGenerico);
+	/*
+	if(GenerarParaGroupGenerico && !ValidacionCampoTotalizarC(column)) {
+		verifica=true;
+	}
+	*/
+	
+	return verifica;
+}
+
+public string GetLeftMargin()
+{
+	String param= "30";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "15";
+	}
+	return param;
+}
+
+public string GetRightMargin()
+{
+	String param= "30";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "0";
+	}
+	return param;
+}
+
+public string GetTopMargin()
+{
+	String param= "20";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "0";
+	}
+	return param;
+}
+
+public string GetBottomMargin()
+{
+	String param= "20";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "0";
+	}
+	return param;
+}
+
+public String GetSubreporRelacionesDetail() 
+{
+	//return "";
+			
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase,false);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			
+			int intHeightInicial=19;
+			int intHeightDetalle=intTamDetalleRelacionReporte;
+			int intHeightFinal=intHeightInicial;
+			
+			int count=1;
+			
+			int y=3;
+			int width=int.Parse(GetAnchoLineasRectangle())-10;
+			int x=6;			
+			int height=intTamDetalleRelacionReporte;
+			int iContador=0;
+			
+			String strBandInit="";
+			String strBandFin="";
+			
+			if(JasperReports_Version.Equals("5.5")) {
+				strBandInit="\r\n\t\t\t\t<band height=\"130\">";
+				strBandFin="\r\n\t\t\t\t</band>";
+				
+				//strTablaClaseRelacionada+=strBandFin;
+			}
+			
+			if(GenerarRelacionesMaestro||GenerarParaReporte) {
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values) {						
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany&&!GenerarParaReporte) {						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						
+						if(!VerificarTablaRelacionFromPropertiesC(collectionInfo.JunctionTableSchema)) {							
+							continue;
+						}
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany/*&&GenerarParaReporte*/) {						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						//continue;
+					} else {	
+						continue;
+					}
+					
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo)) {						
+						continue;
+					}
+					
+					iContador++;
+					
+					if(!JasperReports_Version.Equals("5.5")){
+						if(blnNormalOrientation) {
+							if(iContador>intMax_Relaciones){
+								continue;	
+							}
+						} else {
+							if(iContador>(intMax_Relaciones-2)){
+								continue;	
+							}
+						}
+					}
+					
+					y=intHeightFinal+intDesplazamientoReporteMaestro;//+intHeightInicial+3;
+					
+					if(JasperReports_Version.Equals("5.5")) {
+						y=5;
+					}
+					
+					strTablaClaseRelacionada+=strBandInit;
+					strTablaClaseRelacionada+="\r\n\t\t\t\t<subreport isUsingCache=\"true\">";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t<reportElement x=\""+x.ToString()+"\" y=\""+y.ToString()+"\" width=\""+width.ToString()+"\" height=\""+height.ToString()+"\" key=\"subreport-"+count.ToString()+"\"/>";
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+						strTablaClaseRelacionada+="\r\n\t\t\t\t\t<dataSourceExpression>$F{"+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+strClaseDetalleBean+"}</dataSourceExpression>";
+						
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany&&!GenerarParaReporte) {
+						strTablaClaseRelacionada+="\r\n\t\t\t\t\t<dataSourceExpression>$F{"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"s"+strClaseDetalleBean+"}</dataSourceExpression>";
+						
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany/*&&GenerarParaReporte*/){
+						strTablaClaseRelacionada+="\r\n\t\t\t\t\t<dataSourceExpression>$F{"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"s"+strClaseDetalleBean+"}</dataSourceExpression>";
+					}
+					
+					
+					
+					//strTablaClaseRelacionada+="\r\n\t\t\t\t\t<subreportExpression class=\"java.lang.String\">$P{SUBREPORT_DIR} + \""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"DetalleRelacionesDesign.jasper\"</subreportExpression>";
+					//java.io.InputStream
+					//net.sf.jasperreports.engine.JasperReport
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t<subreportExpression class=\"java.io.InputStream\">$P{subreport_"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"}</subreportExpression>";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t</subreport>";
+					strTablaClaseRelacionada+=strBandFin;
+					
+					intHeightFinal+=intHeightDetalle;
+					
+					count++;
+				}
+			} else {
+				return "";
+			}
+			
+			//Trace.WriteLine(strTablaClaseRelacionada);
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetFieldRelaciones() 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase,false);
+			
+			TableSchema tablaRelacionadaObjetivo;
+			int iContador=0;
+			
+			if(GenerarRelacionesMaestro||GenerarParaReporte) {
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values) {								
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany && !GenerarParaReporte) {						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						
+						if(!VerificarTablaRelacionFromPropertiesC(collectionInfo.JunctionTableSchema)) {
+							continue;
+						}
+					} else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany/*&&GenerarParaReporte*/) {
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;						
+						//continue;
+					} else {
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo)) {
+						continue;
+					}
+				
+					iContador++;
+					
+					if(!JasperReports_Version.Equals("5.5")){
+						if(blnNormalOrientation) {
+							if(iContador>intMax_Relaciones){
+								continue;	
+							}
+						} else {
+							if(iContador>(intMax_Relaciones-2)){
+								continue;	
+							}
+						}
+					}
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+						strTablaClaseRelacionada+="\r\n\t<field name=\""+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+strClaseDetalleBean+"\" class=\"java.lang.Object\"/>";
+					} else {
+						strTablaClaseRelacionada+="\r\n\t<field name=\""+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"s"+strClaseDetalleBean+"\" class=\"java.lang.Object\"/>";
+					}
+				}
+			} else {
+				return "";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetGroupGenerico() {
+	String strTablaClaseRelacionada="";	
+	String strHeightFooter="50";
+	
+	strTablaClaseRelacionada+="\r\n\t<group name=\"sDescripcionGeneralEntityReporte1\">";
+	strTablaClaseRelacionada+="\r\n\t\t<groupExpression><![CDATA[$F{sDescripcionGeneralEntityReporte1}]]></groupExpression>";
+	strTablaClaseRelacionada+="\r\n\t\t<groupHeader>";
+	
+	//SI ES TOTALES, SOLO FOOTER
+	if(!GenerarParaGroupGenericoSoloTotales) {		
+		strTablaClaseRelacionada+="\r\n\t\t\t<band height=\"50\">";
+		
+		strTablaClaseRelacionada+=GetRectangleCabecera(false);
+		
+		//TITULO COLUMNA GRUOP AUXILIAR
+		strTablaClaseRelacionada+=GetHeaderTitleGenerarParaGroupGenerico(false,false);
+		
+		//TITULOS COLUMNAS VALORES
+		strTablaClaseRelacionada+=GetCabecerasColumnsReporte();
+		
+		//DETALLE COLUMNA GROUP AUXILIAR
+		strTablaClaseRelacionada+=GetDetailGenerarParaGroupGenerico(false);
+		
+		strTablaClaseRelacionada+="\r\n\t\t\t</band>";
+	}
+	
+	strTablaClaseRelacionada+="\r\n\t\t</groupHeader>";
+	strTablaClaseRelacionada+="\r\n\t\t<groupFooter>";
+	
+	if(GenerarParaGroupGenericoSoloTotales) {
+		strHeightFooter="16";
+	}
+	
+	strTablaClaseRelacionada+="\r\n\t\t\t<band height=\""+strHeightFooter+"\">";
+	
+	//TEXT "TOTALES"
+	
+	if(!GenerarParaGroupGenericoSoloTotales) {
+		strTablaClaseRelacionada+=GetHeaderTitleGenerarParaGroupGenerico(true,false);
+	
+	} else {
+		//DETALLE COLUMNA GROUP AUXILIAR
+		strTablaClaseRelacionada+=GetDetailGenerarParaGroupGenerico(false);
+	}
+	
+	//TEXT TOTALES
+	strTablaClaseRelacionada+=GetTiposXmlReporteColumnaClase(true,false,GenerarParaReporteDinamico,GenerarParaGroupReporte);
+	
+	strTablaClaseRelacionada+="\r\n\t\t\t</band>";
+	strTablaClaseRelacionada+="\r\n\t\t</groupFooter>";
+	strTablaClaseRelacionada+="\r\n\t</group>";
+			
+	return strTablaClaseRelacionada; 
+}
+
+public String GetRectangleCabecera(bool esParaMaestro,int intYInicial,int intNivelTitulo) {
+	return GetRectangleCabeceraC(esParaMaestro,blnNormalOrientation,GenerarParaReporteDinamico,intYInicial,intNivelTitulo);	
+}
+
+public String GetRectangleCabecera(bool esParaMaestro) {
+	return GetRectangleCabeceraC(esParaMaestro,blnNormalOrientation,GenerarParaReporteDinamico,1,1);
+	/*
+	String strTablaClaseRelacionada="";
+	String strBackcolor="CCCCCC";
+	
+	if(esParaMaestro){
+		strBackcolor="999999";
+	}
+	
+	strTablaClaseRelacionada+="\r\n\t\t\t\t<rectangle radius=\"0\">";
+	strTablaClaseRelacionada+="\r\n\t\t\t\t\t<reportElement";
+	strTablaClaseRelacionada+=" mode=\"Opaque\"";
+	strTablaClaseRelacionada+=" x=\"1\"";
+	strTablaClaseRelacionada+=" y=\"1\"";
+	strTablaClaseRelacionada+=" width=\""+GetAnchoLineasRectangle()+"\"";
+	strTablaClaseRelacionada+=" height=\"17\"";
+	strTablaClaseRelacionada+=" forecolor=\"#000000\"";
+	strTablaClaseRelacionada+=" backcolor=\"#"+strBackcolor+"\"";
+	strTablaClaseRelacionada+=" key=\"element-22\"/>";
+	strTablaClaseRelacionada+="\r\n\t\t\t\t\t<graphicElement stretchType=\"NoStretch\">";
+	strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t<pen lineWidth=\"0.25\" lineStyle=\"Solid\"/>";
+	strTablaClaseRelacionada+="\r\n\t\t\t\t\t</graphicElement>";
+	strTablaClaseRelacionada+="\r\n\t\t\t\t</rectangle>";
+				
+	return strTablaClaseRelacionada; 
+	*/
+}
+
+//<parameter name="SUBREPORT" isForPrompting="false" class="java.io.InputStream"/>	
+public String GetParameterRelaciones() 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase,false);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			if(GenerarRelacionesMaestro||GenerarParaReporte)
+			{
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+								
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}	
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany&&!GenerarParaReporte)
+					{
+						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						
+						if(!VerificarTablaRelacionFromPropertiesC(collectionInfo.JunctionTableSchema))
+						{
+							continue;
+						}
+					}
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany/*&&GenerarParaReporte*/)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						
+						//continue;
+					}
+					else
+					{
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+					{
+						continue;
+					}
+				
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						//java.io.InputStream,java.lang.Object
+						strTablaClaseRelacionada+="\r\n\t<parameter name=\"subreport_"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"\" isForPrompting=\"false\" class=\"java.io.InputStream\"/>";
+					}
+					else
+					{	//java.io.InputStream,java.lang.Object
+						strTablaClaseRelacionada+="\r\n\t<parameter name=\"subreport_"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString()).ToLower()+"\" isForPrompting=\"false\" class=\"java.io.InputStream\"/>";
+					}
+				}
+			}
+			else
+			{
+				return "";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetHeightDetail() {
+			String strTablaClaseRelacionada="";	
+			strTablaClaseRelacionada+="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase,false);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+			int intHeightInicial=19;
+			int intHeightDetalle=intTamDetalleRelacionReporte;
+			int intHeightFinal=intHeightInicial;
+			int iContador=0;
+			
+			if(true/*!GenerarParaGroupGenericoSoloTotales*/) { 
+				if(GenerarRelacionesMaestro || GenerarParaReporte) {
+					if(!GenerarReporteVertical) {
+						foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values) {								
+							if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+								tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+							
+							} else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany&&!GenerarParaReporte) {						
+								tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+							
+							} else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany/*&&GenerarParaReporte*/) {
+								tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+								
+								//continue;
+							} else {
+								continue;
+							}
+								
+							if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo)) {
+								continue;
+							}
+							
+							iContador++;
+							
+							if(blnNormalOrientation) {
+								if(iContador>intMax_Relaciones){
+									continue;	
+								}
+							} else {
+								if(iContador>(intMax_Relaciones-2)){
+									continue;	
+								}
+							}
+						
+							intHeightFinal+=intHeightDetalle;
+							
+							/*
+							if(blnConImagenEnreporte) {					
+							}
+							*/					
+						}
+						
+						if(GenerarRelacionesMaestro) {
+							//Trace.WriteLine(intHeightFinal);
+							
+							intHeightFinal+=intHeightInicial;
+							
+							//intHeightFinal=iContador * intTamDetalleRelacionReporte;//35;
+							
+							//Trace.WriteLine(intHeightFinal);
+							
+						} else {
+							intHeightFinal+=intDesplazamientoReporteMaestro;
+						}
+						
+					} else {
+						intHeightFinal=getHeightVerticalReporte();
+					}
+					
+				} else if(GenerarReporteVertical) {
+					
+					intHeightFinal=getHeightVerticalReporte();
+					
+					/*
+					//intHeightInicial=totalHeightInicial;					
+					intHeightFinal=totalHeightInicial;
+					
+					for (int i = 0, j=-1,totalWidth=totalWidthInicial,totalHeight=0; i < TablaBase.Columns.Count; i++){ 
+		
+						if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow
+							|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])) {
+							continue; 
+						} else{
+							j++;
+						} 
+						
+						intHeightFinal+=GetHeightXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical);
+						
+					}
+					*/
+					
+				}
+				/*
+				else
+				{
+					//CUANDO IMAGEN ENTRA SE DA HEIGHT=100=19+80
+					if(blnConImagenEnreporte) {
+						intHeightInicial+=80;
+					}
+						
+					return intHeightInicial.ToString();
+				}
+				*/
+			} else {
+				//intHeightFinal=0;
+			}
+			
+	return intHeightFinal.ToString(); 
+}
+
+public int getHeightVerticalReporte() {
+	
+	int intHeightFinal=0;
+	//intHeightInicial=totalHeightInicial;					
+	intHeightFinal=totalHeightInicial;
+	//Trace.WriteLine(intHeightFinal);
+					
+	for (int i = 0, j=-1,totalWidth=totalWidthInicial,totalHeight=0; i < TablaBase.Columns.Count; i++){ 
+		
+		if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow
+			|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])) {
+			continue; 
+		} else{
+			j++;
+		} 
+						
+		intHeightFinal+=GetHeightXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical);
+						
+	}
+	
+	return intHeightFinal;
+}
+
+public string GetAligmentSubtitulo()
+{
+	String param= "Center";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "Left";
+	}
+	return param;
+}
+
+public string GetXSubtitulo()
+{
+	String param= "94";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "0";
+	}
+	return param;
+}
+
+public string GetHeightPageTitle()
+{
+	String param= "149";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "50";
+	}
+	return param;
+}
+
+public string GetYSubtitulo()
+{
+	String param= "55";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "6";
+	}
+	return param;
+}
+
+public string GetYLinea2()
+{
+	String param= "102";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "46";
+	}
+	return param;
+}
+
+public string GetHeightPageFooter()
+{
+	String param= "27";
+	
+	if(GenerarRelacionesDetalle)
+	{
+		param= "9";
+	}
+	return param;
+}
+
+int valorSobrante=0;
+//bool blnNormalOrientation=true;
+
+public string GetXPaginacion1()
+{
+	String param= "325";
+	
+	if(!blnNormalOrientation)
+	{
+		param= "570";
+	}
+	return param;
+}
+
+public string GetXPaginacion2()
+{
+	String param= "499";
+	
+	if(!blnNormalOrientation)
+	{
+		param= "744";
+	}
+	return param;
+}
+
+public string GetAnchoLineasRectangle() {
+	return GetAnchoLineasRectangleC(blnNormalOrientation);
+	/*
+	String param= "534";
+	
+	if(!blnNormalOrientation)
+	{
+		param= "781";
+	}
+	return param;
+	*/
+}
+
+public string GetAnchoTituloSubtitulo()
+{
+	String param= "440";
+	
+	if(!blnNormalOrientation)
+	{
+		param= "685";
+	}
+	return param;
+}
+
+public string GetAnchoBusquedaPor()
+{
+	String param= "533";
+	
+	if(!blnNormalOrientation)
+	{
+		param= "778";
+	}
+	return param;
+}
+
+public string GetOrientationValues() {
+	String param= "";
+	int intTotalWidth=0;
+	int intTotalWidthAux=0;
+	int j=0;
+	int k=0;
+	
+	intTotalWidth=GetTotalWidthCabeceraReporteC(TablaBase,ref j,GenerarReporteVertical);
+	
+	//System.Windows.Forms.MessageBox.Show(j.ToString());
+	
+	/*
+	for (int i = 0; i < TablaBase.Columns.Count; i++) { 		
+		if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i]) || GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i])) {
+			continue; 
+		}
+		
+		j++;		
+		intTotalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i]);
+		
+		
+		//INDICA Q IMAGEN SI ALCANZO A SER MOSTRADO
+		//if(GenerarConImagen && EsPathImagenColumn(TablaBase.Columns[i])) {
+		//	if(intTotalWidth<=842) {
+		//		 blnConImagenEnreporte=true;
+		//	}
+		//}
+		
+	} 
+	*/
+	
+	if(intTotalWidth>535 && !GenerarReporteVertical) {
+		//ES VARIABLE GLOBAL
+		//blnNormalOrientation=false;
+		
+		param="\r\n\t\t orientation=\"Landscape\"";
+		param+= "\r\n\t\t pageWidth=\"842\"";
+		param+= "\r\n\t\t pageHeight=\"595\"";
+		param+= "\r\n\t\t columnWidth=\"782\"";
+		
+		if(intTotalWidth<782) {
+			valorSobrante=(782-intTotalWidth)/j;				
+			
+		} else {
+			valorSobrante=0;
+		}
+		
+		//System.Windows.Forms.MessageBox.Show(valorSobrante.ToString());
+			
+		if(intTotalWidth>782) {								
+			for (int i = 0; i < TablaBase.Columns.Count; i++) { 
+				if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow || GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i]) || GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i])) {
+					continue; 
+				}
+				
+				k++;		
+				intTotalWidthAux+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical,true);								
+			}
+		}
+	} else {
+		//blnNormalOrientation=true;
+		
+		if(intTotalWidth<535) {
+			if(j!=0) {
+				valorSobrante=(535-intTotalWidth)/j;
+			} else {
+				valorSobrante=0;
+			}
+		} else {
+			valorSobrante=0;
+		}
+		
+		//System.Windows.Forms.MessageBox.Show(valorSobrante.ToString());
+			
+		param="\r\n\t\t orientation=\"Portrait\"";
+		param+= "\r\n\t\t pageWidth=\"595\"";
+		param+= "\r\n\t\t pageHeight=\"842\"";
+		param+= "\r\n\t\t columnWidth=\"535\"";
+	}
+	
+	return param;
+}
+
+public string GetOrientation()
+{
+	String param= "Portrait";
+	
+	
+	return param;
+}
+
+public string GetSqlParameterSelect()
+{
+	String param= "";
+	int posicion=-1;
+	string strNombre = "";
+	
+	foreach (ColumnSchema column in TablaBase.Columns)
+	{
+		if(column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired|| column.Name==strVersionRow)
+		{
+			continue;
+		}
+		
+		posicion++;
+		
+		strNombre = GetNombreColumnaClaseC(column);
+		
+		if(!posicion.Equals(0))
+		{
+			param+= ",";
+		}	
+		
+		param+=GetNombreClaseObjetoC(TablaBase.ToString())+"."+"`"+strNombre.ToLower()+"` AS "+GetNombreClaseObjetoC(TablaBase.ToString())+"_"+strNombre.ToLower();
+	}
+	
+	return param;
+}
+
+public string GetFieldClase() {
+	String strValorParametroReporte="";
+	
+	if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales) {
+		strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte1\" class=\"java.lang.String\"/>";
+		strValorParametroReporte+="\r\n\t<field name=\"sDetalleGeneralEntityReporte\" class=\"java.lang.String\"/>";
+		/*
+		strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte2\" class=\"java.lang.String\"/>";
+		strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte3\" class=\"java.lang.String\"/>";
+		strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte4\" class=\"java.lang.String\"/>";
+		strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte5\" class=\"java.lang.String\"/>";
+		*/
+	} else if(GenerarReporteVertical) {
+		strValorParametroReporte+="\r\n\t<field name=\"sDetalleGeneralEntityReporte\" class=\"java.lang.String\"/>";
+	}
+	
+	TableSchema tableSchemaFk=null;
+	
+	foreach (ColumnSchema column in TablaBase.Columns) {
+		if(GetEsReporteColumnFromPropertiesC(column)||column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired||column.Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(column))
+		{
+			continue;
+		}
+		
+		if(GenerarParaGroupGenericoVerificacionNegacion(column)) {
+			continue;
+		}
+			
+		string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC().ToLower();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoReporteColumnaClaseC(column);
+		
+		String strTipo="java.lang.String";
+		
+		if(column.DataType==DbType.Boolean)
+		{
+			strValorParametroReporte+="\r\n\t<field name=\""+strPrefijo+strClaseDetalleBeanReporte+"\" class=\""+strTipo+"\"/>";
+			continue;
+		}
+	
+		if(column.IsForeignKeyMember)
+		{
+			tableSchemaFk=GetTableSchemaFromColumnForeignKey(column);
+		
+			strValorParametroReporte+="\r\n\t<field name=\""+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreCompletoClaseRelacionadaFromColumn(column))+strDescripcion+"\" class=\""+strTipo+"\"/>";
+			continue;
+		}
+		
+		strValorParametroReporte+="\r\n\t<field name=\""+strPrefijo+"\" class=\""+param+"\"/>";
+			
+	}
+	
+	
+	
+	return strValorParametroReporte;
+}
+
+public string GetVariablesTotalGroupGenerico() {
+	String strValorParametroReporte="";
+	
+	strValorParametroReporte=GetVariablesTotalGroupGenerico("sDescripcionGeneralEntityReporte1");
+	
+	return strValorParametroReporte;
+}
+
+public string GetVariablesTotalGroupGenerico(String strNombreGroup) {
+	String strValorParametroReporte="";
+	
+	/*
+	if(GenerarParaGroupGenerico) {
+		//strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte1\" class=\"java.lang.String\"/>";		
+	}
+	*/
+	
+	foreach (ColumnSchema column in TablaBase.Columns) {
+		if(GenerarParaGroupGenericoVerificacionNegacion(column) || !ValidacionCampoTotalizarC(column)) {
+			continue;
+		}
+			
+		string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC().ToLower();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoReporteColumnaClaseC(column);
+		
+		//String strTipo="java.lang.String";
+		
+		//TOTAL GRUPO
+		strValorParametroReporte+="\r\n\t<variable name=\"vg_total_"+strPrefijo+"\" class=\""+param+"\" resetType=\"Group\" resetGroup=\""+strNombreGroup+"\" calculation=\"Sum\">";//sDescripcionGeneralEntityReporte1
+		strValorParametroReporte+="\r\n\t\t<variableExpression><![CDATA[$F{"+strPrefijo+"}]]></variableExpression>";
+		strValorParametroReporte+="\r\n\t</variable>";
+		
+		//TOTAL TOTAL REPORTE
+		strValorParametroReporte+="\r\n\t<variable name=\"vt_total_total_"+strPrefijo+"\" class=\""+param+"\" resetType=\"Report\" calculation=\"Sum\">";
+		strValorParametroReporte+="\r\n\t\t<variableExpression><![CDATA[$F{"+strPrefijo+"}]]></variableExpression>";
+		strValorParametroReporte+="\r\n\t</variable>";
+		
+		//strValorParametroReporte+="\r\n\t<field name=\""+strPrefijo+"\" class=\""+param+"\"/>";
+			
+	}
+	
+	
+	
+	return strValorParametroReporte;
+}
+
+public string GetVariablesGroupReporte() {
+	String strValorParametroReporte="";
+	
+	/*
+	if(GenerarParaGroupGenerico) {
+		//strValorParametroReporte+="\r\n\t<field name=\"sDescripcionGeneralEntityReporte1\" class=\"java.lang.String\"/>";		
+	}
+	*/
+	
+	ArrayList arrListGrupos=new ArrayList();
+	String sNombreGrupo="";
+	String strTemporal="";
+		   strTemporal+="";
+	
+	//<%=GetRectangleCabecera(false)%>			
+	//<%=GetCabecerasColumnsReporte()%>
+			
+	foreach (ColumnSchema column in TablaBase.Columns) {
+		sNombreGrupo=GetReporteGrupoTableFromPropertiesC(column);
+		
+		if(sNombreGrupo.Equals("")) {
+			continue;
+		} else {
+			if(ExisteListaTextoC(arrListGrupos,sNombreGrupo)) {
+				continue;
+			} else {
+				arrListGrupos.Add(sNombreGrupo);
+			}
+		}
+			
+		string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC().ToLower();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoReporteColumnaClaseC(column);
+		
+		//String strTipo="java.lang.String";
+		
+		//DEFINIR VARIALES TOTALES
+		strValorParametroReporte+=GetVariablesTotalGroupGenerico(sNombreGrupo);
+		
+		strValorParametroReporte+="\r\n\t<group name=\""+sNombreGrupo+"\">";
+		strValorParametroReporte+="\r\n\t<groupExpression><![CDATA[$F{"+strPrefijo+"}]]></groupExpression>";
+		strValorParametroReporte+="\r\n\t<groupHeader>";
+		strValorParametroReporte+="\r\n\t<band height=\"60\">";
+		
+		//CABECERA GRUPO
+		strValorParametroReporte+=GetRectangleCabecera(false);		
+		strValorParametroReporte+=GetCabecerasColumnsReporte(true,false,sNombreGrupo,1);
+		strValorParametroReporte+=GetTiposXmlReporteColumnaClase(false,false,false,true,false,sNombreGrupo,20);
+		
+		//CABECERA DETALLE
+		//NO PERMITE RECTANGLE AQUI		
+		strValorParametroReporte+=GetRectangleCabecera(false,40,2);
+		strValorParametroReporte+=GetCabecerasColumnsReporte(true,true,sNombreGrupo,40);
+		
+		//DEBE ESTAR EN DETALLE NORMAL
+		//strValorParametroReporte+=GetTiposXmlReporteColumnaClase(false,false,false,true,true,sNombreGrupo,1);
+		
+		strValorParametroReporte+="\r\n\t</band>";
+		strValorParametroReporte+="\r\n\t</groupHeader>";
+		strValorParametroReporte+="\r\n\t\t<groupFooter>";
+		strValorParametroReporte+="\r\n\t\t\t<band height=\"30\">";
+		
+		//MOSTRAR TOTALES GRUPO
+		strValorParametroReporte+=GetTiposXmlReporteColumnaClase(true,false,GenerarParaReporteDinamico,GenerarParaGroupReporte,false,sNombreGrupo,1);
+		
+		//strTemporal=GetTiposXmlReporteColumnaClase(true,false,GenerarParaReporteDinamico,GenerarParaGroupReporte,false,sNombreGrupo,1);		
+		//Trace.WriteLine("TOTALES:"+strTemporal);
+		
+		strValorParametroReporte+="\r\n\t\t</band>";
+		strValorParametroReporte+="\r\n\t\t</groupFooter>";
+		strValorParametroReporte+="\r\n\t</group>";
+			
+		//DEFINIR VARIALES TOTALES
+		//strValorParametroReporte+=GetVariablesTotalGroupGenerico(sNombreGrupo);
+	}
+	
+	
+	
+	return strValorParametroReporte;
+}
+
+</script>
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" 
+		<%if(!GenerarRelacionesDetalle && !GenerarRelacionesMaestro){%>
+		name="<%=GetNombreArchivo()%>"
+		<%}else if(GenerarRelacionesDetalle){%>
+		name="<%=GetNombreClaseC(TablaBase.ToString())%>DetalleRelacionesDesign"
+		<%}else if(GenerarRelacionesMaestro){%>
+		name="<%=GetNombreClaseC(TablaBase.ToString())%>MasterRelacionesDesign"
+		<%}%>
+		
+		 columnCount="1"
+		 printOrder="Vertical"
+		 <%=GetOrientationValues()%>
+		 columnSpacing="0"
+		 leftMargin="<%=GetLeftMargin()%>"
+		 rightMargin="<%=GetRightMargin()%>"
+		 topMargin="<%=GetTopMargin()%>"
+		 bottomMargin="<%=GetBottomMargin()%>"
+		 whenNoDataType="NoPages"
+		 isTitleNewPage="false"
+		 isSummaryNewPage="false">
+	<property name="ireport.scriptlethandling" value="0" />
+	<property name="ireport.encoding" value="UTF-8" />
+	<import value="java.util.*" />
+	<import value="net.sf.jasperreports.engine.*" />
+	<import value="net.sf.jasperreports.engine.data.*" />
+
+	<%if(!GenerarRelacionesDetalle){%>
+	<parameter name="subtitulo" isForPrompting="false" class="java.lang.String"/>
+	<%}else{%>
+	<parameter name="subtitulo" isForPrompting="false" class="java.lang.String">
+	<defaultValueExpression>"<%=GetTituloNombreTableFromPropertiesC(TablaBase)%><%=GetPluralTituloNombreTableFromPropertiesC(TablaBase)%>"</defaultValueExpression>
+	</parameter>
+	<%}%>
+	<parameter name="usuario" isForPrompting="false" class="java.lang.String"/>
+	<%if(!GenerarRelacionesDetalle){%>
+	<parameter name="titulo" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="busquedapor" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="PATH_IMAGEN" isForPrompting="false" class="java.lang.String"/>
+	<parameter name="con_grafico" isForPrompting="false" class="java.lang.Boolean">
+		<defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+	</parameter>
+	<%}%>
+	
+	<%if(blnTieneImagen){%>
+	<parameter name="PATH_BASE_IMAGEN" isForPrompting="false" class="java.lang.String"/>
+	<%}%>
+	
+	<%if(GenerarRelacionesMaestro || GenerarParaReporte){%>
+	<parameter name="SUBREPORT_DIR" isForPrompting="true" class="java.lang.String">
+	<defaultValueExpression>"E:\\Me\\Proyectos\\ActivismoIndependienteSubversion\\WebActivismoIndependiente\\WebContent\\Reportes\\"</defaultValueExpression>
+	</parameter>
+	<%if(GenerarRelacionesMaestro || (/*GenerarParaReporte&&*/GenerarRelacionesDetalle)){%>
+	<%=GetParameterRelaciones()%>
+	<%}%>	
+	<%}%>
+		
+	<%= GetFieldClase() %>		
+	
+	<%if(GenerarParaGroupReporte){%>
+	<%=GetVariablesGroupReporte()%>
+	<%}%>		
+	
+	<%if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales){%>
+	<%=GetVariablesTotalGroupGenerico()%>
+	<%}%>
+	
+	<%if(GenerarRelacionesMaestro || (/*GenerarParaReporte&&*/GenerarRelacionesDetalle)){%>
+	<%=GetFieldRelaciones()%>
+	<%}%>
+	
+	<%if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales){%>
+	<%= GetGroupGenerico() %>
+	<%}%>
+	
+		<background>
+			<band height="0"  <%=GetIsSplitVersion()%>>
+			</band>
+		</background>
+		<title>
+			<band height="<%=GetHeightPageTitle()%>"  <%=GetIsSplitVersion()%>>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="<%=GetYLinea2()%>"
+						width="<%=GetAnchoLineasRectangle()%>"
+						height="0"
+						forecolor="#000000"
+						key="line"
+						positionType="FixRelativeToBottom"/>
+					<graphicElement stretchType="NoStretch">
+					<pen lineWidth="2.0" lineStyle="Solid"/>
+					</graphicElement>
+				</line>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="3"
+						width="<%=GetAnchoLineasRectangle()%>"
+						height="0"
+						forecolor="#000000"
+						key="line"/>
+					<graphicElement stretchType="NoStretch">
+					<pen lineWidth="2.0" lineStyle="Solid"/>
+					</graphicElement>
+				</line>
+				<%if(!GenerarRelacionesDetalle){%>
+				<image  evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="0"
+						y="14"
+						width="94"
+						height="93"
+						key="image-1"/>
+					<box></box>
+					<graphicElement stretchType="NoStretch"/>
+					<imageExpression class="java.lang.String"><![CDATA[$P{PATH_IMAGEN}]]></imageExpression>
+				</image>
+				<%}%>
+				<%if(!GenerarRelacionesDetalle){%>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="94"
+						y="10"
+						width="<%=GetAnchoTituloSubtitulo()%>"
+						height="40"
+						key="textField"/>
+					<box></box>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<%=GetFontName("TITULO")%>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{titulo}]]></textFieldExpression>
+				</textField>
+				<%}%>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="<%=GetXSubtitulo()%>"
+						y="<%=GetYSubtitulo()%>"
+						width="<%=GetAnchoTituloSubtitulo()%>"
+						height="40"
+						key="textField"
+						isRemoveLineWhenBlank="true"/>
+					<box></box>
+					<textElement textAlignment="<%=GetAligmentSubtitulo()%>">
+						<%=GetFontName("SUBTITULO")%>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{subtitulo}]]></textFieldExpression>
+				</textField>
+				<%if(!GenerarRelacionesDetalle){%>
+				<textField isStretchWithOverflow="false" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="1"
+						y="112"
+						width="<%=GetAnchoBusquedaPor()%>"
+						height="32"
+						key="textField"/>
+					<box></box>
+					<textElement verticalAlignment="Middle">
+						<%=GetFontName("BUSUEDA")%>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA[$P{busquedapor}]]></textFieldExpression>
+				</textField>
+				<%}%>
+			</band>
+		</title>
+		<pageHeader>
+			<band height="9" <%=GetIsSplitVersion()%>>
+			</band>
+		</pageHeader>
+		<%if(!GenerarReporteVertical){%>
+		<columnHeader>
+			<band height="20"  <%=GetIsSplitVersion()%>>
+			<%if(!GenerarRelacionesMaestro && !GenerarParaGroupGenerico/* && !GenerarParaGroupGenericoSoloTotales*/
+				 && !GenerarParaGroupReporte){%>			
+			
+			<%=GetRectangleCabecera(false)%>
+			
+			<%=GetCabecerasColumnsReporte()%>			
+			
+			<%}%>			
+			</band>
+		</columnHeader>
+		<%}%>
+		<detail>
+			<band height="<%=GetHeightDetail()%>" <%=GetIsSplitVersion()%>>
+			<%if(!GenerarReporteVertical){%>
+			
+			<%if(GenerarParaGroupGenericoSoloTotales){%>
+			<printWhenExpression><![CDATA[($P{titulo}=="NONE")?Boolean.TRUE:Boolean.FALSE]]></printWhenExpression>
+			<%}%>
+			
+			<%//if(!GenerarParaGroupGenericoSoloTotales){%>
+			<%if(GenerarRelacionesMaestro){%>
+			
+			<%=GetRectangleCabecera(false)%>
+			
+			<%for (int i = 0, j=-1,totalWidth=totalWidthInicial,totalHeight=0; i < TablaBase.Columns.Count; i++){ %>
+			<%if(GetEsReporteColumnFromPropertiesC(TablaBase.Columns[i])||TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])||EsPathImagenDocumentoColumn(TablaBase.Columns[i]) || GenerarParaGroupGenericoVerificacionNegacion(TablaBase.Columns[i])){continue; }else{j++;} %>
+			<%= GetTipoXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],totalWidth,valorSobrante,blnNormalOrientation,j,GenerarParaReporteDinamico,1,JasperReports_Version,totalHeight,GenerarReporteVertical) %>
+			<%totalWidth+=GetWidthXmlCabeceraReporteColumnaClaseC(TablaBase.Columns[i],GenerarReporteVertical,true); %>
+			<%}%>
+			
+			<%}%>						
+			
+			<%=GetTiposXmlReporteColumnaClase(false,false,GenerarParaReporteDinamico,GenerarParaGroupReporte)%>			
+			
+			<%=GetFinBandDetail(true)%>
+			
+			<%=GetSubreporRelacionesDetail()%>
+			<%//}%>
+			
+			<%} else {%>
+			<%=GetDetailGenerarParaGroupGenerico(true)%>
+			<%=GetCabecerasColumnsReporte()%>
+			<%=GetTiposXmlReporteColumnaClase(false,false,GenerarParaReporteDinamico,GenerarParaGroupReporte)%>			
+			
+			<%}%>
+			
+			<%=GetFinBandDetail(false)%>			
+		</detail>
+		<columnFooter>
+			<band height="0"  <%=GetIsSplitVersion()%>>
+			</band>
+		</columnFooter>
+		<pageFooter>
+			<band height="<%=GetHeightPageFooter()%>"  <%=GetIsSplitVersion()%>>
+				<%if(!GenerarRelacionesDetalle){%>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="<%=GetXPaginacion1()%>"
+						y="4"
+						width="170"
+						height="19"
+						key="textField"/>
+					<box>					
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right">
+						<%=GetFontName()%>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["Pagina " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+				</textField>
+				<%}%>				
+				<%if(!GenerarRelacionesDetalle){%>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Report" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="<%=GetXPaginacion2()%>"
+						y="4"
+						width="36"
+						height="19"
+						forecolor="#000000"
+						backcolor="#FFFFFF"
+						key="textField"/>
+					<box>					
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Top" rotation="None" <%=GetLineSpacingVersion()%>>
+						<%=GetFontName()%>
+					</textElement>
+				<textFieldExpression   class="java.lang.String"><![CDATA["" + $V{PAGE_NUMBER}]]></textFieldExpression>
+				</textField>
+				<%}%>
+				<line direction="TopDown">
+					<reportElement
+						x="0"
+						y="1"
+						width="<%=GetAnchoLineasRectangle()%>"
+						height="0"
+						forecolor="#000000"
+						key="line"/>
+					<graphicElement stretchType="NoStretch">
+					<pen lineWidth="2.0" lineStyle="Solid"/>
+					</graphicElement>
+				</line>
+				<%if(!GenerarRelacionesDetalle){%>
+				<textField isStretchWithOverflow="false" pattern="" isBlankWhenNull="false" evaluationTime="Now" hyperlinkType="None"  hyperlinkTarget="Self" >
+					<reportElement
+						x="220"
+						y="6"
+						width="100"
+						height="19"
+						key="textField"/>
+					<box>					
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<%=GetFontName("DATE")%>
+					</textElement>
+				<textFieldExpression   class="java.util.Date"><![CDATA[new Date()]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="2" y="6" width="210" height="19"/>
+					<textElement/>
+					<textFieldExpression class="java.lang.String"><![CDATA[$P{usuario}]]></textFieldExpression>
+				</textField>
+				<%}%>
+			</band>
+		</pageFooter>
+		<summary>
+			<band height="<%=GetSummaryHeigh()%>" <%=GetIsSplitVersion()%>>
+			<%if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales || GenerarParaGroupReporte){%>
+			<%=GetHeaderTitleGenerarParaGroupGenerico(false,true)%>
+			<%=GetTiposXmlReporteColumnaClase(false,true,GenerarParaReporteDinamico,GenerarParaGroupReporte)%>
+			<%}%>
+			
+			<%if(!GenerarParaReporteDinamico){%>
+			<%if(GenerarParaGroupGenerico || GenerarParaGroupGenericoSoloTotales){%>
+			<%if(blnTieneCampoTotalizar){%>
+			<%=GetGraficoReporte()%>
+			<%}%>
+			<%}%>
+			<%} else {%>
+			<!--GRAFICO-->
+			<%}%>
+			</band>
+		</summary>
+</jasperReport>

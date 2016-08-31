@@ -1,0 +1,187 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+background: #FFFFFF;
+margin-left: 0px;
+margin-top: 0px;
+margin-right: 0px;
+margin-bottom: 0px;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 12px;
+line-height: 17px;
+color: #333;
+}
+
+.login {
+height: 90px;
+}
+
+.login h1 { 
+font-size: 15px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.login h2 {
+font-size: 15px;
+font-weight: bold;
+color: #FFFFFF;
+padding: 5px 0 0 20px;
+letter-spacing: -1px;
+}
+
+#wrap {
+margin: 0 auto;
+width: 780px;
+background: #fff;
+}
+
+.cabecera {
+height: 90px;
+}
+
+.cabecera h1 { 
+font-size: 20px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000099;
+}
+
+.cabecera h2 {
+font-size: 19px;
+color: #000099;
+padding: 5px 0 0 20px;
+letter-spacing: -1px;
+font-weight: 100;
+}
+
+.busqueda {
+height: 90px;
+}
+
+.busqueda h1 { 
+font-size: 15px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.busqueda h2 {
+font-size: 15px;
+color: #004990;
+padding: 5px 0 0 20px;
+letter-spacing: -1px;
+font-weight: 100;
+}
+
+.busqueda tabla {
+margin-left: auto;
+margin-right: auto;
+}
+
+.busqueda td 
+{ 
+	padding: 5px;
+}
+   
+.elementos{
+height: 90px;
+}
+.elementos h1 { 
+font-size: 28px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.elementos h2 {
+font-size: 13px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.elementos table {
+margin-left: auto;
+margin-right: auto;
+}
+
+.elementos td 
+{ 
+	padding: 5px;
+}
+
+.acciones{
+height: 90px;
+}
+
+.acciones h1 { 
+font-size: 28px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.acciones h2 {
+font-size: 13px;
+letter-spacing: -1px;
+padding: 23px 0 0 20px;
+color: #000000;
+}
+
+.acciones table {
+
+}
+
+#content {
+padding: 0 20px 20px 20px;
+}
+
+#footer {
+height: 30px;
+line-height: 30px;
+background: #657983;
+text-align: center;
+font-size: 11px;
+color: #fff;
+}
+#footer a { color: #fff; }
+
+.right {
+float: right;
+width: 520px;
+text-align: justify;
+}
+.right h2 {
+font-size: 18px;
+font-weight: 100;
+padding: 15px 0 7px 0;
+}
+
+
+.left {
+float: left;
+width: 200px;
+margin-top: 10px;
+background: #004990;
+}
+.left h2 {
+margin: 10px 0 0 0;
+padding-left: 10px;
+height: 28px;
+line-height: 28px;
+color: #fff;
+font-size: 13px;
+background: #788BBD;
+}
+.left ul {
+padding: 10px 0 15px 20px;
+list-style-type: square;
+color: #788BBD;
+}
+
+

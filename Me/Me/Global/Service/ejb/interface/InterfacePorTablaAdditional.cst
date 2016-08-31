@@ -1,0 +1,384 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Ch?vez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="PackageSeguridad" Type="System.String" Default="Seguridad" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="TablasBaseForReporte" Type="SchemaExplorer.TableSchemaCollection" Category="Context" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ConWebServices" Type="System.Boolean" Default="false" Category="4. Service Architecture" Description="Nombre del Programdor" %>
+<%@ Property Name="ConRMI" Type="System.Boolean" Default="false" Category="4. Service Architecture" Description="Nombre del Programdor" %>
+
+<%@ Property Name="ConSessionBeansHome" Type="System.Boolean" Default="false" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="JBoss_Version" Type="System.String" Default="5.1" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="SourceDatabaseReportes" Type="SchemaExplorer.DatabaseSchema" Category="0.Tipo Generacion" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="GeneracionReportesTablasModulo" Type="System.Boolean" Default="false" Category="0. Tipo Generacion" Description="Nombre del Programdor" %>
+
+<script runat="template">
+public string GetExceptionExtraServices()
+{	
+	String strWebMethodAnnotationFromConWebServices="";//GetWebMethodAnnotationFromConWebServicesC(ConWebServices);
+	
+	if(ConRMI) {
+		strWebMethodAnnotationFromConWebServices=",RemoteException";
+	
+	}
+	
+	return strWebMethodAnnotationFromConWebServices;
+}
+
+public string GetFuncionesModuloTablaReportes() {		
+	String sFunciones="";
+	TableSchemaCollection SourceDatabaseTablesReportes;
+	TableSchemaCollection SourceDatabaseTablesProcesos=new TableSchemaCollection();	
+	bool existeProcesos=false;
+	//blnEstablaModulo=true;
+	
+	if(GeneracionReportesTablasModulo && blnEstablaModulo) {
+		SourceDatabaseTablesReportes=GetTablasForEsquemaC(SourceDatabaseReportes,TablaBase.Owner,true);
+		
+		foreach(TableSchema tableSchema in SourceDatabaseTablesReportes){
+			arrayTablasRelacionadasParametros=CargarTablasParametrosDesdeProcesosC(tableSchema,true);
+			
+			sFunciones+="\r\n "+GetNombreClaseC(tableSchema.ToString())+"ReturnGeneral procesarAccion"+GetNombreClaseC(tableSchema.ToString())+"sWithConnection(DatosCliente datosCliente,ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,String sProceso,List<"+GetNombreClaseC(tableSchema.ToString())+"> "+GetNombreClaseObjetoC(tableSchema.ToString())+"s,"+GetNombreClaseC(tableSchema.ToString())+strParameterGeneral+" "+GetNombreClaseObjetoC(tableSchema.ToString())+strParameterGeneral+")throws Exception;";
+			
+			sFunciones+=GetIndicesTablasClases(tableSchema);	
+			
+			if(GetEsProcesoFromPropertiesC(tableSchema)) {
+				SourceDatabaseTablesProcesos.Add(tableSchema);
+				
+				if(!existeProcesos) {
+					existeProcesos=true;	
+				}
+			}
+		}	
+		
+		if(existeProcesos) {
+			sFunciones+="\r\n";
+		}
+		
+		foreach(TableSchema tableSchema in SourceDatabaseTablesProcesos){
+			sFunciones+=GetProcesarInformacionTablasClases(tableSchema);
+		}	
+	}
+	
+	return sFunciones;
+}
+
+public String GetProcesarInformacionTablasClases(TableSchema tableSchema) {
+	String strFuncion=string.Empty;
+	
+	bool blnEsReporteLocal= GetEsReporteFromPropertiesC(tableSchema);
+			
+	String strParametroReporte="";
+	String strParametrosBusquedas=GetVariablesTodosIndicesTablasC(tableSchema,false,true);
+	//Trace.WriteLine(strParametrosBusquedas);
+	//if(blnEsReporteLocal) {
+		strParametroReporte="ParametroGeneralUsuario parametroGeneralUsuario,Modulo moduloActual,Opcion opcionActual,Usuario usuarioActual,";
+	//}
+			
+	strFuncion="\r\n Boolean ProcesarInformacion"+GetNombreClaseC(tableSchema.ToString())+"(DatosCliente datosCliente,"+strParametroReporte+""+strTypeCollection+"<"+GetNombreClaseC(tableSchema.ToString())+"> "+GetNombreClaseObjetoC(tableSchema.ToString())+"s,String sTipoBusqueda"+strParametrosBusquedas+") throws Exception ;";
+	
+	return strFuncion;
+}	
+			
+public String GetIndicesTablasClases(TableSchema tableSchema) 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			bool blnEsReporteLocal= GetEsReporteFromPropertiesC(tableSchema);
+			
+			String strParametroReporte="";
+			
+			if(blnEsReporteLocal) {
+				strParametroReporte="ParametroGeneralUsuario parametroGeneralUsuario,Modulo moduloActual,Opcion opcionActual,Usuario usuarioActual,";
+			}
+			
+			foreach(IndexSchema indexSchema in tableSchema.Indexes)
+			{
+				if(!indexSchema.IsPrimaryKey)
+				{
+					if(!VerificarIndiceBusquedaTablaC(tableSchema,indexSchema.Name))
+					{
+						continue;
+					}
+					
+					if(indexSchema.IsUnique)
+					{
+						strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServices()+" "+GetNombreClaseC(tableSchema.ToString())+" "+"get"+GetNombreClaseC(tableSchema.ToString())+indexSchema.Name+"WithConnection(DatosCliente datosCliente,";
+					}
+					else
+					{
+						if(indexSchema.Name.Contains("Busqueda")||indexSchema.Name.Contains("FK"))
+						{
+						strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServices()+" "+strTypeCollection+"<"+GetNombreClaseC(tableSchema.ToString())+"> "+"get"+GetNombreClaseC(tableSchema.ToString())+"s"+indexSchema.Name+"WithConnection(String sFinalQuery,Pagination pagination,DatosCliente datosCliente,"+strParametroReporte;
+						}
+						else
+						{
+						strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServices()+" "+strTypeCollection+"<"+GetNombreClaseC(tableSchema.ToString())+"> "+"get"+GetNombreClaseC(tableSchema.ToString())+"s"+indexSchema.Name+"WithConnection(DatosCliente datosCliente,";
+						}
+					}	
+					int count=1;	
+					foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+					{
+						
+						
+						if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+						{
+							strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+						
+							//BUSQUEDA NORMAL PERO CON COLUMNA EN RANGO
+							if(GetConRangoBusquedasColumnFromPropertiesC(memberColumnSchema.Column)||GetConRangoBusquedasIndicesColumnFromPropertiesC(memberColumnSchema.Column,indexSchema)) {
+								strInitFuncion+=","+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+strSufijoRangoFinal; 
+							}
+							
+							if(!indexSchema.MemberColumns.Count.Equals(count))
+							{
+								strInitFuncion+=",";	
+							}
+						}
+						else
+						{
+							if(!indexSchema.Name.Contains("BusquedaRango"))
+							{
+								strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+							}
+							else
+							{
+								strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 
+								strInitFuncion+=",";
+								strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 
+								break;
+							}
+							
+							if(!indexSchema.MemberColumns.Count.Equals(count))
+							{
+								strInitFuncion+=",";	
+							}
+						}
+						count++;
+					}
+					strInitFuncion+=")throws Exception;";																																			
+				}
+			}
+			
+								
+			return strInitFuncion; 
+		}
+
+public string GetWebMethodAnnotationFromConWebServices()
+{	
+	String strWebMethodAnnotationFromConWebServices=GetWebMethodAnnotationFromConWebServicesC(ConWebServices);
+	/*
+	if(ConWebServices) {
+		strWebMethodAnnotationFromConWebServices="@WebMethod";
+	
+	}*/
+	return strWebMethodAnnotationFromConWebServices;
+}
+
+public String GetIndicesTablasClasesReportes() {
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			for(int i=0;i<TablasBaseForReporte.Count;i++) {
+				//strInitFuncion+="\r\n"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"ReturnGeneral procesarAccion"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"sWithConnection(DatosCliente datosCliente,ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,String sProceso,List<GetNombreClaseC(TablasBaseForReporte[i].ToString())> "+GetNombreClaseObjetoC(TablasBaseForReporte[i].ToString())+"s)throws Exception;";
+				//Trace.WriteLine("herqqqqqqqqqqqqqqqqqqqqqe");	
+				
+				foreach(IndexSchema indexSchema in TablasBaseForReporte[i].Indexes) {					
+					if(!indexSchema.IsPrimaryKey) {						
+						if(indexSchema.IsUnique) {
+							strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServicesC(ConWebServices)+" "+GetNombreClaseC(TablasBaseForReporte[i].ToString())+" "+"get"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+indexSchema.Name+"WithConnection(DatosCliente datosCliente,";
+						} else {
+							if(indexSchema.Name.Contains("Busqueda")||indexSchema.Name.Contains("FK")) {
+								strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServicesC(ConWebServices)+" "+strTypeCollection+"<"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"> "+"get"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"s"+indexSchema.Name+"WithConnection(String sFinalQuery,Pagination pagination,DatosCliente datosCliente,";
+							} else {
+								strInitFuncion+="\r\n"+GetWebMethodAnnotationFromConWebServicesC(ConWebServices)+" "+strTypeCollection+"<"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"> "+"get"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+"s"+indexSchema.Name+"WithConnection(DatosCliente datosCliente,";
+							}
+						}	
+						
+						int count=1;	
+						foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns) {														
+							if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual"))) {
+								strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+							
+								//BUSQUEDA NORMAL PERO CON COLUMNA EN RANGO
+								if(GetConRangoBusquedasColumnFromPropertiesC(memberColumnSchema.Column)||GetConRangoBusquedasIndicesColumnFromPropertiesC(memberColumnSchema.Column,indexSchema)) {
+									strInitFuncion+=","+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+strSufijoRangoFinal; 
+								}
+								
+								if(!indexSchema.MemberColumns.Count.Equals(count)) {
+									strInitFuncion+=",";	
+								}
+							} else {
+								if(!indexSchema.Name.Contains("BusquedaRango")) {
+									strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+								} else {
+									strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 
+									strInitFuncion+=",";
+									strInitFuncion+=GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 
+									break;
+								}
+							}
+							count++;
+						}
+						strInitFuncion+=")throws Exception;";																																			
+					}
+				}
+			}
+								
+		return strInitFuncion; 
+	}
+		
+public String GetSessionBeanSufijoLocal() 
+		{
+			String strFuncion=string.Empty;	
+			
+			
+				
+			if(ConSessionBeansHome)
+			{
+				strFuncion+="Home";
+			}
+					
+			if(ConRMI) {
+				strFuncion+="  extends Remote ";
+			}
+			
+			return strFuncion;
+		}
+		
+public String GetImportSessionBeanPackages() 
+		{
+			String strFuncion=string.Empty;			
+			strFuncion="import java.rmi.RemoteException;";
+			
+			if(!ConWebServices)
+			{
+				if(JBoss_Version.Equals("5.1")) {
+					if(!ConSessionBeansHome) {
+						strFuncion+="\r\nimport javax.ejb.Remote;";
+					} else {
+						strFuncion+="\r\nimport javax.ejb.Local;";
+						strFuncion+="\r\nimport javax.ejb.CreateException;";
+					}
+				}
+			} else {
+				strFuncion+="\r\nimport javax.jws.WebService;";
+				strFuncion+="\r\nimport javax.jws.WebMethod;";
+				strFuncion+="\r\nimport java.rmi.Remote;";
+				strFuncion+="\r\nimport java.rmi.RemoteException;";
+				strFuncion+="\r\nimport javax.jws.soap.SOAPBinding;";
+				strFuncion+="\r\nimport javax.jws.soap.SOAPBinding.Style;";
+			}
+			
+			
+			return strFuncion;
+		}
+		
+public String GetSessionBeanAnnotation() 
+{
+	String strFuncion=string.Empty;	
+	
+	if(!ConWebServices) {
+		if(JBoss_Version.Equals("5.1")) {
+			if(ConSessionBeansHome) {
+				strFuncion+="@Local";
+			} else {
+				strFuncion+="@Remote";
+			}
+		}
+	} else {
+		strFuncion+="@WebService";
+	}
+	
+	return strFuncion;
+}
+
+
+public string GetPackageFromConWebServices()
+{	
+	String strPackageFromConWebServices="";
+	
+	if(!ConWebServices) {
+		strPackageFromConWebServices=Empresa+"."+Package+"."+Module+strPackageService+"."+strEjb+"."+strEjbInterface;
+	
+	} else {
+		strPackageFromConWebServices=Empresa+"."+Package+"."+Module+strPackageService+"."+strPackageWebServicePrefix+"."+strPackageWebServiceInterface;
+	}
+	
+	return strPackageFromConWebServices;
+}
+	
+	
+public string GetNombreClase(string strTablaBase)
+{			
+		return GetNombreClaseC(strTablaBase);
+}
+	
+
+</script>
+<%=GetByDanLicence()%>
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene todos los Accesos a BDD de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+package <%=GetPackageFromConWebServices()%>;
+
+<%//if(ConRMI){%>
+//SI TALVEZ SE NECESITE, YA ESTA LLAMADO
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+<%//}%>
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Date;
+
+import java.sql.Timestamp;
+import java.util.List;
+
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.DatoGeneral;
+import <%=Empresa%>.<%= strPackageFramework%>.<%= Package%>.<%= strPackageBusiness%>.<%= strPackageLogic%>.*;
+<%=GetImportSessionBeanPackages()%>
+<%=GetEsImportPaqueteReporteC(TablaBase,"import "+Empresa+"."+ Package+"."+Module+strPackageBusiness+"."+strPackageEntities)%>
+
+<%if(blnEstablaModulo) {%>
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>.report.*;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageUtils%>.report.*;
+<%}%>
+
+import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusinessSeguridad%>.<%=strPackageEntitiesSeguridad%>.*;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>.*;
+
+<%=GetSessionBeanAnnotation()%>
+@SuppressWarnings("unused")
+public interface <%=GetNombreClase(TablaBase.ToString())%>Additionable<%=GetSessionBeanSufijoLocal()%> {
+	//CONTROL_INICIO
+	
+	<%=GetFuncionesModuloTablaReportes()%>
+	
+	<%if(TablasBaseForReporte!=null&&TablasBaseForReporte.Count>0){%>
+	<%= GetIndicesTablasClasesReportes() %>
+	<%}%>
+	
+	<%if(GetConMaximoCodigoDatabaseFromPropertiesC(TablaBase.Database)){%>
+	Boolean ProcesarAccion(ParametroGeneralUsuario parametroGeneralUsuario,Modulo moduloActual,Opcion opcionActual,Usuario usuarioActual,DatosCliente datosCliente,String sProceso,List<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s)throws Exception<%=GetExceptionExtraServices()%>;
+	<%}%>
+	
+	//CONTROL_FUNCION2
+}
+

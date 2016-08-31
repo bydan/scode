@@ -1,0 +1,252 @@
+<%@ Template Language="C#" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base clars for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="Aplicacion" Type="System.String" Default="SISTEMA OPEN SOURCE" Category="Presentation" Description="Nombre del Sistema" %>
+<%@ Property Name="SourceTablesSimpleMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Presentation" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceTablesRelationshipsMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Presentation" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+
+<script runat="template">
+
+public String GetRamaArbolAjaxFromTablesImageMaintenance()
+{
+			String strFuncionesAccionesImagen="";	
+			
+						
+					String strTitleControl="";
+					bool blnEsPrimero=true;
+					
+					if(SourceTablesSimpleMaintenance!=null)
+					{
+						for(int i = 0,j=0; i < SourceTablesSimpleMaintenance.Count; i++ )	
+						{
+							if(!GetEsMenuFromPropertiesC(SourceTablesSimpleMaintenance[i]))
+							{
+								continue;
+							}
+							else
+							{
+								if(blnEsPrimero)
+								{
+									blnEsPrimero=false;
+									strTitleControl+="strPerfilArbol+=\"\\r\n,\";";
+								}
+							}
+							
+							foreach(ColumnSchema columnSchema in SourceTablesSimpleMaintenance[i].Columns)
+							{	
+								if(columnSchema.NativeType=="image"&&columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow)
+								{
+									if(j!=0)
+									{
+										strTitleControl+="strPerfilArbol+=\"\\r\n\\t\\t,\';";	
+									}
+									
+									j++;
+									
+									strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t{ label : '*"+strMantenimientoDe+GetTituloNombreTableFromPropertiesC(SourceTablesSimpleMaintenance[i])+GetPluralTituloNombreTableFromPropertiesC(SourceTablesSimpleMaintenance[i])+" "+GetNombreColumnaClaseC(columnSchema)+"',\";";
+									strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\taction : { topic : '/foo/select', message : {targetId : 'Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+GetNombreColumnaClaseC(columnSchema)+".jsp'}}\";";
+									strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t}\";";
+							
+								}
+							
+							}
+							
+						}
+					}
+				
+			
+			
+	return "";//strTitleControl;
+}
+
+public string GetEventsJavaScriptFromTables()
+{	
+	String strTitleControl="";
+	
+	if(SourceTablesSimpleMaintenance!=null)
+	{
+				
+		for(int i = 0; i < SourceTablesSimpleMaintenance.Count; i++ )	
+		{
+			if(GetEsReporteFromPropertiesC(SourceTablesSimpleMaintenance[i]))
+			{
+				continue;
+			}
+			
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\nelse if(args.message.targetId=='Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+".jsp')\";";
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n{\";";
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n\\tpagina='Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+".jsp';\";";
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n}\";";
+			
+			foreach(ColumnSchema columnSchema in SourceTablesSimpleMaintenance[i].Columns)
+							{	
+								if(columnSchema.NativeType=="image"&&columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow)
+								{
+									strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\nelse if(args.message.targetId=='Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+GetNombreColumnaClaseC(columnSchema)+".jsp')\";";
+									strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n{\";";
+									strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n\\tpagina='Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+GetNombreColumnaClaseC(columnSchema)+"Imagen.jsp';\";";
+									strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n}\";";
+							
+								}
+							
+							}
+		}
+	}	
+	
+	if(SourceTablesRelationshipsMaintenance!=null)
+	{
+			
+		for(int i = 0; i < SourceTablesRelationshipsMaintenance.Count; i++ )	
+		{
+			if(GetEsReporteFromPropertiesC(SourceTablesRelationshipsMaintenance[i]))
+			{
+				continue;
+			}
+			
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\nelse if(args.message.targetId=='Mantenimiento"+SourceTablesRelationshipsMaintenance[i].Name+"Relaciones.jsp')\";";
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n{\";";
+			strTitleControl+="\r\n\t\tstrPerfilJavaScriptArbol+=\"\\r\n\\tpagina='Mantenimiento"+SourceTablesRelationshipsMaintenance[i].Name+"Relaciones.jsp';\";";
+			strTitleControl+="\r\n\tstrPerfilJavaScriptArbol+=\"\\r\n}\";";
+		}
+	}
+	
+	return strTitleControl;
+}
+
+public string GetRamaArbolAjaxFromTablesSimpleMaintenance()
+{	
+	String strTitleControl="";
+	
+	if(SourceTablesSimpleMaintenance!=null)
+	{
+		for(int i = 0; i < SourceTablesSimpleMaintenance.Count; i++ )	
+		{
+			if(!GetEsMenuFromPropertiesC(SourceTablesSimpleMaintenance[i]))
+			{
+				continue;
+			}
+			
+			if(i!=0)
+			{
+				strTitleControl+="strPerfilArbol+=\"\\r\n\\t\\t,\";";	
+			}
+			
+			
+			
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t{ label : '*"+strMantenimientoDe+GetTituloNombreTableFromPropertiesC(SourceTablesSimpleMaintenance[i])+GetPluralTituloNombreTableFromPropertiesC(SourceTablesSimpleMaintenance[i])+"',\";";
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\taction : { topic : '/foo/select', message : {targetId : 'Mantenimiento"+SourceTablesSimpleMaintenance[i].Name+".jsp'}}\";";
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t}\";";
+			
+			
+		}
+	}
+	
+	return strTitleControl;
+}
+
+public string GetRamaArbolAjaxFromTablesRelationshipsMaintenance()
+{	
+	String strTitleControl="";
+	
+	if(SourceTablesRelationshipsMaintenance!=null)
+	{
+		for(int i = 0; i < SourceTablesRelationshipsMaintenance.Count; i++ )	
+		{
+			if(!GetEsMenuFromPropertiesC(SourceTablesRelationshipsMaintenance[i]))
+			{
+				continue;
+			}
+			
+			if(i!=0)
+			{
+				strTitleControl+="strPerfilArbol+=\"\\r\n\\t\\t,\";";	
+			}
+			
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t{ label : '*"+strMantenimientoDe+GetTituloNombreTableFromPropertiesC(SourceTablesRelationshipsMaintenance[i])+GetPluralTituloNombreTableFromPropertiesC(SourceTablesRelationshipsMaintenance[i])+"',\";";
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\taction : { topic : '/foo/select', message : {targetId : 'Mantenimiento"+SourceTablesRelationshipsMaintenance[i].Name+"Relaciones.jsp'}}\";";
+			strTitleControl+="\r\n\tstrPerfilArbol+=\"\\r\n\\t\\t}\";";
+			
+			
+		}
+	}
+	
+	return strTitleControl;
+}
+</script>
+
+<%=strStartPageInclude%> taglib prefix="a" uri="http://jmaki/v1.0/jsp" %>
+<%=strStartPageInclude%> page contentType="text/html; charset=iso-8859-1" language="java" import="java.sql.*" errorPage="" %>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<script type="text/javascript" language="javascript" src="JavaScript/ajax.js"><//script>
+<script type="text/javascript" language="javascript" src="JavaScript/FuncionesGeneralesAjax.js"></script>
+<script type="text/javascript" language="javascript" src="JavaScript/FuncionesGenerales.js"></script>
+
+
+<title>Aplicacion</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+body {
+	background-image: url(Imagenes/background4.jpg);
+	background-repeat: repeat-Y
+}
+</style>
+
+<%=strStartPageIncludeOnly%>
+	String strPerfilArbol="";
+	
+	strPerfilArbol+="\r\n{";
+    strPerfilArbol+="\r\n\troot : {";
+    strPerfilArbol+="\r\n\tlabel : '<%=Aplicacion%>',";
+    strPerfilArbol+="\r\n\texpanded : true,";
+    strPerfilArbol+="\r\n\tchildren : [";
+    strPerfilArbol+="\r\n\t{ label : '<%=strCatalogosSimples%>',";
+    strPerfilArbol+="\r\n\t\texpanded : true,";
+    strPerfilArbol+="\r\n\t\tchildren : [";
+ 	<%=GetRamaArbolAjaxFromTablesSimpleMaintenance()%>
+	<%=GetRamaArbolAjaxFromTablesImageMaintenance()%>
+    strPerfilArbol+="\r\n\t\t]";
+    strPerfilArbol+="\r\n\t},";
+	strPerfilArbol+="\r\n\t{ label : '<%=strCatalogosCompuestos%>',";
+    strPerfilArbol+="\r\n\t\texpanded : true,";
+    strPerfilArbol+="\r\n\t\tchildren : [";
+ 	strPerfilArbol+="\r\n\t\t<%=GetRamaArbolAjaxFromTablesRelationshipsMaintenance()%>";
+    strPerfilArbol+="\r\n\t\t]";
+    strPerfilArbol+="\r\n\t\t}";
+    strPerfilArbol+="\r\n\t]";
+    strPerfilArbol+="\r\n\t}";
+    strPerfilArbol+="\r\n\t}";
+		
+	request.getSession().setAttribute("valueTreeAjax",strPerfilArbol);
+	
+<%=strFinishPageInclude%>
+
+<%=strStartPageIncludeOnly%>
+
+	String strPerfilJavaScriptArbol="";
+	
+	strPerfilJavaScriptArbol+="\r\nif(args.message.targetId==''||args.message.targetId==null)";
+	strPerfilJavaScriptArbol+="\r\n{";
+	strPerfilJavaScriptArbol+="\r\n\tpagina='FinContenido.jsp';";
+	strPerfilJavaScriptArbol+="\r\n}";	
+
+	<%=GetEventsJavaScriptFromTables()%>
+	
+	request.getSession().setAttribute("valueJavaScriptTreeAjax",strPerfilJavaScriptArbol);
+	
+<%=strFinishPageInclude%>	
+
+</head>
+<body >
+<input name="logo" type="image" src="Imagenes/Logos/Tame1.jpg" width="200" height="100">
+
+<br>
+
+</body>
+</html>
+

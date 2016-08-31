@@ -1,0 +1,333 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ CodeTemplate Src="Base\BaseDatosCodeSmith\GrupoProceso.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ CodeTemplate Src="Base\BaseDatosCodeSmith\Proceso.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ CodeTemplate Src="Base\BaseDatosCodeSmith\SubProceso.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+
+<%@ Register Name="TemplateDynamic" Template="TemplateDynamic.cst" %>
+
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Collections.Generic" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+
+<%@ Property Name="GeneracionOutputArchivo" Type="System.Boolean" Default="false" Category="0_Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="IdSistema" Type="System.String" Default="1" Category="0_Generacion DB CodeSmith" Description="Nombre del Programdor" %>
+<%@ Property Name="IdModulo" Type="System.String" Default="1" Category="0_Generacion DB CodeSmith" Description="Nombre del Programdor" %>
+<%@ Property Name="CodigoGrupoProceso" Type="System.String" Default="1" Category="0_Generacion DB CodeSmith" Description="Nombre del Programdor" %>
+
+<%@ Property Name="AAA_GeneracionGeneral" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0_Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="SourceDataBaseReporte" Type="SchemaExplorer.DatabaseSchema" Category="0_Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" Category="0_Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="TablaBase2" Type="SchemaExplorer.TableSchema" Category="0_Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsForGenerate" Type="SchemaExplorer.ColumnSchemaCollection" Category="0_Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+
+
+<%@ Property Name="ArchivoOutputSobreEscribir" Type="System.Boolean" Default="false" Category="1_General" Description="Nombre del Programdor" %>
+<%@ Property Name="ArchivoNombre" Type="System.String" Default="super_template1" Category="1_General" Description="Nombre del Programdor" Optional="True"%>
+
+<%@ Property Name="AAF_B_Nombre" Type="System.String" Default="" Category="2.1_Parametro Generacion Puente" Description="Nombre del Programdor" Optional="True"%>
+
+<script runat="template">
+TemplateDynamic templateDynamic = new TemplateDynamic();
+String sReplace="//TO_REPLACE";
+
+public override void Render(TextWriter writer){
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Base\\Files\\"+ArchivoNombre+".java";	
+	StreamWriter streamWriter = null;//new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+	
+	
+	//CREA ARCHIVO
+	if(GeneracionOutputArchivo) {		
+		streamWriter = new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+		
+		
+		//ASIGNA GENERACION ARCHIVO
+		
+		this.Response.AddTextWriter(streamWriter);
+	}
+	
+	
+	//GENERA CODIGO
+	base.Render(writer);
+	
+	//CIERRA ARCHIVO
+	if(GeneracionOutputArchivo) {
+		streamWriter.Close();
+		
+		Trace.WriteLine("ARCHIVO GENERADO "+filePath);
+	}	
+}
+
+public void InicializarTipoGeneracion() {	
+	templateDynamic.AAA_GeneracionGeneral=false;
+	//TABLAS
+	templateDynamic.TablaBase=TablaBase;
+	templateDynamic.TablaBase2=TablaBase2;
+	
+	//BASE Y COLUMNAS	
+	templateDynamic.SourceDataBase=SourceDataBase;
+	templateDynamic.SourceColumnsForGenerate=SourceColumnsForGenerate;
+}
+
+public String GetMayorizarDiarios() {
+	
+	//REQUISITOS:
+	
+	String sUtil="";
+	String sAux="";
+	String sAuxCompletar="";
+	String sAuxFinal="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	
+	//Trace.WriteLine("Here");
+	
+	//1
+	InicializarTipoGeneracion();
+	
+	templateDynamic.AAA_GeneracionGeneral=true;
+	templateDynamic.AAF_B_Nombre=AAF_B_Nombre;
+	
+	sAuxFinal=templateDynamic.RenderToString();
+	
+	
+	String sWhere="";
+	
+	GrupoProceso grupoProceso=new GrupoProceso();	
+	List<GrupoProceso> grupos_procesos=new List<GrupoProceso>(); 
+	
+	Proceso proceso=new Proceso();
+	List<Proceso> procesos = new List<Proceso>();
+	
+	SubProceso sub_proceso=new SubProceso();
+	List<SubProceso> sub_procesos = new List<SubProceso>();
+	
+	sWhere=" where idSistema="+IdSistema+" and idModulo="+IdModulo+" and Codigo='"+CodigoGrupoProceso+"'";	
+	grupos_procesos =grupoProceso.getGruposProcesos(sWhere,DB,HOST_DB,USER_DB,PASSWORD_DB);
+	
+	//GRUPO PROCESO A GENERAR
+	foreach(GrupoProceso grupo_proceso in grupos_procesos) {
+		Trace.WriteLine("Grupo Proceso -> "+grupo_proceso.getnombre());
+		
+		
+		//PROCESOS
+		sWhere=" where idGrupoProceso="+grupo_proceso.getId()+" order by Orden asc, SubOrden asc";
+		procesos =proceso.getProcesos(sWhere,DB,HOST_DB,USER_DB,PASSWORD_DB);
+	
+		foreach(Proceso procesoLocal in procesos) {
+			Trace.WriteLine("Proceso -> "+procesoLocal.gettabla());
+			
+			
+			//SUB-PROCESOS
+			sWhere=" where idProceso="+procesoLocal.getId()+" order by idTipoSubProceso asc,Orden asc, SubOrden asc";
+			sub_procesos =sub_proceso.getSubProcesos(sWhere,DB,HOST_DB,USER_DB,PASSWORD_DB);
+	
+			foreach(SubProceso sub_procesoLocal in sub_procesos) {
+				Trace.WriteLine("Sub-Proceso -> "+sub_procesoLocal.gettabla());
+			}
+			//SUB-PROCESOS
+		}
+		//PROCESOS
+	}
+	//GRUPO PROCESO A GENERAR
+	
+
+	
+	//TableSchema tablaBase=GetTablaFromNombreC("AsientoContable",SourceDataBase,true);
+	//TableSchema tablaBase2=GetTablaFromNombreC("ProcesoMayorizarDiario",SourceDataBaseReporte,true);
+	
+	//Trace.WriteLine(tablaBase.Name);
+	//Trace.WriteLine(tablaBase2.Name);
+		
+	
+	//templateDynamic.TablaBase=tablaBase;
+	//templateDynamic.TablaBase2=tablaBase2;
+		
+	
+	return sAuxFinal;	
+}
+
+</script>
+<%if(AAA_GeneracionGeneral) {%>
+<%=GetMayorizarDiarios()%>
+<%}%>
+
+<script runat="template">
+/*
+public void GenerarOutputBase(String sAuxFinal) {
+	String sUtil="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Base\\Files\\"+ArchivoNombre;
+	Trace.WriteLine(filePath);
+	
+	//Trace.WriteLine("Here");
+		
+	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+		streamWriterDestino.Write(sAuxFinal);
+	}	
+}
+
+public String GenerarOutput() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	
+	stringBuilder=new StringBuilder();
+	
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Files\\"+ArchivoNombre;
+	
+	Trace.WriteLine(filePath);
+	
+	
+	//TextReader textReaderOrigen = new StreamReader(filePath);
+		
+	//while ((sLinea = textReaderOrigen.ReadLine()) != null) {
+	//	if(sLinea.Contains(ClaveEscribir)) {
+	//		sLinea=sLinea.Replace(ClaveEscribir,ClaveEscribir+GetFuncionEscribir());	
+	//	}
+			
+	//	stringBuilder.Append("\r\n"+sLinea);
+	//	Console.WriteLine(sLinea);
+	//}
+		
+	//textReaderOrigen.Close();
+	
+	String sNuevaOpcion="";
+	
+	
+
+	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+		streamWriterDestino.Write(stringBuilder.ToString());
+	}
+		
+	
+	sUtil="ok";
+	
+	return sUtil;
+	
+}
+
+public bool ExisteCampoTabla(TableSchema tableSchema,String strCampo) {
+	bool existe=false;
+	
+	foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+		if(columnSchema.Name.Equals(strCampo)) {
+			existe=true;
+			
+			break;
+		}		
+	}
+	
+	return existe;
+}
+
+public String GetAAA_GeneracionGeneral() {
+	String sUtil="";
+	String sAux="";
+	String sAuxCompletar="";
+	String sAuxFinal="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Base\\Files\\"+ArchivoNombre;
+	Trace.WriteLine(filePath);
+	//Trace.WriteLine("Here");
+	
+	//1
+	
+	InicializarTipoGeneracion();
+	if(AAA_GeneracionGeneral) {
+		templateDynamic.AAA_GeneracionGeneral=true;	
+		
+		sAuxFinal=templateDynamic.RenderToString();
+	}
+	
+	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+		streamWriterDestino.Write(sAuxFinal);
+	}
+	
+	return sAuxFinal;	
+}
+
+public String GetTabs(int iNumero) {
+	String sUtil="";
+	
+	
+	for(int i=1;i<=iNumero;i++) {
+		sUtil+="\t";
+	}
+	
+	Trace.WriteLine(sUtil);
+	
+	return sUtil;
+}
+
+public String GetMayorizarDiarios() {
+	
+	//REQUISITOS:
+	//Escoger SourceDatabase Normal y Reportes
+	
+	
+	String sUtil="";
+	String sAux="";
+	String sAuxCompletar="";
+	String sAuxFinal="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	
+	//string path = Directory.GetCurrentDirectory();
+	//string filePath=path+"\\Base\\Files\\"+ArchivoNombre+".java";
+	//Trace.WriteLine(filePath);
+	
+	
+	//Trace.WriteLine("Here");
+	
+	//1
+	InicializarTipoGeneracion();
+	
+	TableSchema tablaBase=GetTablaFromNombreC("AsientoContable",SourceDataBase,true);
+	TableSchema tablaBase2=GetTablaFromNombreC("ProcesoMayorizarDiario",SourceDataBaseReporte,true);
+	
+	//Trace.WriteLine(tablaBase.Name);
+	//Trace.WriteLine(tablaBase2.Name);
+		
+	templateDynamic.AAA_GeneracionGeneral=true;
+	templateDynamic.AAF_B_Nombre=AAF_B_Nombre;
+	
+	//templateDynamic.TablaBase=tablaBase;
+	//templateDynamic.TablaBase2=tablaBase2;
+	
+	sAuxFinal=templateDynamic.RenderToString();
+	
+	
+	//if(GeneracionOutputArchivo) {
+	//	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+	//		streamWriterDestino.Write(sAuxFinal);
+	//	}
+	//}
+	
+	
+	//if(GeneracionOutputArchivo) {
+		//GenerarOutputBase(sAuxFinal);
+	//}
+	
+	return sAuxFinal;	
+}
+*/
+</script>

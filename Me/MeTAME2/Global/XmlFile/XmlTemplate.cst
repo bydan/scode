@@ -1,0 +1,25 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII" %>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Text" %>
+<%@ Property Name="xml" Type="System.String" Default="NONE" %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="1. General" Description="Database to get the extended properties from." %>
+
+
+
+<script runat="template">
+public String GetConfig() {
+	String strTablaClaseRelacionada=string.Empty;
+	StringBuilder stringBuilder=new StringBuilder();								 			 
+	
+	foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+		strTablaClaseRelacionada="\r\n\t\t<class>com.bydan.erp.business.entity."+GetNombreClaseC(tableSchema.ToString())+"</class>";
+		stringBuilder.Append(strTablaClaseRelacionada);
+	}	
+	
+	return stringBuilder.ToString();
+}
+</script>
+<%=xml%>
+<%=GetConfig()%>

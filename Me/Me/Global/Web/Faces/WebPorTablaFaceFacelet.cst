@@ -1,0 +1,137 @@
+﻿<%@ Template Language="C#" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8" %>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="GenerarParaImagen" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ColumnaImagen" Type="ColumnSchema" Category="Options" Optional="true"%>
+<%@ Property Name="ConFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ConJSInclude" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ConJavaScriptInclude" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+</script>
+<rich:page  xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:rich="http://richfaces.org/rich"
+    xmlns:a4j="http://richfaces.org/a4j" markupType="xhtml"
+    contentType="text/html" sidebarPosition="#{usuarioSessionBeanFace.strPosition}"  sidebarWidth="#{usuarioSessionBeanFace.intTamanioArbolMenu}"
+    pageTitle="<%=GetTituloNombreTableFromPropertiesC(TablaBase).ToUpper()%> MANTENIMIENTO">
+    
+	<f:facet name="header">
+    	<ui:include src="/Components/Header.xhtml" />
+    </f:facet>
+    
+    <f:facet name="sidebar">
+	    <ui:include src="/Components/Tree.xhtml" />
+	</f:facet>
+	
+	<f:facet name="footer">
+        <ui:include src="/Components/Footer.xhtml" />    
+    </f:facet>       		
+   	
+   	<rich:page xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:rich="http://richfaces.org/rich"
+    xmlns:a4j="http://richfaces.org/a4j" markupType="xhtml"
+    contentType="text/html">
+
+	<a4j:form>  
+		
+	<rich:panel header="<%=GetTituloNombreTableFromPropertiesC(TablaBase)%>" style="width: 100%">
+		<h:panelGrid columns="1" columnClasses="gridContent">     
+			<rich:panel> 
+				<a4j:commandButton value="Mostrar totales por avion" reRender="totalesavions,graficototalesavions" action="#{totalavionBeanFace.GetTodosTotalAvions}" id="btnTotalesPorAvion" oncomplete="window.open ('http://10.1.1.15:#{funcionesBeanFace.intPuertoWeb}/GerencialEstadisticaWeb/servlets/pdf','mywindow'); ">
+				</a4j:commandButton>
+			</rich:panel>
+			
+			
+			
+			<rich:panel id="<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s" >
+				<rich:dataTable value="#{<%=GetNombreClaseObjetoC(TablaBase.ToString())%>BeanFace.<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s}" var="<%=GetNombreClaseObjetoC(TablaBase.ToString())%>" rows="15"> 
+					<f:facet name="caption">
+						<h:outputText value="<%=GetTituloNombreTableFromPropertiesC(TablaBase)%>" />
+					</f:facet>
+		
+					<f:facet name="header">
+						<h:outputText value="<%=GetTituloNombreTableFromPropertiesC(TablaBase)%>" />
+					</f:facet>
+				
+					<rich:column>
+						<f:facet name="header">Anio</f:facet>
+						<h:outputText value="#{totalavion.field_chaAnio}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Mes</f:facet>
+						<h:outputText value="#{totalavion.field_chaMes}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Oferta</f:facet>
+						<h:outputText value="#{totalavion.field_decOferta}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Suma Acumulada</f:facet>
+						<h:outputText value="#{totalavion.field_decSumaAcumulada}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Matricula</f:facet>
+						<h:outputText value="#{totalavion.field_chaMatricula}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Total Pasajeros Trasportados</f:facet>
+						<h:outputText value="#{totalavion.field_decPaxTransportados}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Infantes Trasportados</f:facet>
+						<h:outputText value="#{totalavion.field_decInfantesTransportad}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Infantes Trasportados</f:facet>
+						<h:outputText value="#{totalavion.field_decOcupacion}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Infantes Trasportados</f:facet>
+						<h:outputText value="#{totalavion.field_decTarifa}" />
+					</rich:column>
+	
+					<rich:column>
+						<f:facet name="header">Carga</f:facet>
+						<h:outputText value="#{totalavion.field_decCarga}" />
+					</rich:column>
+		
+					<rich:column>
+						<f:facet name="header">Correo</f:facet>
+						<h:outputText value="#{totalavion.field_decCorreo}" />
+					</rich:column>
+		
+					<rich:column>
+						<f:facet name="header">Excesos de Equipaje</f:facet>
+						<h:outputText value="#{totalavion.field_decExcesosEquipaje}" />
+					</rich:column>					
+				</rich:dataTable>
+			</rich:panel>
+		
+		</h:panelGrid>
+		
+	</rich:panel>
+	
+	</a4j:form>
+   	
+</rich:page>
+

@@ -1,0 +1,323 @@
+<%@ CodeTemplate Language="C#" Debug="True" TargetLanguage="T-SQL" Description="Generates a script based on the data from a table." %>
+<%@ Property Name="SourceTable" Type="SchemaExplorer.TableSchema" Category="Context" Description="Table to get the data from." %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="CodeSmith.BaseTemplates" %>
+<%@ Assembly Name="System.Data" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Import Namespace="System.Text" %>
+<%@ Import Namespace="System.Collections" %>
+/*
+ * VSS Header, do not delete!
+ *
+ * $Revision: 1.1 $
+ * $Date: 2003/10/05 22:16:53 $
+ * $Author: Administrator $
+ *
+ */
+
+USE <%= SourceTable.Database.Name %>
+GO
+
+ <%= GetTableDependencesManyMany() %>
+/*
+ * Purpose:
+ *
+ * Change History:
+ *
+ */
+
+--VSS $Revision: 1.1 $
+TRUNCATE TABLE <%= GetTableOwner() %>[<%= SourceTable.Name %>]
+
+DBCC CHECKIDENT ('<%= GetTableOwner() %>[<%= SourceTable.Name %>]', RESEED, 1)
+
+SET IDENTITY_INSERT <%= GetTableOwner() %>[<%= SourceTable.Name %>] ON
+
+INSERT INTO <%= GetTableOwner() %>[<%= SourceTable.Name %>] (
+	<% for (int i = 0; i < SourceTable.Columns.Count; i++) { %>
+	[<%= SourceTable.Columns[i].Name %>]<% if (i < SourceTable.Columns.Count - 1) { %>,<% } %>
+	<% } %>
+)
+	<% for (int i = 0; i < SourceTableData.Rows.Count; i++) { %>
+	SELECT <%= GetTableRowValues(SourceTableData.Rows[i]) %><% if (i < SourceTableData.Rows.Count - 1) { %> UNION<% } %>
+	<% } %>
+
+SET IDENTITY_INSERT <%= GetTableOwner() %>[<%= SourceTable.Name %>] OFF
+<script runat="template">
+public string GetTableDependencesManyMany()
+{
+	StringBuilder rowBuilder2 = new StringBuilder();
+	
+	ArrayList arrAllTablesDependences = new ArrayList();
+	ArrayList arrAllTablesDependencesSecondTable = new ArrayList();
+	ArrayList arrAllTablesDependencesManyMany = new ArrayList();
+	
+	for (int i = 0; i < SourceTable.Database.Tables.Count; i++)
+	{
+	if(SourceTable.IsDependantOf(SourceTable.Database.Tables[i]))
+	{
+		if(SourceTable.Database.Tables[i].Name.Equals(SourceTable.Name))
+		{
+			continue;
+		}
+			
+		arrAllTablesDependences.Add(SourceTable.Database.Tables[i].Name);
+		//rowBuilder2.Append(SourceTable.Database.Tables[i].Name+"\r\n");
+	}			
+	}
+	
+	for (int i = 0; i < SourceTable.Database.Tables.Count; i++)
+	{	
+		if(SourceTable.IsDependantOf(SourceTable.Database.Tables[i]))
+	{
+		
+			
+		foreach (String tableDependence in arrAllTablesDependences)
+            {
+				arrAllTablesDependencesSecondTable= new ArrayList();
+				arrAllTablesDependencesSecondTable=GetTableDependencesOneMany(SourceTable.Database.Tables[i]);		
+		
+		foreach (String tableDependenceSecondTable in arrAllTablesDependencesSecondTable)
+            {
+            if(tableDependence.Equals(tableDependenceSecondTable))
+			{
+			arrAllTablesDependencesManyMany.Add(tableDependence);
+			}
+			
+			
+			}
+			
+            }
+			
+	}
+	}		
+	
+	foreach (String tableDependenceTable in arrAllTablesDependencesManyMany)
+            {
+            rowBuilder2.Append(tableDependenceTable+"\r\n");
+            }
+			
+	return rowBuilder2.ToString();
+	}
+	
+
+
+
+
+
+public ArrayList GetTableDependencesOneMany(SchemaExplorer.TableSchema tableDepend)
+{
+	StringBuilder rowBuilder2 = new StringBuilder();
+	
+	ArrayList arrAllTablesDependences = new ArrayList();
+	ArrayList arrAllTablesDependencesSecondTable = new ArrayList();
+	
+	for (int i = 0; i < tableDepend.Database.Tables.Count; i++)
+	{
+	if(tableDepend.IsDependantOf(tableDepend.Database.Tables[i]))
+	{
+		if(tableDepend.Database.Tables[i].Name.Equals(tableDepend.Name))
+		{
+			continue;
+		}
+			
+		arrAllTablesDependences.Add(tableDepend.Database.Tables[i].Name);
+		//rowBuilder2.Append(SourceTable.Database.Tables[i].Name+"\r\n");
+	}			
+	}
+	
+	for (int i = 0; i < tableDepend.Database.Tables.Count; i++)
+	{	
+		if(tableDepend.IsDependantOf(tableDepend.Database.Tables[i]))
+	{
+		arrAllTablesDependencesSecondTable= new ArrayList();
+		arrAllTablesDependencesSecondTable=GetTableDependencesSecondTable(tableDepend.Database.Tables[i]);		
+			
+		foreach (String tableDependenceSecondTable in arrAllTablesDependencesSecondTable)
+            {
+             arrAllTablesDependences.Remove(tableDependenceSecondTable);
+            }
+			
+	}
+	}		
+	
+			
+	return arrAllTablesDependences;
+	}
+
+
+
+
+
+
+
+
+	
+public string GetTableDependencesOneMany()
+{
+	StringBuilder rowBuilder2 = new StringBuilder();
+	
+	ArrayList arrAllTablesDependences = new ArrayList();
+	ArrayList arrAllTablesDependencesSecondTable = new ArrayList();
+	
+	for (int i = 0; i < SourceTable.Database.Tables.Count; i++)
+	{
+	if(SourceTable.IsDependantOf(SourceTable.Database.Tables[i]))
+	{
+		if(SourceTable.Database.Tables[i].Name.Equals(SourceTable.Name))
+		{
+			continue;
+		}
+			
+		arrAllTablesDependences.Add(SourceTable.Database.Tables[i].Name);
+		//rowBuilder2.Append(SourceTable.Database.Tables[i].Name+"\r\n");
+	}			
+	}
+	
+	for (int i = 0; i < SourceTable.Database.Tables.Count; i++)
+	{	
+		if(SourceTable.IsDependantOf(SourceTable.Database.Tables[i]))
+	{
+		arrAllTablesDependencesSecondTable= new ArrayList();
+		arrAllTablesDependencesSecondTable=GetTableDependencesSecondTable(SourceTable.Database.Tables[i]);		
+			
+		foreach (String tableDependenceSecondTable in arrAllTablesDependencesSecondTable)
+            {
+             arrAllTablesDependences.Remove(tableDependenceSecondTable);
+            }
+			
+	}
+	}		
+	
+	foreach (String tableDependenceTable in arrAllTablesDependences)
+            {
+            rowBuilder2.Append(tableDependenceTable+"\r\n");
+            }
+			
+	return rowBuilder2.ToString();
+	}
+	
+	public ArrayList GetTableDependencesSecondTable(SchemaExplorer.TableSchema tableDepend)
+	{
+			ArrayList arrAllTablesDependences = new ArrayList();
+			
+		for (int i = 0; i < tableDepend.Database.Tables.Count; i++)
+	{
+		if(tableDepend.Database.Tables[i].Name.Equals(SourceTable.Name))
+		{
+			continue;
+		}
+			
+	if(tableDepend.IsDependantOf(tableDepend.Database.Tables[i]))
+	{
+			arrAllTablesDependences.Add(tableDepend.Database.Tables[i].Name);
+		
+	}		
+	}
+	
+	return arrAllTablesDependences;
+	}
+	
+private DataTable _sourceTableData;
+
+private DataTable SourceTableData
+{
+	get
+	{
+		if (_sourceTableData == null)
+		{
+			_sourceTableData = SourceTable.GetTableData();
+		}
+		
+		return _sourceTableData;
+	}
+}
+
+public string GetTableRowValues(DataRow row)
+{
+	StringBuilder rowBuilder = new StringBuilder();
+	
+	for (int i = 0; i < SourceTable.Columns.Count; i++)
+	{
+		ColumnSchema column = SourceTable.Columns[i];
+		if (IsNumericType(column))
+		{
+			if (row[i] == DBNull.Value)
+			{
+				rowBuilder.Append("NULL, ");
+			}
+			else
+			{
+				rowBuilder.Append(row[i].ToString());
+				rowBuilder.Append(", ");
+			}
+		}
+		else
+		{
+			if (row[i] == DBNull.Value)
+			{
+				rowBuilder.Append("NULL, ");
+			}
+			else if (row[i] is DateTime)
+			{
+				rowBuilder.Append("'");
+				rowBuilder.Append(((DateTime)row[i]).ToString("MM-dd-yyyy HH:mm:ss.fff"));
+				rowBuilder.Append("'");
+				rowBuilder.Append(", ");
+			}
+			else
+			{
+				rowBuilder.Append("'");
+				rowBuilder.Append(PrepareValue(row[i].ToString()));
+				rowBuilder.Append("'");
+				rowBuilder.Append(", ");
+			}
+		}
+	}
+	
+	return rowBuilder.ToString().Substring(0, rowBuilder.ToString().Length - 2);
+
+}
+
+public string PrepareValue(string value)
+{
+	return value.Replace("'", "''").Replace("\r\r\n", "' + CHAR(13) + CHAR(10) + '").Replace("\r\n", "' + CHAR(10) + '");
+}
+
+public bool IsNumericType(ColumnSchema column)
+{
+	switch (column.NativeType.ToLower())
+	{
+		case "bigint":
+		case "bit":
+		case "decimal":
+		case "float":
+		case "int":
+		case "money":
+		case "numeric":
+		case "real":
+		case "smallint":
+		case "smallmoney":
+		case "tinyint": return true;
+		default: return false;
+	}
+}
+
+public string GetTableOwner()
+{
+    return GetTableOwner(true);
+}
+
+public string GetTableOwner(bool includeDot)
+{
+    if (SourceTable.Owner.Length > 0)
+    {
+        return "[" + SourceTable.Owner + "].";
+    }
+    else
+    {
+        return "";
+    }
+}
+</script>

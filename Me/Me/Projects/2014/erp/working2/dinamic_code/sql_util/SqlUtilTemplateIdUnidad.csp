@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=2014_Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa&#xD;&#xA;" />
+  </variables>
+  <propertySets>
+    <propertySet name="SqlUtilTemplate.cs" output="SqlUtilTemplate.cs" template="C:\Users\bydanf\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\SqlUtilTemplate.cst">
+      <property name="GeneracionCambiarDescripcionColumna">True</property>
+      <property name="GeneracionCambiarNombreColumna">False</property>
+      <property name="GeneracionTest">False</property>
+      <property name="GeneracionNuevaQuitarDescripcionColumna">False</property>
+      <property name="TGeneracionNuevaQuitarDescripcionTabla">False</property>
+      <property name="GeneracionMostrarIndicesRelaciones">False</property>
+      <property name="GeneracionIndices">False</property>
+      <property name="GeneracionReportes">False</property>
+      <property name="ConCrearNuevaDescripcion">False</property>
+      <property name="TipoTablaFuncionalidad">BODEGA_PRODUCTO_UNIDAD</property>
+      <property name="PalabraNuevaDescripcion" />
+      <property name="PalabraClaveBuscar" />
+      <property name="TablaBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>PuntoVenta</owner>
+      <name>DetalleFacturaPuntoVenta</name>
+    </table>
+      </property>
+      <property name="PalabraClaveBuscarDescripcion">id_producto</property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="PalabraClaveNombreDescripcion">CONEVENTDEPEND</property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>PuntoVenta</owner>
+        <name>DetalleFacturaPuntoVenta</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="PalabraClaveReemplazoDescripcion">id_producto</property>
+      <property name="NombreColumnaAplicar">idUnidad</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

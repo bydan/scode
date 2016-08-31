@@ -1,0 +1,25 @@
+<table>
+   <owner>Nomina</owner>
+   <name>TipoCalculo</name>
+</table>
+<table>
+   <owner>Nomina</owner>
+   <name>TipoGrupoRubroEmplea</name>
+</table>
+
+
+
+
+
+
+
+|PREFIJOTABLA=fac_
+
+
+Cartera.Consignatario
+Facturacion.DetalleProforma
+Facturacion.EstadoDetalleProforma
+Facturacion.EstadoProforma
+Facturacion.Proforma
+Facturacion.TerminoProforma
+Facturacion.TipoProforma

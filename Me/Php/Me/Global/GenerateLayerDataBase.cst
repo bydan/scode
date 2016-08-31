@@ -1,0 +1,1579 @@
+﻿<%@ Template Language="C#" Debug="true" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" %>    	
+<%@ CodeTemplate Src="CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Register Name="AccesoDatosTemplate" Template="AccesoDatos/AccesoDatosPorTabla.cst" %>
+<%@ Register Name="EntitiesTemplate" Template="Entities/EntitiesPorTabla.cst" %>
+<%@ Register Name="EntitiesTemplateBean" Template="Entities/EntitiesPorTablaBean.cst" %>
+<%@ Register Name="EntitiesCompuestoTemplate" Template="Entities/EntitiesCompuestoPorTabla.cst" %>
+<%@ Register Name="InterfaceTemplate" Template="Interface/InterfacePorTabla.cst" %>
+<%@ Register Name="InterfaceTemplateAdditional" Template="Interface/InterfacePorTablaAdditional.cst" %>
+<%@ Register Name="LogicaNegocioTemplate" Template="LogicaNegocio/LogicaNegocioPorTabla.cst" %>
+<%@ Register Name="LogicaNegocioTemplateAdditional" Template="LogicaNegocio/LogicaNegocioPorTablaAdditional.cst" %>
+<%@ Register Name="ServletTemplate" Template="Servlet/ServletPorTabla.cst" %>
+<%@ Register Name="ServletTemplateAdditional" Template="Servlet/ServletPorTablaAdditional.cst" %>
+<%@ Register Name="WebTemplate" Template="Web/WebPorTabla.cst" %>
+<%@ Register Name="WebTemplateRelaciones" Template="Web/WebPorTablaRelaciones.cst" %>
+<%@ Register Name="WebMainTemplate" Template="Web/WebMainAux.cst" %>
+<%@ Register Name="JavaScriptTemplateEntities" Template="JavaScript/Entities/JavaScript0Entities.cst" %>
+<%@ Register Name="JavaScriptTemplateEntitiesCompuesto" Template="JavaScript/Entities/JavaScript0EntitiesCompuesto.cst" %>
+<%@ Register Name="JavaScriptTemplateAccesoDatos" Template="JavaScript/AccesoDatos/JavaScript1DataAccess.cst" %>
+<%@ Register Name="JavaScriptTemplateAccesoDatosAdicional" Template="JavaScript/AccesoDatos/JavaScript11DataAccessAdditional.cst" %>
+<%@ Register Name="JavaScriptTemplateLayerCommunication" Template="JavaScript/LayerCommunication/JavaScript3LayerCommunication.cst" %>
+<%@ Register Name="JavaScriptTemplateLogicaNegocio" Template="JavaScript/LogicaNegocio/JavaScript2Logic.cst" %>
+<%@ Register Name="JavaScriptTemplateFuncionesGenerales" Template="JavaScript/FuncionesGenerales/JavaScript4FuncionesGenerales.cst" %>
+<%@ Register Name="JavaScriptTemplateConstantes" Template="JavaScript/Constantes/JavaScript41Constantes.cst" %>
+<%@ Register Name="JavaScriptTemplatePaginaWebInteraccion" Template="JavaScript/PaginaWebInteraccion/JavaScript5PaginaWebInteraccion.cst" %>
+<%@ Register Name="JavaScriptTemplatePaginaWebInteraccionRelaciones" Template="JavaScript/PaginaWebInteraccion/JavaScript5PaginaWebInteraccionRelaciones.cst" %>
+<%@ Register Name="JavaScriptTemplatePaginaWebInteraccionEvents" Template="JavaScript/PaginaWebInteraccion/JavaScript51PaginaWebInteraccion.cst" %>
+<%@ Register Name="JavaScriptTemplatePaginaWebInteraccionEventsRelaciones" Template="JavaScript/PaginaWebInteraccion/JavaScript51PaginaWebInteraccionRelaciones.cst" %>
+<%@ Register Name="JavaScriptTemplateServicios" Template="JavaScript/Servicios/JavaScript6Servicios.cst" %>
+<%@ Register Name="JavaScriptTemplateServiciosAjax" Template="JavaScript/ServiciosAjax/JavaScript7AjaxListasTransformar.cst" %>
+<%@ Register Name="JavaScriptTemplateLoad" Template="JavaScript/Load/JavaScript8Load.cst" %>
+<%@ Register Name="JavaScriptTemplateLoadRelaciones" Template="JavaScript/Load/JavaScript8LoadRelaciones.cst" %>
+<%@ Register Name="XmlTemplate" Template="XmlFile/XmlTemplate.cst" %>
+<%@ Register Name="SqlRowsTemplate" Template="Sql/RowsDBUtilsNecesary/SqlTemplate.cst" %>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="General" Description="Database to get the extended properties from." %>
+<%@ Property Name="Layers" Type="Me.Layers" Category="General" Description="The pattern type to implement in the Component Layer." Default="DataAccess" %>
+
+<%@ Property Name="Package" Type="System.String" Default="" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="Empresa" Type="System.String" Default="ByDan" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="TablasIgnorar" Type="SchemaExplorer.TableSchemaCollection" Category="Options" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="GenerarFilesAdditional" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarSoloCompuestos" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="GenerarSoloFilesAdditional" Type="System.Boolean" Default="false" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="Aplicacion" Type="System.String" Default="SISTEMA OPEN SOURCE" Category="Presentation" Description="Nombre del Sistema" %>
+<%@ Property Name="SourceTablesSimpleMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Presentation" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceTablesRelationshipsMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Presentation" Description="Select a set of tables." Optional="true"%>
+
+
+<%@ Register Name="AjaxDojoAccordionTemplate" Template="Ajax/DojoAccordion/DojoAccordionPorTabla.cst" %>
+<%@ Register Name="AjaxDojoComboBoxTemplate" Template="Ajax/DojoComboBox/DojoComboBoxPorTabla.cst" %>
+<%@ Register Name="AjaxDojoFishEyeTemplate" Template="Ajax/DojoFishEye/DojoFishEyePorTabla.cst" %>
+<%@ Register Name="AjaxDojoTableTemplate" Template="Ajax/DojoTable/DojoTablePorTabla.cst" %>
+<%@ Register Name="AjaxExtJSGridTemplate" Template="Ajax/ExtJSGrid/ExtJSGridPorTabla.cst" %>
+<%@ Register Name="AjaxMenuYahooWidgetsExtTemplate" Template="Ajax/MenuYahooWidgetsExt/MenuYahooWidgetsExtPorTabla.cst" %>
+<%@ Register Name="AjaxTreeWidgetsExtTemplate" Template="Ajax/TreeWidgetsExt/TreeWidgetsExtPorTabla.cst" %>
+<%@ Register Name="AjaxYahooDataTableTemplate" Template="Ajax/YahooDataTable/YahooDataTablePorTabla.cst" %>
+<%@ Register Name="AjaxYahooTabbedViewTemplate" Template="Ajax/YahooTabbedView/YahooTabbedViewPorTabla.cst" %>
+
+<%@ Property Name="SourceTablesDojoTable" Type="SchemaExplorer.TableSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceTablesYahooDataTable" Type="SchemaExplorer.TableSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceTablesExtJSGrid" Type="SchemaExplorer.TableSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsDojoAccordion" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsDojoComboBox" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsDojoFishEye" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsYahooMenuWidgets" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsTreeWidgets" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsYahooTabbedView" Type="SchemaExplorer.ColumnSchemaCollection" Category="Optional Ajax" Description="Select a set of tables." Optional="true"%>
+
+<%@ Register Name="SourceReporteTemplate" Template="Reportes/SourcePorTabla.cst" %>
+<%@ Register Name="DesignReporteTemplate" Template="Reportes/DesignPorTabla.cst" %>
+
+<script runat="template">
+
+public void GenerarArchivosReportesRelaciones(TableSchema table,String strDirectorioReporteDiseno,DesignReporteTemplate designReporteTemplate,PreserveRegionsMergeStrategy strategy) 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(table);
+			bool existe=false;
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			designReporteTemplate.GenerarRelacionesMaestro=true;
+			designReporteTemplate.TablaBase=table;
+			designReporteTemplate.RenderToFile(strDirectorioReporteDiseno +GetNombreClase(table.Name)+ "MasterRelacionesDesign.jrxml", strategy);		
+		
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+					
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}	
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}
+					else
+					{
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+					{
+						continue;
+					}
+					
+					designReporteTemplate.TablaBase=tablaRelacionadaObjetivo;
+					designReporteTemplate.GenerarRelacionesMaestro=false;
+					designReporteTemplate.GenerarRelacionesDetalle=true;
+					
+					designReporteTemplate.RenderToFile(strDirectorioReporteDiseno +GetNombreClase(tablaRelacionadaObjetivo.Name)+ "DetalleRelacionesDesign.jrxml", strategy);		
+		
+				}
+			
+		designReporteTemplate.TablaBase=table;	
+		designReporteTemplate.GenerarRelacionesMaestro=false;	
+		designReporteTemplate.GenerarRelacionesDetalle=false;
+}
+
+public bool ExisteRelaciones(TableSchema table) 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(table);
+			bool existe=false;
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			
+			
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+								
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}	
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}
+					else
+					{
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+					{
+						continue;
+					}
+					
+					existe=true;		
+					break;	
+				}
+			
+			
+			return existe; 
+}
+
+public string GetSqlQuerys()
+{
+	string strNombreClase=string.Empty;
+		
+	strNombreClase="";
+		
+	foreach(TableSchema tableSchema in SourceDatabase.Tables)
+	{
+		strNombreClase+="\r\ninsert into UTIL.OIDS(NOMBRE,ULTIMOOID)values('"+Schema+"."+GetNombreTableFromProperties(tableSchema)+"',1);";
+	}
+	
+	
+	return strNombreClase;
+}
+
+public string GetJasperCompiles()
+{
+	string strNombreClase=string.Empty;
+		
+	strNombreClase="\r\nString strPathCompilacion=\"\";";
+		
+	foreach(TableSchema tableSchema in SourceDatabase.Tables)
+	{
+		strNombreClase+="\r\nJasperCompileManager.compileReportToFile(strPathCompilacion+\""+GetNombreClaseC(tableSchema.ToString())+"Design.jrxml\");";
+	}
+	
+		foreach(TableSchema tableSchema in SourceDatabase.Tables)
+		{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(tableSchema);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			if(!ExisteRelaciones(tableSchema))
+			{
+				continue;
+			}
+			else
+			{
+				strNombreClase+="\r\nJasperCompileManager.compileReportToFile(strPathCompilacion+\""+GetNombreClaseC(tableSchema.ToString())+"MasterRelacionesDesign.jrxml\");";
+			}
+			
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+					
+								
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}	
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}
+					else
+					{
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+					{
+						continue;
+					}
+					
+					strNombreClase+="\r\nJasperCompileManager.compileReportToFile(strPathCompilacion+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"DetalleRelacionesDesign.jrxml\");";
+				}
+		}		
+			
+	return strNombreClase;
+}
+
+private string _outputDirectory = String.Empty;
+//<%@ Property Name="EntidadesNombre" Type="System.String" Default="ParametrosCompras" Category="Options" Description="Nombre de la Entidad" %>
+//<%@ Property Name="SourceTablesMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Optional General" Optional="true" Description="Select a set of tables." %>
+
+[Editor(typeof(System.Windows.Forms.Design.FolderNameEditor), typeof(System.Drawing.Design.UITypeEditor))] 
+[Optional]
+[Category("General")]
+[Description("The directory to output the results to.")]
+public string OutputDirectory 
+{
+	get
+	{
+		
+		// default to the directory that the template is located in
+		//if (_outputDirectory.Length == 0)
+		//{ 
+		//return this.CodeTemplateInfo.DirectoryName + "output\\DataBase\\"+SourceDatabase.Name+"\\";
+		return this.CodeTemplateInfo.DirectoryName + "output\\Layer\\"+SourceDatabase.Name+"\\"+Layers.ToString()+"\\";
+
+		//}
+		//return _outputDirectory;
+	}
+	set
+	{
+		if (!value.EndsWith("\\")) value += "\\";
+		_outputDirectory = value;
+	} 
+}
+
+public string GetNombreClase(string strTablaBase)
+{
+	string [] strTabla = strTablaBase.Split('.');
+	string strNombreClase=string.Empty;
+	string strNombreTemporal=string.Empty;
+	
+	strNombreClase=strTabla[0];
+		
+	/*bool primero=true;
+	
+	foreach(string nombre in strTabla)
+	{
+		if(!primero)
+		{
+		strNombreTemporal=nombre.Substring(0, 1).ToUpper()+nombre.Substring(1, nombre.Length-1).ToLower();		
+		strNombreClase+=strNombreTemporal;
+		}
+		else
+		{
+		primero=false;
+		}
+	}	*/
+	
+	
+		return strNombreClase;//strNombreClase+"DALC";
+	}
+
+/*public bool ExisteEnTablasMaintenance(TableSchema tableSchema)
+{
+	bool Existe=false;
+	
+	if(SourceTablesMaintenance!=null)
+	{
+	foreach(TableSchema tableMaintenance in SourceTablesMaintenance)
+	{
+		
+		if(tableSchema.Equals(tableMaintenance))
+		{
+			Existe=true;
+		}		
+	}						
+	}	
+	return Existe;	
+}*/
+
+
+public bool ExisteEnTablasRelationshipsMaintenance(TableSchema tableSchema)
+{
+	bool Existe=false;
+		
+	if(SourceTablesRelationshipsMaintenance!=null)
+	{
+		foreach(TableSchema tableMaintenance in SourceTablesRelationshipsMaintenance)
+		{
+			
+			if(tableSchema.Equals(tableMaintenance))
+			{
+				Existe=true;
+			}		
+		}						
+	}	
+	return Existe;	
+}
+
+public bool ExisteEnTablasSimpleMaintenance(TableSchema tableSchema)
+{
+	bool Existe=false;
+		
+	if(SourceTablesSimpleMaintenance!=null)
+	{
+		foreach(TableSchema tableMaintenance in SourceTablesSimpleMaintenance)
+		{
+			
+			if(tableSchema.Equals(tableMaintenance))
+			{
+				Existe=true;
+			}		
+		}						
+	}	
+	return Existe;	
+}	
+
+public bool ExisteEnTablasIgnorar(TableSchema tableSchema)
+{
+	bool Existe=false;
+		
+	if(TablasIgnorar!=null)
+	{
+		foreach(TableSchema tableIgnorar in TablasIgnorar)
+		{
+			
+			if(tableSchema.Equals(tableIgnorar))
+			{
+				Existe=true;
+			}		
+		}						
+	}	
+	return Existe;	
+}
+
+public bool ExisteEnTablasRelacionesMaintenance(TableSchema tableSchema)
+{
+	bool Existe=false;
+		
+	if(SourceTablesSimpleMaintenance!=null)
+	{
+		foreach(TableSchema tableMaintenance in SourceTablesRelationshipsMaintenance)
+		{
+			
+			if(tableSchema.Equals(tableMaintenance))
+			{
+				Existe=true;
+			}		
+		}						
+	}	
+	return Existe;	
+}
+public bool ExisteEnTablasExtJSGrid(TableSchema tableSchema)
+{
+	bool Existe=false;
+		
+	if(SourceTablesExtJSGrid!=null)
+	{
+	foreach(TableSchema tableMaintenance in SourceTablesExtJSGrid)
+	{
+		
+		if(tableSchema.Equals(tableMaintenance))
+		{
+			Existe=true;
+		}		
+	}						
+	}	
+	return Existe;	
+}	
+
+public bool ExisteEnTablasYahooDataTable(TableSchema tableSchema)
+{
+	bool Existe=false;
+				
+	if(SourceTablesYahooDataTable!=null)
+	{
+	foreach(TableSchema tableMaintenance in SourceTablesYahooDataTable)
+	{
+		
+		if(tableSchema.Equals(tableMaintenance))
+		{
+			Existe=true;
+		}		
+	}						
+	}	
+	return Existe;	
+}
+
+public bool ExisteEnTablasDojoTable(TableSchema tableSchema)
+{
+	bool Existe=false;
+				
+	if(SourceTablesDojoTable!=null)
+	{
+	foreach(TableSchema tableMaintenance in SourceTablesDojoTable)
+	{
+		
+		if(tableSchema.Equals(tableMaintenance))
+		{
+			Existe=true;
+		}		
+	}						
+	}	
+	return Existe;	
+}
+	
+public string GetNombreClasePrefijo(string strTablaBase)
+{
+	//string [] strTabla = strTablaBase.Split('.');
+	string [] strNombres = strTablaBase.Split('_');
+	string strNombreClase=string.Empty;
+	string strNombreTemporal=string.Empty;
+	
+	bool primero=true;
+	foreach(string nombre in strNombres)
+	{
+		if(!primero)
+		{
+		strNombreTemporal=nombre.Substring(0, 1).ToUpper()+nombre.Substring(1, nombre.Length-1).ToLower();		
+		strNombreClase+=strNombreTemporal;
+		//strNombreClase+=nombre;
+		}
+		else
+		{
+		primero=false;
+		}
+	}	
+		return strNombreClase;//strNombreClase+"DALC";
+	}
+	
+public string GetCampoTabla(ColumnSchema column)
+{
+	string strPrefijo = column.Name;
+	return strPrefijo;
+	}
+	
+public string GetSqlParameterStatement(ColumnSchema column)
+{
+	string strPrefijo = column.NativeType.ToString().Substring(0, 3).ToLower();
+	switch (strPrefijo)
+	{
+		case "var":
+		{
+			strPrefijo="str" ;
+			break;
+		}
+		case "dat":
+		{
+			strPrefijo="dt" ;
+			break;
+		}
+		
+	}
+	string strNombre = column.Name.Substring(0, 1).ToUpper() + column.Name.Substring(1, column.Name.Length-1).ToLower();
+	string strPrefijoVariables = "@i_";
+	strPrefijo+=strNombre;
+	string param ='"'+strPrefijoVariables+column.Name+'"' + " , "+"DbType."+column.NativeType ;
+
+	switch (column.DataType)
+	{
+		case DbType.DateTime:
+		{
+			param ='"'+strPrefijoVariables+column.Name+'"' + " , "+ "DbType.DateTime" ;
+			
+			break;
+		}
+		case DbType.AnsiString:
+		{
+			param ='"'+strPrefijoVariables+column.Name+'"' + " , "+ "DbType.String" ;
+			
+			break;
+		}
+		case DbType.Int32:
+		{
+			param ='"'+strPrefijoVariables+column.Name+'"' + " , "+ "DbType.Int32" ;
+			
+			break;
+		}
+		case DbType.Int16:
+		{
+			param ='"'+strPrefijoVariables+column.Name+'"' + " , "+ "DbType.Int16" ;
+			
+			break;
+		}
+		case DbType.Int64:
+		{
+			param ='"'+strPrefijoVariables+column.Name+'"' + " , "+ "DbType.Int64" ;
+			
+			break;
+		}
+	
+	}
+	param+=" , " + strPrefijo;
+
+	return param;
+}
+//armar parametros de entrada del sp
+public string GetSqlParameterIn(ColumnSchema column)
+{
+	string strPrefijo = column.NativeType.ToString().Substring(0, 3).ToLower();
+	switch (strPrefijo)
+	{
+		case "var":
+		{
+			strPrefijo="str" ;
+			break;
+		}
+		case "dat":
+		{
+			strPrefijo="dt" ;
+			break;
+		}
+		
+	}
+	string strNombre = column.Name.Substring(0, 1).ToUpper() + column.Name.Substring(1, column.Name.Length-1).ToLower();
+	strPrefijo+=strNombre;
+	
+	
+	string param =  column.NativeType +  "  " +  strPrefijo;
+	
+	switch (column.DataType)
+	{
+		case DbType.DateTime:
+		{
+			param =  "DateTime"  +  "  " +  strPrefijo ;
+			break;
+		}
+		case DbType.AnsiString:
+		{
+			param =  "string"  +  "  " +  strPrefijo ;
+			break;
+		}
+		case DbType.Int64:
+		{
+			param =  "Int64"  +  "  " +  strPrefijo ;
+			break;
+		}
+	
+	}
+	
+	
+	
+
+	return param;
+}
+
+public string DefinirEntidadNombre(string strTabla)
+{
+	string strEntidadNombre=string.Empty;
+	string []strPrefijo=strTabla.Split('_');
+	
+	if(strPrefijo.Length>0){
+		switch (strPrefijo[0]){
+		
+		case "PAR":
+		strEntidadNombre="Parametro";
+		break;
+		
+		case "SEG":
+		strEntidadNombre="Seguridad";
+		break;
+		
+		case "INV":
+		strEntidadNombre="Inventario";
+		break;
+		
+		default:
+		strEntidadNombre=string.Empty;
+		break;
+		}
+		}
+	
+	
+	if(strEntidadNombre==string.Empty)
+	{
+		if(strTabla.Contains("PLANTILLA"))
+		strEntidadNombre="PlantillaContable";
+		
+		else if(strTabla.Contains("ITEM"))
+		strEntidadNombre="Item";
+		
+		else if(strTabla.Contains("DOCUMENTO"))
+		strEntidadNombre="Documento";
+		
+		else if(strTabla.Contains("FLUJO"))
+		strEntidadNombre="Flujo";
+		
+		
+		
+	}
+	
+	if(strEntidadNombre==string.Empty)
+	{
+		if(strTabla.Contains("BODEGA"))
+		strEntidadNombre="Inventario";
+		
+		else if(strTabla.Contains("PROVEEDOR"))
+		strEntidadNombre="Parametro";
+		
+		else if(strTabla.Contains("RELACION"))
+		strEntidadNombre="Flujo";
+		
+		else if(strTabla.Contains("ROL"))
+		strEntidadNombre="Flujo";
+	}
+		return strEntidadNombre;
+}
+
+public override void Render(TextWriter writer)
+{
+	DateTime startTime = DateTime.Now;
+	
+	string strDirectorioAccesoDatos=string.Empty;
+	string strDirectorioEntities=string.Empty;
+	string strDirectorioInterface=string.Empty;
+	string strDirectorioLogicaNegocio=string.Empty;
+	string strDirectorioServlet=string.Empty;
+	string strDirectorioWeb=string.Empty;
+	string strDirectorioWebSimple=string.Empty;
+	string strDirectorioWebRelaciones=string.Empty;
+	string strDirectorioAjax=string.Empty;
+	
+	
+	string strDirectorioJavaScriptAccesoDatos=string.Empty;
+	string strDirectorioJavaScriptInterface=string.Empty;
+	string strDirectorioJavaScriptEntities=string.Empty;
+	string strDirectorioJavaScriptFuncionesGenerales=string.Empty;
+	string strDirectorioJavaScriptLogicaNegocio=string.Empty;
+	string strDirectorioJavaScriptPaginaWebInteraccion=string.Empty;
+	string strDirectorioJavaScriptServicios=string.Empty;
+	string strDirectorioJavaScriptServiciosAjax=string.Empty;
+	string strDirectorioJavaScriptLoad=string.Empty;
+	
+	string strDirectorioReporte=string.Empty;
+	string strDirectorioReporteDiseno=string.Empty;
+	
+	strDirectorioAccesoDatos=this.OutputDirectory;
+	strDirectorioEntities=this.OutputDirectory;
+	strDirectorioInterface=this.OutputDirectory;
+	strDirectorioLogicaNegocio=this.OutputDirectory;
+	strDirectorioServlet=this.OutputDirectory;
+	strDirectorioWeb=this.OutputDirectory;
+	strDirectorioWebSimple=this.OutputDirectory;
+	strDirectorioWebRelaciones=this.OutputDirectory;
+	strDirectorioAjax=this.OutputDirectory;
+	
+	if (!strDirectorioAccesoDatos.EndsWith("\\")) strDirectorioAccesoDatos += "\\";
+	if (!Directory.Exists(strDirectorioAccesoDatos)) Directory.CreateDirectory(strDirectorioAccesoDatos);
+	
+	if (!strDirectorioEntities.EndsWith("\\")) strDirectorioEntities += "\\";
+	if (!Directory.Exists(strDirectorioEntities)) Directory.CreateDirectory(strDirectorioEntities);
+	
+	if (!strDirectorioInterface.EndsWith("\\")) strDirectorioInterface += "\\";
+	if (!Directory.Exists(strDirectorioInterface)) Directory.CreateDirectory(strDirectorioInterface);
+	
+	if (!strDirectorioLogicaNegocio.EndsWith("\\")) strDirectorioLogicaNegocio += "\\";
+	if (!Directory.Exists(strDirectorioLogicaNegocio)) Directory.CreateDirectory(strDirectorioLogicaNegocio);
+	
+	if (!strDirectorioServlet.EndsWith("\\")) strDirectorioServlet += "\\";
+	if (!Directory.Exists(strDirectorioServlet)) Directory.CreateDirectory(strDirectorioServlet);
+	
+	if (!strDirectorioWeb.EndsWith("\\")) strDirectorioWeb += "\\";
+	if (!Directory.Exists(strDirectorioWeb)) Directory.CreateDirectory(strDirectorioWeb);
+	
+	if (!strDirectorioWebSimple.EndsWith("\\")) strDirectorioWebSimple += "\\";
+	if (!Directory.Exists(strDirectorioWebSimple)) Directory.CreateDirectory(strDirectorioWebSimple);
+	
+	if (!strDirectorioWebRelaciones.EndsWith("\\")) strDirectorioWebRelaciones+= "\\";
+	if (!Directory.Exists(strDirectorioWebRelaciones)) Directory.CreateDirectory(strDirectorioWebRelaciones);
+			
+	if (!strDirectorioAjax.EndsWith("\\")) strDirectorioAjax += "\\";
+	if (!Directory.Exists(strDirectorioAjax)) Directory.CreateDirectory(strDirectorioAjax);
+	
+	
+	if (!strDirectorioJavaScriptAccesoDatos.EndsWith("\\")) strDirectorioJavaScriptAccesoDatos += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptAccesoDatos)) Directory.CreateDirectory(strDirectorioJavaScriptAccesoDatos);
+
+	if (!strDirectorioJavaScriptInterface.EndsWith("\\")) strDirectorioJavaScriptInterface += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptInterface)) Directory.CreateDirectory(strDirectorioJavaScriptInterface);
+
+	if (!strDirectorioJavaScriptEntities.EndsWith("\\")) strDirectorioJavaScriptEntities += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptEntities)) Directory.CreateDirectory(strDirectorioJavaScriptEntities);
+
+	if (!strDirectorioJavaScriptFuncionesGenerales.EndsWith("\\")) strDirectorioJavaScriptFuncionesGenerales += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptFuncionesGenerales)) Directory.CreateDirectory(strDirectorioJavaScriptFuncionesGenerales);
+	
+	if (!strDirectorioJavaScriptLogicaNegocio.EndsWith("\\")) strDirectorioJavaScriptLogicaNegocio += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptLogicaNegocio)) Directory.CreateDirectory(strDirectorioJavaScriptLogicaNegocio);
+
+	if (!strDirectorioJavaScriptPaginaWebInteraccion.EndsWith("\\")) strDirectorioJavaScriptPaginaWebInteraccion += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptPaginaWebInteraccion)) Directory.CreateDirectory(strDirectorioJavaScriptPaginaWebInteraccion);
+
+	if (!strDirectorioJavaScriptServicios.EndsWith("\\"))strDirectorioJavaScriptServicios += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptServicios)) Directory.CreateDirectory(strDirectorioJavaScriptServicios);
+
+	if (!strDirectorioJavaScriptServiciosAjax.EndsWith("\\")) strDirectorioJavaScriptServiciosAjax += "\\";
+	if (!Directory.Exists(strDirectorioJavaScriptServiciosAjax)) Directory.CreateDirectory(strDirectorioJavaScriptServiciosAjax);
+	
+	strDirectorioAccesoDatos=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\DataAccess\";
+	strDirectorioEntities=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Business\Entities\";
+	strDirectorioInterface=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Business\Interface\";
+	strDirectorioLogicaNegocio=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Business\Logic\";
+	strDirectorioServlet=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\Servlet\";
+	strDirectorioWeb=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\WebLibrary\MaintenanceLibrary\";
+	strDirectorioWebSimple=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\WebLibrary\MaintenanceSimple\";
+	strDirectorioWebRelaciones=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\WebLibrary\MaintenanceRelaciones\";
+	strDirectorioAjax=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\Ajax\";
+	
+			
+	strDirectorioJavaScriptAccesoDatos=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\DataAccess\";
+	strDirectorioJavaScriptEntities=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\Entities\";
+	strDirectorioJavaScriptLogicaNegocio=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\Logic\";
+	strDirectorioJavaScriptInterface=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\LayerCommunication\";	
+	strDirectorioJavaScriptServiciosAjax=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\AjaxServices\";
+	strDirectorioJavaScriptFuncionesGenerales=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\GeneralFunctionsAndConstants\";
+	strDirectorioJavaScriptServicios=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\Services\";	
+	strDirectorioJavaScriptPaginaWebInteraccion=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\WebPageInteraction\";
+	strDirectorioJavaScriptLoad=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\JavaScript\Load\";
+	
+	strDirectorioReporte=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Reporte\Source\";
+	strDirectorioReporteDiseno=this.OutputDirectory+@"\"+this.Empresa+@"\"+Package+@"\Presentation\Web\Reportes\";
+	
+	if (!Directory.Exists(strDirectorioAccesoDatos)) Directory.CreateDirectory(strDirectorioAccesoDatos);
+	
+	if (!Directory.Exists(strDirectorioEntities)) Directory.CreateDirectory(strDirectorioEntities);
+	
+	if (!Directory.Exists(strDirectorioInterface)) Directory.CreateDirectory(strDirectorioInterface);
+	
+	if (!Directory.Exists(strDirectorioLogicaNegocio)) Directory.CreateDirectory(strDirectorioLogicaNegocio);
+	
+	if (!Directory.Exists(strDirectorioServlet)) Directory.CreateDirectory(strDirectorioServlet);
+	
+	if (!Directory.Exists(strDirectorioWeb)) Directory.CreateDirectory(strDirectorioWeb);
+	
+	if (!Directory.Exists(strDirectorioWebSimple)) Directory.CreateDirectory(strDirectorioWebSimple);
+	
+	if (!Directory.Exists(strDirectorioWebRelaciones)) Directory.CreateDirectory(strDirectorioWebRelaciones);
+		
+	if (!Directory.Exists(strDirectorioAjax)) Directory.CreateDirectory(strDirectorioAjax);
+	
+	
+	
+	if (!Directory.Exists(strDirectorioJavaScriptAccesoDatos)) Directory.CreateDirectory(strDirectorioJavaScriptAccesoDatos);
+	if (!Directory.Exists(strDirectorioJavaScriptInterface)) Directory.CreateDirectory(strDirectorioJavaScriptInterface);
+	if (!Directory.Exists(strDirectorioJavaScriptEntities)) Directory.CreateDirectory(strDirectorioJavaScriptEntities);
+	if (!Directory.Exists(strDirectorioJavaScriptFuncionesGenerales)) Directory.CreateDirectory(strDirectorioJavaScriptFuncionesGenerales);
+	if (!Directory.Exists(strDirectorioJavaScriptLogicaNegocio)) Directory.CreateDirectory(strDirectorioJavaScriptLogicaNegocio);
+	if (!Directory.Exists(strDirectorioJavaScriptPaginaWebInteraccion)) Directory.CreateDirectory(strDirectorioJavaScriptPaginaWebInteraccion);
+	if (!Directory.Exists(strDirectorioJavaScriptServicios)) Directory.CreateDirectory(strDirectorioJavaScriptServicios);
+	if (!Directory.Exists(strDirectorioJavaScriptServiciosAjax)) Directory.CreateDirectory(strDirectorioJavaScriptServiciosAjax);
+	if (!Directory.Exists(strDirectorioJavaScriptLoad)) Directory.CreateDirectory(strDirectorioJavaScriptLoad);
+
+	if (!Directory.Exists(strDirectorioReporte)) Directory.CreateDirectory(strDirectorioReporte);
+	if (!Directory.Exists(strDirectorioReporte)) Directory.CreateDirectory(strDirectorioReporteDiseno);
+
+	string strEntidadesNombre=string.Empty;
+	string strDirectorio=string.Empty;
+	string strLineasProyecto=string.Empty;
+	
+	 
+    /*<Compile Include="Documento\Documento.cs" />*/
+
+	//Creo directorio Para los Partial class
+	string strDirectorioPartialClass=string.Empty;
+	
+	/*if (!strDirectorioPartialClass.EndsWith("\\")) strDirectorioPartialClass += "\\";
+	if (!Directory.Exists(strDirectorioPartialClass)) Directory.CreateDirectory(strDirectorioPartialClass);
+	*/	
+	
+		AccesoDatosTemplate accesoDatosTemplate = new AccesoDatosTemplate();
+		EntitiesTemplate entitiesTemplate = new EntitiesTemplate();
+		EntitiesTemplateBean entitiesTemplateBean = new EntitiesTemplateBean();
+		EntitiesCompuestoTemplate entitiesCompuestoTemplate = new EntitiesCompuestoTemplate();
+		InterfaceTemplate interfaceTemplate = new InterfaceTemplate();
+		InterfaceTemplateAdditional interfaceTemplateAdditional = new InterfaceTemplateAdditional();
+		LogicaNegocioTemplate logicaNegocioTemplate = new LogicaNegocioTemplate();
+		LogicaNegocioTemplateAdditional logicaNegocioTemplateAdditional = new LogicaNegocioTemplateAdditional();
+		ServletTemplate servletNegocioTemplate = new ServletTemplate();
+		ServletTemplateAdditional servletNegocioTemplateAdditional = new ServletTemplateAdditional();
+		WebTemplate webTemplate = new WebTemplate();
+		WebTemplateRelaciones webTemplateRelaciones  = new WebTemplateRelaciones();
+		WebMainTemplate webMainTemplate = new WebMainTemplate();
+		XmlTemplate xmlTemplate = new XmlTemplate();
+		SqlRowsTemplate sqlRowsTemplate=new SqlRowsTemplate();
+		
+		
+		
+		JavaScriptTemplateAccesoDatos javaScriptTemplateAccesoDatos = new JavaScriptTemplateAccesoDatos();
+		JavaScriptTemplateAccesoDatosAdicional javaScriptTemplateAccesoDatosAdicional = new JavaScriptTemplateAccesoDatosAdicional();
+		JavaScriptTemplateEntities javaScriptTemplateEntities = new JavaScriptTemplateEntities();
+		JavaScriptTemplateEntitiesCompuesto javaScriptTemplateEntitiesCompuesto  = new JavaScriptTemplateEntitiesCompuesto();
+		JavaScriptTemplateLogicaNegocio javaScriptTemplateLogicaNegocio = new JavaScriptTemplateLogicaNegocio();
+		JavaScriptTemplateLayerCommunication javaScriptTemplateLayerCommunication = new JavaScriptTemplateLayerCommunication();
+		JavaScriptTemplateServiciosAjax javaScriptTemplateServiciosAjax  = new JavaScriptTemplateServiciosAjax();
+		JavaScriptTemplateFuncionesGenerales javaScriptTemplateFuncionesGenerales = new JavaScriptTemplateFuncionesGenerales();
+		JavaScriptTemplateConstantes javaScriptTemplateConstantes = new JavaScriptTemplateConstantes();
+		JavaScriptTemplateServicios javaScriptTemplateServicios = new JavaScriptTemplateServicios();
+		
+		JavaScriptTemplatePaginaWebInteraccion javaScriptTemplatePaginaWebInteraccion= new JavaScriptTemplatePaginaWebInteraccion();
+		
+		JavaScriptTemplatePaginaWebInteraccionRelaciones javaScriptTemplatePaginaWebInteraccionRelaciones= new JavaScriptTemplatePaginaWebInteraccionRelaciones();
+		JavaScriptTemplatePaginaWebInteraccionEvents javaScriptTemplatePaginaWebInteraccionEvents= new JavaScriptTemplatePaginaWebInteraccionEvents();
+		JavaScriptTemplatePaginaWebInteraccionEventsRelaciones javaScriptTemplatePaginaWebInteraccionEventsRelaciones = new JavaScriptTemplatePaginaWebInteraccionEventsRelaciones();
+		JavaScriptTemplateLoad javaScriptTemplateLoad= new JavaScriptTemplateLoad();
+		JavaScriptTemplateLoadRelaciones javaScriptTemplateLoadRelaciones = new JavaScriptTemplateLoadRelaciones ();
+	
+		
+		
+		AjaxDojoAccordionTemplate ajaxDojoAccordionTemplate=new AjaxDojoAccordionTemplate();
+		AjaxDojoComboBoxTemplate ajaxDojoComboBoxTemplate=new AjaxDojoComboBoxTemplate();
+		AjaxDojoFishEyeTemplate ajaxDojoFishEyeTemplate=new AjaxDojoFishEyeTemplate();
+		AjaxDojoTableTemplate ajaxDojoTableTemplate=new AjaxDojoTableTemplate();
+		AjaxExtJSGridTemplate ajaxExtJSGridTemplate=new AjaxExtJSGridTemplate();
+		AjaxMenuYahooWidgetsExtTemplate ajaxMenuYahooWidgetsExtTemplate=new AjaxMenuYahooWidgetsExtTemplate();
+		AjaxTreeWidgetsExtTemplate ajaxTreeWidgetsExtTemplate=new AjaxTreeWidgetsExtTemplate();
+		AjaxYahooDataTableTemplate ajaxYahooDataTableTemplate=new AjaxYahooDataTableTemplate();
+		AjaxYahooTabbedViewTemplate ajaxYahooTabbedViewTemplate=new AjaxYahooTabbedViewTemplate();
+		
+		SourceReporteTemplate sourceReporteTemplate = new SourceReporteTemplate ();
+		DesignReporteTemplate designReporteTemplate = new DesignReporteTemplate ();
+		
+		accesoDatosTemplate.Schema=Schema;
+		entitiesTemplate.Schema=Schema;
+		entitiesTemplateBean.Schema=Schema;
+		entitiesCompuestoTemplate.Schema=Schema;
+		
+		accesoDatosTemplate.NombreProgramador=NombreProgramador;
+		entitiesTemplate.NombreProgramador=NombreProgramador;
+		entitiesTemplateBean.NombreProgramador=NombreProgramador;
+		entitiesCompuestoTemplate.NombreProgramador=NombreProgramador;
+		interfaceTemplate.NombreProgramador=NombreProgramador;
+		interfaceTemplateAdditional.NombreProgramador=NombreProgramador;
+		logicaNegocioTemplate.NombreProgramador=NombreProgramador;
+		logicaNegocioTemplateAdditional.NombreProgramador=NombreProgramador;
+		servletNegocioTemplate.NombreProgramador=NombreProgramador;
+		servletNegocioTemplateAdditional.NombreProgramador=NombreProgramador;
+		webTemplate.NombreProgramador=NombreProgramador;
+		webTemplateRelaciones.NombreProgramador=NombreProgramador;
+		sourceReporteTemplate.NombreProgramador=NombreProgramador;
+		designReporteTemplate.NombreProgramador=NombreProgramador;
+		
+		javaScriptTemplateAccesoDatos.NombreProgramador=NombreProgramador;
+		javaScriptTemplateAccesoDatosAdicional.NombreProgramador=NombreProgramador;
+		javaScriptTemplateEntities.NombreProgramador=NombreProgramador;
+		javaScriptTemplateEntitiesCompuesto.NombreProgramador=NombreProgramador;
+		javaScriptTemplateLogicaNegocio.NombreProgramador=NombreProgramador;
+		javaScriptTemplateLayerCommunication.NombreProgramador=NombreProgramador;
+		javaScriptTemplateServiciosAjax.NombreProgramador=NombreProgramador;
+		javaScriptTemplateFuncionesGenerales.NombreProgramador=NombreProgramador;
+		javaScriptTemplateConstantes.NombreProgramador=NombreProgramador;
+		javaScriptTemplateServicios.NombreProgramador=NombreProgramador;
+		javaScriptTemplatePaginaWebInteraccion.NombreProgramador=NombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionRelaciones.NombreProgramador=NombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionEvents.NombreProgramador=NombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionEventsRelaciones.NombreProgramador=NombreProgramador;
+		javaScriptTemplateLoad.NombreProgramador=NombreProgramador;
+		javaScriptTemplateLoadRelaciones.NombreProgramador=NombreProgramador;
+	
+		
+		accesoDatosTemplate.Empresa=Empresa;
+		entitiesTemplate.Empresa=Empresa;
+		entitiesTemplateBean.Empresa=Empresa;
+		entitiesCompuestoTemplate.Empresa=Empresa;
+		interfaceTemplate.Empresa=Empresa;
+		interfaceTemplateAdditional.Empresa=Empresa;
+		logicaNegocioTemplate.Empresa=Empresa;
+		logicaNegocioTemplateAdditional.Empresa=Empresa;
+		servletNegocioTemplate.Empresa=Empresa;
+		servletNegocioTemplateAdditional.Empresa=Empresa;
+		webTemplate.Empresa=Empresa;
+		webTemplateRelaciones.Empresa=Empresa;
+		sourceReporteTemplate.Empresa=Empresa;
+		designReporteTemplate.Empresa=Empresa;
+		
+		javaScriptTemplateAccesoDatos.Empresa=Empresa;
+		javaScriptTemplateAccesoDatosAdicional.Empresa=Empresa;
+		javaScriptTemplateEntities.Empresa=Empresa;
+		javaScriptTemplateEntitiesCompuesto.Empresa=Empresa;
+		javaScriptTemplateLogicaNegocio.Empresa=Empresa;
+		javaScriptTemplateLayerCommunication.Empresa=Empresa;
+		javaScriptTemplateServiciosAjax.Empresa=Empresa;
+		javaScriptTemplateFuncionesGenerales.Empresa=Empresa;
+		javaScriptTemplateConstantes.Empresa=Empresa;
+		javaScriptTemplateServicios.Empresa=Empresa;
+		javaScriptTemplatePaginaWebInteraccion.Empresa=Empresa;
+		javaScriptTemplatePaginaWebInteraccionRelaciones.Empresa=Empresa;
+		javaScriptTemplatePaginaWebInteraccionEvents.Empresa=Empresa;
+		javaScriptTemplatePaginaWebInteraccionEventsRelaciones.Empresa=Empresa;
+		javaScriptTemplateLoad.Empresa=Empresa;
+		javaScriptTemplateLoadRelaciones.Empresa=Empresa;
+
+		
+		ajaxDojoAccordionTemplate.NombreProgramador=NombreProgramador;
+		ajaxDojoComboBoxTemplate.NombreProgramador=NombreProgramador;
+		ajaxDojoFishEyeTemplate.NombreProgramador=NombreProgramador;
+		ajaxDojoTableTemplate.NombreProgramador=NombreProgramador;
+		ajaxExtJSGridTemplate.NombreProgramador=NombreProgramador;
+		ajaxMenuYahooWidgetsExtTemplate.NombreProgramador=NombreProgramador;
+		ajaxTreeWidgetsExtTemplate.NombreProgramador=NombreProgramador;
+		ajaxYahooDataTableTemplate.NombreProgramador=NombreProgramador;
+		ajaxYahooTabbedViewTemplate.NombreProgramador=NombreProgramador;
+		
+		sourceReporteTemplate.NombreProgramador=NombreProgramador;
+		
+		PreserveRegionsMergeStrategy strategy = new PreserveRegionsMergeStrategy("^[ \t]*(?i:Custom)", "C#");
+		
+		String xmlServlets="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+		xmlServlets+="\r\n<web-app xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://java.sun.com/xml/ns/javaee\" xmlns:web=\"http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd\" xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd\" id=\"WebApp_ID\" version=\"2.5\">";
+		xmlServlets+="\r\n<display-name>"+ this.Package +"</display-name>";
+		xmlServlets+="\r\n<welcome-file-list>";
+  		xmlServlets+="\r\n<welcome-file>index.jsp</welcome-file>";
+ 	    xmlServlets+="\r\n<welcome-file>default.jsp</welcome-file>";
+  		xmlServlets+="\r\n</welcome-file-list>\r\n\r\n";
+		
+		xmlServlets+="<servlet>";
+		xmlServlets+="\r\n<servlet-name>PdfServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.PdfServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>PdfServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/pdf</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		xmlServlets+="\r\n\r\n<servlet>";
+		xmlServlets+="\r\n<servlet-name>ImageServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.ImageServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>ImageServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/image</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		xmlServlets+="\r\n\r\n<servlet>";
+		xmlServlets+="\r\n<servlet-name>XlsServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.XlsServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>XlsServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/xls</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		xmlServlets+="\r\n\r\n<servlet>";
+		xmlServlets+="\r\n<servlet-name>JExcelApiServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.JExcelApiServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>JExcelApiServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/jxl</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		xmlServlets+="\r\n\r\n<servlet>";
+		xmlServlets+="\r\n<servlet-name>RtfServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.RtfServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>RtfServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/rtf</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		xmlServlets+="\r\n\r\n<servlet>";
+		xmlServlets+="\r\n<servlet-name>OdtServlet</servlet-name>";
+		xmlServlets+="\r\n<servlet-class>net.sf.jasperreports.j2ee.servlets.OdtServlet</servlet-class>";
+		xmlServlets+="\r\n</servlet>";
+	
+		xmlServlets+="\r\n\r\n<servlet-mapping>";
+		xmlServlets+="\r\n<servlet-name>OdtServlet</servlet-name>";
+		xmlServlets+="\r\n<url-pattern>/servlets/odt</url-pattern>";
+		xmlServlets+="\r\n</servlet-mapping>";
+	
+		String strDirectorioJavaScriptTabla="";
+		
+		webMainTemplate.Package=strEntidadesNombre;
+		webMainTemplate.Aplicacion=Aplicacion;
+		
+		if(SourceTablesSimpleMaintenance!=null)
+		{
+			webMainTemplate.SourceTablesSimpleMaintenance=SourceTablesSimpleMaintenance;
+		}
+		
+		
+		if(SourceTablesRelationshipsMaintenance!=null)
+		{
+			webMainTemplate.SourceTablesRelationshipsMaintenance=SourceTablesRelationshipsMaintenance;
+		}
+		
+		
+		webMainTemplate.Empresa=Empresa;
+		webMainTemplate.NombreProgramador=NombreProgramador;
+
+		for (int x = 0; x < SourceDatabase.Tables.Count; x++)
+		{
+			Trace.WriteLine("Generando...."+SourceDatabase.Tables[x].Name+ " Tabla "+x.ToString()+ " de "+SourceDatabase.Tables.Count.ToString());
+			
+			if(ExisteEnTablasIgnorar(SourceDatabase.Tables[x]))
+			{
+					continue;
+			}
+			
+			if(SourceDatabase.Tables[x].Name.Contains("BIN")||SourceDatabase.Tables[x].Name.Contains("EXCEPTIONS")||SourceDatabase.Tables[x].Name.Contains("sys"))
+			{
+					continue;
+			}
+				
+		xmlServlets+="<servlet>";
+ 		xmlServlets+="\r\n<display-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"Servlet</display-name>";
+      	xmlServlets+="\r\n<servlet-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"Servlet</servlet-name>";
+      	xmlServlets+="\r\n<servlet-class>"+this.Empresa+"."+this.Package+".Presentation.Web.Servlet"+"."+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"Servlet</servlet-class>";
+   		xmlServlets+="\r\n</servlet>";
+   
+   		xmlServlets+="\r\n\r\n<servlet-mapping>";
+     	xmlServlets+="\r\n<servlet-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"Servlet</servlet-name>";
+      	xmlServlets+="\r\n<url-pattern>/"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"Servlet</url-pattern> ";
+   		xmlServlets+="\r\n</servlet-mapping>\r\n\r\n";
+			
+		xmlServlets+="<servlet>";
+ 		xmlServlets+="\r\n<display-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"ServletAdditional</display-name>";
+      	xmlServlets+="\r\n<servlet-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"ServletAdditional</servlet-name>";
+      	xmlServlets+="\r\n<servlet-class>"+this.Empresa+"."+this.Package+".Presentation.Web.Servlet."+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"ServletAdditional</servlet-class>";
+   		xmlServlets+="\r\n</servlet>";
+   
+   		xmlServlets+="\r\n\r\n<servlet-mapping>";
+     	xmlServlets+="\r\n<servlet-name>"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"ServletAdditional</servlet-name>";
+      	xmlServlets+="\r\n<url-pattern>/"+GetNombreClaseC(SourceDatabase.Tables[x].ToString())+"ServletAdditional</url-pattern> ";
+   		xmlServlets+="\r\n</servlet-mapping>\r\n\r\n";
+		
+				
+		accesoDatosTemplate.TablaBase=SourceDatabase.Tables[x];
+		entitiesTemplate.TablaBase=SourceDatabase.Tables[x];
+		entitiesTemplateBean.TablaBase=SourceDatabase.Tables[x];
+		interfaceTemplate.TablaBase=SourceDatabase.Tables[x];
+		interfaceTemplateAdditional.TablaBase=SourceDatabase.Tables[x];
+		logicaNegocioTemplate.TablaBase=SourceDatabase.Tables[x];
+		logicaNegocioTemplateAdditional.TablaBase=SourceDatabase.Tables[x];
+		servletNegocioTemplate.TablaBase=SourceDatabase.Tables[x];
+		servletNegocioTemplateAdditional.TablaBase=SourceDatabase.Tables[x];
+		webTemplate.TablaBase=SourceDatabase.Tables[x];
+		webTemplateRelaciones.TablaBase=SourceDatabase.Tables[x];
+		sourceReporteTemplate.TablaBase=SourceDatabase.Tables[x];
+		designReporteTemplate.TablaBase=SourceDatabase.Tables[x];
+		
+		javaScriptTemplateAccesoDatos.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateAccesoDatos.TablasBaseCompuestoJunction=SourceDatabase.Tables[x];
+		javaScriptTemplateAccesoDatos.TablasBaseCompuestoDetalle=SourceDatabase.Tables[x];
+		
+		javaScriptTemplateAccesoDatosAdicional.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateEntities.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateLogicaNegocio.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateLayerCommunication.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateServiciosAjax.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateFuncionesGenerales.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateConstantes.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateServicios.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplatePaginaWebInteraccion.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplatePaginaWebInteraccionRelaciones.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplatePaginaWebInteraccionEvents.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplatePaginaWebInteraccionEventsRelaciones.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateLoad.TablaBase=SourceDatabase.Tables[x];
+		javaScriptTemplateLoadRelaciones.TablaBase=SourceDatabase.Tables[x];
+
+		javaScriptTemplatePaginaWebInteraccion.TablasBaseCompuestoJunction=SourceDatabase.Tables[x];
+		javaScriptTemplatePaginaWebInteraccion.TablasBaseCompuestoDetalle=SourceDatabase.Tables[x];
+		
+		//strEntidadesNombre=DefinirEntidadNombre(SourceDatabase.Tables[x].Name);
+		strEntidadesNombre=Package;
+		String strNombreProgramador=NombreProgramador;
+		
+		accesoDatosTemplate.Package=strEntidadesNombre;
+		entitiesTemplate.Package=strEntidadesNombre;
+		entitiesTemplateBean.Package=strEntidadesNombre;
+		entitiesCompuestoTemplate.Package=strEntidadesNombre;
+		interfaceTemplate.Package=strEntidadesNombre;
+		interfaceTemplateAdditional.Package=strEntidadesNombre;
+		logicaNegocioTemplate.Package=strEntidadesNombre;
+		logicaNegocioTemplateAdditional.Package=strEntidadesNombre;
+		servletNegocioTemplate.Package=strEntidadesNombre;
+		servletNegocioTemplateAdditional.Package=strEntidadesNombre;
+		webTemplate.Package=strEntidadesNombre;
+		webTemplateRelaciones.Package=strEntidadesNombre;
+		sourceReporteTemplate.Package=strEntidadesNombre;
+		designReporteTemplate.Package=strEntidadesNombre;
+		
+		javaScriptTemplateAccesoDatos.Package=strEntidadesNombre;
+		javaScriptTemplateAccesoDatosAdicional.Package=strEntidadesNombre;
+		javaScriptTemplateEntities.Package=strEntidadesNombre;
+		javaScriptTemplateEntitiesCompuesto.Package=strEntidadesNombre;
+		javaScriptTemplateLogicaNegocio.Package=strEntidadesNombre;
+		javaScriptTemplateLayerCommunication.Package=strEntidadesNombre;
+		javaScriptTemplateServiciosAjax.Package=strEntidadesNombre;
+		javaScriptTemplateFuncionesGenerales.Package=strEntidadesNombre;
+		javaScriptTemplateConstantes.Package=strEntidadesNombre;
+		javaScriptTemplateServicios.Package=strEntidadesNombre;
+		javaScriptTemplatePaginaWebInteraccion.Package=strEntidadesNombre;
+		javaScriptTemplatePaginaWebInteraccionRelaciones.Package=strEntidadesNombre;
+		javaScriptTemplatePaginaWebInteraccionEvents.Package=strEntidadesNombre;
+		javaScriptTemplatePaginaWebInteraccionEventsRelaciones.Package=strEntidadesNombre;
+		javaScriptTemplateLoad.Package=strEntidadesNombre;
+		javaScriptTemplateLoadRelaciones.Package=strEntidadesNombre;
+		
+		
+		
+		ajaxDojoAccordionTemplate.Package=strEntidadesNombre;
+		ajaxDojoComboBoxTemplate.Package=strEntidadesNombre;
+		ajaxDojoFishEyeTemplate.Package=strEntidadesNombre;
+		ajaxDojoTableTemplate.Package=strEntidadesNombre;
+		ajaxExtJSGridTemplate.Package=strEntidadesNombre;
+		ajaxMenuYahooWidgetsExtTemplate.Package=strEntidadesNombre;
+		ajaxTreeWidgetsExtTemplate.Package=strEntidadesNombre;
+		ajaxYahooDataTableTemplate.Package=strEntidadesNombre;
+		ajaxYahooTabbedViewTemplate.Package=strEntidadesNombre;
+
+
+		accesoDatosTemplate.NombreProgramador=strNombreProgramador;
+		entitiesTemplate.NombreProgramador=strNombreProgramador;
+		entitiesTemplateBean.NombreProgramador=strNombreProgramador;
+		entitiesCompuestoTemplate.NombreProgramador=strNombreProgramador;
+		interfaceTemplate.NombreProgramador=strNombreProgramador;
+		interfaceTemplateAdditional.NombreProgramador=strNombreProgramador;
+		logicaNegocioTemplate.NombreProgramador=strNombreProgramador;
+		logicaNegocioTemplateAdditional.NombreProgramador=strNombreProgramador;
+		servletNegocioTemplate.NombreProgramador=strNombreProgramador;
+		servletNegocioTemplateAdditional.NombreProgramador=strNombreProgramador;
+		webTemplate.NombreProgramador=strNombreProgramador;
+		webTemplateRelaciones.NombreProgramador=strNombreProgramador;
+		sourceReporteTemplate.NombreProgramador=strNombreProgramador;
+		designReporteTemplate.NombreProgramador=strNombreProgramador;
+		
+		javaScriptTemplateAccesoDatos.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateAccesoDatosAdicional.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateEntities.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateEntitiesCompuesto.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateLogicaNegocio.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateLayerCommunication.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateServiciosAjax.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateFuncionesGenerales.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateConstantes.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateServicios.NombreProgramador=strNombreProgramador;
+		javaScriptTemplatePaginaWebInteraccion.NombreProgramador=strNombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionRelaciones.NombreProgramador=strNombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionEvents.NombreProgramador=strNombreProgramador;
+		javaScriptTemplatePaginaWebInteraccionEventsRelaciones.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateLoad.NombreProgramador=strNombreProgramador;
+		javaScriptTemplateLoadRelaciones.NombreProgramador=strNombreProgramador;
+		
+		strEntidadesNombre=string.Empty;
+		
+		if(strEntidadesNombre==string.Empty)
+		{
+			bool blnExisteCompuestos=false;
+			
+			SchemaExplorer.TableSchemaCollection tablasDetalleRelacionadas=new SchemaExplorer.TableSchemaCollection();
+			SchemaExplorer.TableSchemaCollection tablasJunctionRelacionadas=new SchemaExplorer.TableSchemaCollection();
+			SchemaExplorer.TableSchema tableSchemaJunction=SourceDatabase.Tables[x];
+			
+			blnExisteCompuestos=	GetTableAuxiliarFromPropertiesC(SourceDatabase.Tables[x],ref tablasJunctionRelacionadas,ref tablasDetalleRelacionadas);			
+			
+		/*strDirectorioPartialClass=this.OutputDirectory+"\\"+"PartialClass"+"\\"+strEntidadesNombre;
+		if (!strDirectorioPartialClass.EndsWith("\\")) strDirectorioPartialClass += "\\";
+	    if (!Directory.Exists(strDirectorioPartialClass)) Directory.CreateDirectory(strDirectorioPartialClass);
+		*/
+		
+		// Use a preserve regions merge strategy to preserve all of the custom regions in our entity classes when they are re-generated.
+		
+		if(!GenerarSoloFilesAdditional)
+		{
+		
+			switch(Layers.ToString())
+			{
+				case "DataAccess":
+				
+					accesoDatosTemplate.TablasBaseCompuestoJunction=tablasJunctionRelacionadas;
+					accesoDatosTemplate.TablasBaseCompuestoDetalle=tablasDetalleRelacionadas;	
+					accesoDatosTemplate.RenderToFile(strDirectorioAccesoDatos +GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.java", strategy);					
+					break;
+		
+				case "Entities":
+				
+					entitiesTemplate.RenderToFile(strDirectorioEntities +GetNombreClase(SourceDatabase.Tables[x].Name)+ ".java", strategy);
+					entitiesTemplateBean.RenderToFile(strDirectorioReporte +GetNombreClase(SourceDatabase.Tables[x].Name)+ strClaseBean+".java", strategy);				
+					break;
+								
+				case "Interface":
+				
+					interfaceTemplate.TablasBaseCompuestoJunction=tablasJunctionRelacionadas;
+					interfaceTemplate.TablasBaseCompuestoDetalle=tablasDetalleRelacionadas;
+					interfaceTemplate.RenderToFile(strDirectorioInterface +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Interface.java", strategy);
+					
+					if(GenerarFilesAdditional)
+					{
+						interfaceTemplateAdditional.RenderToFile(strDirectorioInterface +GetNombreClase(SourceDatabase.Tables[x].Name)+ "InterfaceAdditional.java", strategy);		
+					}
+					break;
+						
+				case "Logic":
+				
+					logicaNegocioTemplate.TablasBaseCompuestoJunction=tablasJunctionRelacionadas;
+					logicaNegocioTemplate.TablasBaseCompuestoDetalle=tablasDetalleRelacionadas;
+					logicaNegocioTemplate.RenderToFile(strDirectorioLogicaNegocio +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Logic.java", strategy);
+					
+					if(GenerarFilesAdditional)
+					{
+						logicaNegocioTemplateAdditional.RenderToFile(strDirectorioLogicaNegocio +GetNombreClase(SourceDatabase.Tables[x].Name)+ "LogicAdditional.java", strategy);
+					}					
+					break;
+				
+				case "Servlet":
+				
+					//if(ExisteEnTablasMaintenance(SourceDatabase.Tables[x]))
+					//{
+					servletNegocioTemplate.TablasBaseCompuestoJunction=tablasJunctionRelacionadas;
+					servletNegocioTemplate.TablasBaseCompuestoDetalle=tablasDetalleRelacionadas;
+					servletNegocioTemplate.RenderToFile(strDirectorioServlet +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Servlet.java", strategy);		
+					
+					if(GenerarFilesAdditional)
+					{
+						servletNegocioTemplateAdditional.RenderToFile(strDirectorioServlet +GetNombreClase(SourceDatabase.Tables[x].Name)+ "ServletAdditional.java", strategy);			
+					}			
+					break;
+				
+				case "Reporte":
+			
+					sourceReporteTemplate.RenderToFile(strDirectorioReporte +GetNombreClase(SourceDatabase.Tables[x].Name)+ "SourceReporte.java", strategy);		
+					designReporteTemplate.RenderToFile(strDirectorioReporteDiseno +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Design.jrxml", strategy);		
+					
+					break;
+		
+				case "JspMaintenance":
+				
+					if(ExisteEnTablasSimpleMaintenance(SourceDatabase.Tables[x]))
+					{
+						webTemplate.RenderToFile(strDirectorioWebSimple +"Mantenimiento"+GetNombreClase(SourceDatabase.Tables[x].Name)+ ".jsp", strategy);
+						
+					}
+					else
+					{
+						webTemplate.RenderToFile(strDirectorioWeb +"Mantenimiento"+GetNombreClase(SourceDatabase.Tables[x].Name)+ ".jsp", strategy);
+					}
+					
+					if(ExisteEnTablasRelationshipsMaintenance(SourceDatabase.Tables[x]))
+					{
+						webTemplateRelaciones.RenderToFile(strDirectorioWebRelaciones +"Mantenimiento"+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Relaciones.jsp", strategy);
+					}
+				
+					break;
+				
+				case "JavaScript":
+				
+					if(ExisteEnTablasRelationshipsMaintenance(SourceDatabase.Tables[x]))
+					{
+						javaScriptTemplateLoadRelaciones.RenderToFile(strDirectorioJavaScriptLoad +GetNombreClase(SourceDatabase.Tables[x].Name)+ "LoadRelaciones.js", strategy);
+						javaScriptTemplatePaginaWebInteraccionRelaciones.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(SourceDatabase.Tables[x].Name)+ "WebPageInteractionRelaciones.js", strategy);
+						javaScriptTemplatePaginaWebInteraccionEventsRelaciones.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(SourceDatabase.Tables[x].Name)+ "WebPageInteractionEventsRelaciones.js", strategy);
+					}
+					
+					javaScriptTemplateAccesoDatos.RenderToFile(strDirectorioJavaScriptAccesoDatos +GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.js", strategy);
+					javaScriptTemplateAccesoDatosAdicional.RenderToFile(strDirectorioJavaScriptAccesoDatos +GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccessAdditional.js", strategy);
+					javaScriptTemplateEntities.RenderToFile(strDirectorioJavaScriptEntities+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Entity.js", strategy);
+					
+					javaScriptTemplateAccesoDatos.GenerarCompuesto=false;
+					javaScriptTemplatePaginaWebInteraccion.GenerarCompuesto=false;		
+						
+								
+					javaScriptTemplateAccesoDatos.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplatePaginaWebInteraccion.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplateAccesoDatosAdicional.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplateLogicaNegocio.TablaBase=SourceDatabase.Tables[x];							
+					javaScriptTemplateLayerCommunication.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplateServiciosAjax.TablaBase=SourceDatabase.Tables[x];							
+					javaScriptTemplateFuncionesGenerales.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplateConstantes.TablaBase=SourceDatabase.Tables[x];						
+					javaScriptTemplateServicios.TablaBase=SourceDatabase.Tables[x];								
+					javaScriptTemplatePaginaWebInteraccionEvents.TablaBase=SourceDatabase.Tables[x];					
+					javaScriptTemplateLoad.TablaBase=SourceDatabase.Tables[x];	
+						
+					javaScriptTemplateLogicaNegocio.RenderToFile(strDirectorioJavaScriptLogicaNegocio +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Logic.js", strategy);
+					javaScriptTemplateLayerCommunication.RenderToFile(strDirectorioJavaScriptInterface +GetNombreClase(SourceDatabase.Tables[x].Name)+ "LayerCommunication.js", strategy);
+					javaScriptTemplateServiciosAjax.RenderToFile(strDirectorioJavaScriptServiciosAjax +GetNombreClase(SourceDatabase.Tables[x].Name)+ "AjaxServices.js", strategy);
+					javaScriptTemplateFuncionesGenerales.RenderToFile(strDirectorioJavaScriptFuncionesGenerales +GetNombreClase(SourceDatabase.Tables[x].Name)+ "GeneralFunctions.js", strategy);
+					javaScriptTemplateConstantes.RenderToFile(strDirectorioJavaScriptFuncionesGenerales +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Constants.js", strategy);
+					javaScriptTemplateServicios.RenderToFile(strDirectorioJavaScriptServicios +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Services.js", strategy);
+					javaScriptTemplatePaginaWebInteraccion.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(SourceDatabase.Tables[x].Name)+ "WebPageInteraction.js", strategy);
+					javaScriptTemplatePaginaWebInteraccionEvents.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(SourceDatabase.Tables[x].Name)+ "WebPageInteractionEvents.js", strategy);
+					javaScriptTemplateLoad.RenderToFile(strDirectorioJavaScriptLoad +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Load.js", strategy);
+					break;
+					
+				default:
+					break;
+				
+			}
+		}
+		else
+		{
+			switch(Layers.ToString())
+			{				
+				case "Interface":
+								
+				interfaceTemplateAdditional.RenderToFile(strDirectorioInterface +GetNombreClase(SourceDatabase.Tables[x].Name)+ "InterfaceAdditional.java", strategy);		
+				
+				break;
+				
+				case "Logic":
+
+				logicaNegocioTemplateAdditional.RenderToFile(strDirectorioLogicaNegocio +GetNombreClase(SourceDatabase.Tables[x].Name)+ "LogicAdditional.java", strategy);
+				
+				break;
+				
+				case "Servlet":
+				
+				servletNegocioTemplateAdditional.RenderToFile(strDirectorioServlet +GetNombreClase(SourceDatabase.Tables[x].Name)+ "ServletAdditional.java", strategy);			
+				
+				break;
+										
+				default:
+				break;
+			}
+		}
+
+		
+		
+		if(GenerarSoloCompuestos)
+		{
+			
+			if(blnExisteCompuestos)
+			{
+				int i=0;
+				
+				foreach(TableSchema tablaDetalleRelacionada in tablasDetalleRelacionadas)
+				{		
+						entitiesCompuestoTemplate.TablaBaseMaster=SourceDatabase.Tables[x];		
+						entitiesCompuestoTemplate.TablaBase=tablasJunctionRelacionadas[i];
+						entitiesCompuestoTemplate.TablaBaseRelacionado=tablaDetalleRelacionada;
+						entitiesCompuestoTemplate.RenderToFile(strDirectorioEntities+GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+".java", strategy);
+					
+						javaScriptTemplateEntitiesCompuesto.TablasBaseCompuestoJunction=tablasJunctionRelacionadas[i];
+						javaScriptTemplateEntitiesCompuesto.TablasBaseCompuestoDetalle=tablaDetalleRelacionada;
+						javaScriptTemplateEntitiesCompuesto.RenderToFile(strDirectorioJavaScriptEntities+GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+"Entity.js", strategy);
+						
+						javaScriptTemplateAccesoDatos.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateAccesoDatos.TablasBaseCompuestoJunction=SourceDatabase.Tables[x];
+						javaScriptTemplateAccesoDatos.TablasBaseCompuestoDetalle=tablaDetalleRelacionada;
+						javaScriptTemplateAccesoDatos.GenerarCompuesto=true;
+						javaScriptTemplateAccesoDatos.RenderToFile(strDirectorioJavaScriptAccesoDatos +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "DataAccess.js", strategy);
+						
+						javaScriptTemplatePaginaWebInteraccion.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplatePaginaWebInteraccion.TablasBaseCompuestoJunction=SourceDatabase.Tables[x];
+						javaScriptTemplatePaginaWebInteraccion.TablasBaseCompuestoDetalle=tablasDetalleRelacionadas[i];
+						javaScriptTemplatePaginaWebInteraccion.GenerarCompuesto=true;
+						javaScriptTemplatePaginaWebInteraccion.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "WebPageInteraction.js", strategy);
+						
+						
+						
+						
+						javaScriptTemplateAccesoDatosAdicional.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateAccesoDatosAdicional.RenderToFile(strDirectorioJavaScriptAccesoDatos +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "DataAccessAdditional.js", strategy);
+						
+						javaScriptTemplateLogicaNegocio.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateLogicaNegocio.RenderToFile(strDirectorioJavaScriptLogicaNegocio +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "Logic.js", strategy);
+						
+						javaScriptTemplateLayerCommunication.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateLayerCommunication.RenderToFile(strDirectorioJavaScriptInterface +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "LayerCommunication.js", strategy);
+						
+						javaScriptTemplateServiciosAjax.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateServiciosAjax.RenderToFile(strDirectorioJavaScriptServiciosAjax +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "AjaxServices.js", strategy);
+						
+						javaScriptTemplateFuncionesGenerales.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateFuncionesGenerales.RenderToFile(strDirectorioJavaScriptFuncionesGenerales +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "GeneralFunctions.js", strategy);
+						
+						javaScriptTemplateConstantes.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateConstantes.RenderToFile(strDirectorioJavaScriptFuncionesGenerales +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "Constants.js", strategy);
+						
+						javaScriptTemplateServicios.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateServicios.RenderToFile(strDirectorioJavaScriptServicios +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "Services.js", strategy);
+						
+						javaScriptTemplatePaginaWebInteraccionEvents.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplatePaginaWebInteraccionEvents.RenderToFile(strDirectorioJavaScriptPaginaWebInteraccion +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "WebPageInteractionEvents.js", strategy);
+						
+						javaScriptTemplateLoad.TablaBase=tablasJunctionRelacionadas[i];
+						javaScriptTemplateLoad.RenderToFile(strDirectorioJavaScriptLoad +GetNombreClase(tablasJunctionRelacionadas[i].Name)+GetNombreClase(tablaDetalleRelacionada.Name)+ strClaseAuxiliar+ "Load.js", strategy);
+					
+						//System.Windows.Forms.MessageBox.Show("hi:"+SourceDatabase.Tables[x].Name+" "+tableSchemaJunction.Name+" "+tablaDetalleRelacionada.Name);				
+						
+						i++;
+				}
+			}
+			
+			javaScriptTemplateAccesoDatos.GenerarCompuesto=false;
+			javaScriptTemplatePaginaWebInteraccion.GenerarCompuesto=false;		
+					
+		}
+		
+				
+		//ajaxYahooDataTableTemplateMaintenance.TablaBase=SourceDatabase.Tables[x];
+		//ajaxYahooDataTableTemplateMaintenance.RenderToFile(strDirectorioAjax +"YahooDataTable"+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Maintenance.java", strategy);
+	
+		//ajaxDojoTableTemplateMaintenance.TablaBase=SourceDatabase.Tables[x];
+		//ajaxDojoTableTemplateMaintenance.RenderToFile(strDirectorioAjax +"DojoTable"+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Maintenance.java", strategy);
+	
+		//}
+		
+		if(ExisteEnTablasExtJSGrid(SourceDatabase.Tables[x]))
+		{
+		ajaxExtJSGridTemplate.TablaBase=SourceDatabase.Tables[x];
+	    ajaxExtJSGridTemplate.RenderToFile(strDirectorioAjax + "ExtJSGrid"+GetNombreClase(SourceDatabase.Tables[x].Name)+".java", strategy);
+		}
+		
+		if(ExisteEnTablasYahooDataTable(SourceDatabase.Tables[x]))
+		{
+		ajaxYahooDataTableTemplate.TablaBase=SourceDatabase.Tables[x];
+		ajaxYahooDataTableTemplate.RenderToFile(strDirectorioAjax +"YahooDataTable"+GetNombreClase(SourceDatabase.Tables[x].Name)+ ".java", strategy);
+		}
+		
+		if(ExisteEnTablasDojoTable(SourceDatabase.Tables[x]))
+		{
+		ajaxDojoTableTemplate.TablaBase=SourceDatabase.Tables[x];
+		ajaxDojoTableTemplate.RenderToFile(strDirectorioAjax +"DojoTable"+GetNombreClase(SourceDatabase.Tables[x].Name)+ ".java", strategy);
+		}
+		// Use a preserve regions merge strategy to preserve all of the custom regions in our entity classes when they are re-generated.
+		strategy = new PreserveRegionsMergeStrategy("^[ \t]*(?i:Custom)", "C#");
+		//entityTemplatePartial.RenderToFile(strDirectorioPartialClass +GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.java", strategy);
+		//entityTemplatePartial.RenderToFile(strDirectorioPartialClass +SourceDatabase.Tables[x].Name+ "DataAccess.java", strategy);
+	
+		}
+		/*else
+		{*/
+		//Generar Archivo Cuyo <%=strPhp53VersionComment%>namespace no definido
+		/*strDirectorio=this.OutputDirectory+"\\"+strEntidadesNombre;
+		
+		if (!strDirectorio.EndsWith("\\")) strDirectorio += "\\";
+	    if (!Directory.Exists(strDirectorio)) Directory.CreateDirectory(strDirectorio);
+		*/
+		
+		// Use a preserve regions merge strategy to preserve all of the custom regions in our entity classes when they are re-generated.
+		/* strategy = new PreserveRegionsMergeStrategy("^[ \t]*(?i:Custom)", "C#");
+		
+		accesoDatosTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.java", strategy);
+		entitiesTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ ".java", strategy);
+		interfaceTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Interface.java", strategy);
+		logicaNegocioTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Logica.java", strategy);
+		servletNegocioTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Servlet.java", strategy);
+		webTemplate.RenderToFile(this.OutputDirectory+strEntidadesNombre +GetNombreClase(SourceDatabase.Tables[x].Name)+ "Maintenance.jsp", strategy);
+		*/
+		//Generar Archivo de Partial class Cuyo <%=strPhp53VersionComment%>namespace no definido
+		/*strDirectorioPartialClass=this.OutputDirectory+"\\"+"PartialClass"+"\\"+strEntidadesNombre;
+		
+		if (!strDirectorioPartialClass.EndsWith("\\")) strDirectorioPartialClass += "\\";
+	    if (!Directory.Exists(strDirectorioPartialClass)) Directory.CreateDirectory(strDirectorioPartialClass);
+		
+		strategy = new PreserveRegionsMergeStrategy("^[ \t]*(?i:Custom)", "C#");
+		*///entityTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.java", strategy);
+	
+		/*accesoDatosTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "DataAccess.java", strategy);
+		entitiesTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ ".java", strategy);
+		interfaceTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Interface.java", strategy);
+		logicaNegocioTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Logica.java", strategy);
+		servletNegocioTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Servlet.java", strategy);
+		webTemplate.RenderToFile(strDirectorioPartialClass+GetNombreClase(SourceDatabase.Tables[x].Name)+ "Maintenance.jsp", strategy);
+	
+		}*/
+		
+		if(ExisteRelaciones(SourceDatabase.Tables[x]))
+		{
+			GenerarArchivosReportesRelaciones(SourceDatabase.Tables[x],strDirectorioReporteDiseno,designReporteTemplate, strategy) ;
+		}
+	}
+	
+		webMainTemplate.RenderToFile(strDirectorioWeb +"FinIzquierdaArbolAux.jsp", strategy);
+		
+	
+		xmlServlets+="<servlet>";
+    	xmlServlets+="\r\n<servlet-name>jMaki Servlet</servlet-name>";
+    	xmlServlets+="\r\n<servlet-class>jmaki.xhp.XmlHttpProxyServlet</servlet-class>";
+  		xmlServlets+="\r\n</servlet>";
+		
+  		xmlServlets+="\r\n<servlet-mapping>";
+    	xmlServlets+="\r\n<servlet-name>jMaki Servlet</servlet-name>";
+   		xmlServlets+="\r\n<url-pattern>/xhp</url-pattern>";
+  		xmlServlets+="\r\n</servlet-mapping>";
+		
+  		xmlServlets+="\r\n<context-param>";
+    	xmlServlets+="\r\n<description>Switch off caching. You can remove this parameter or comment it out when this app goes into production.</description>";
+    	xmlServlets+="\r\n<param-name>jmaki-usecache</param-name>";
+    	xmlServlets+="\r\n<param-value>false</param-value>";
+  		xmlServlets+="\r\n</context-param>";
+		
+		xmlServlets+="\r\n\r\n</web-app>";
+		
+		xmlTemplate.xml=xmlServlets;
+		xmlTemplate.RenderToFile(this.OutputDirectory+ "web.xml", strategy);
+		
+		sqlRowsTemplate.sql=GetSqlQuerys()+"\r\n\r\n"+GetJasperCompiles();
+		sqlRowsTemplate.RenderToFile(this.OutputDirectory+ "querys.sql", strategy);
+		
+		Trace.WriteLine("Tiempo de ejecusion: " + (DateTime.Now - startTime).ToString());
+		
+	if(SourceColumnsDojoAccordion!=null)
+	{
+	for (int y = 0; y < SourceColumnsDojoAccordion.Count; y+=2)
+		{
+			ajaxDojoAccordionTemplate.ColumnLabel=SourceColumnsDojoAccordion[y];
+			ajaxDojoAccordionTemplate.ColumnValue=SourceColumnsDojoAccordion[y+1];
+			ajaxDojoAccordionTemplate.TablaBase=SourceColumnsDojoAccordion[y].Table;
+			ajaxDojoAccordionTemplate.RenderToFile(strDirectorioAjax +"DojoAccordion"+GetNombreClase(SourceColumnsDojoAccordion[y].Table.Name)+ ".java", strategy);		
+		}
+		
+			for (int y = 0; y < SourceColumnsDojoComboBox.Count; y+=2)
+		{
+			ajaxDojoComboBoxTemplate.ColumnLabel=SourceColumnsDojoComboBox[y];
+			ajaxDojoComboBoxTemplate.ColumnValue=SourceColumnsDojoComboBox[y+1];
+			ajaxDojoComboBoxTemplate.TablaBase=SourceColumnsDojoComboBox[y].Table;
+			ajaxDojoComboBoxTemplate.RenderToFile(strDirectorioAjax +"DojoComboBox"+GetNombreClase(SourceColumnsDojoComboBox[y].Table.Name)+ ".java", strategy);		
+		}
+	}	
+		
+	
+		if(SourceColumnsDojoFishEye!=null)
+	{
+			for (int y = 0; y < SourceColumnsDojoFishEye.Count; y+=2)
+		{
+			ajaxDojoFishEyeTemplate.ColumnLabel=SourceColumnsDojoFishEye[y];
+			ajaxDojoFishEyeTemplate.ColumnValue=SourceColumnsDojoFishEye[y+1];
+			ajaxDojoFishEyeTemplate.TablaBase=SourceColumnsDojoFishEye[y].Table;
+			ajaxDojoFishEyeTemplate.RenderToFile(strDirectorioAjax +"DojoFishEye"+GetNombreClase(SourceColumnsDojoFishEye[y].Table.Name)+ ".java", strategy);		
+		}
+	}	
+		
+	
+		if(SourceColumnsYahooTabbedView!=null)
+	{
+			for (int y = 0; y < SourceColumnsYahooTabbedView.Count; y+=2)
+		{
+			ajaxYahooTabbedViewTemplate.ColumnLabel=SourceColumnsYahooTabbedView[y];
+			ajaxYahooTabbedViewTemplate.ColumnValue=SourceColumnsYahooTabbedView[y+1];
+			ajaxYahooTabbedViewTemplate.TablaBase=SourceColumnsYahooTabbedView[y].Table;
+			ajaxYahooTabbedViewTemplate.RenderToFile(strDirectorioAjax +"YahooTabbedView"+GetNombreClase(SourceColumnsYahooTabbedView[y].Table.Name)+ ".java", strategy);		
+		}
+	}	
+		
+
+}
+</script>
+

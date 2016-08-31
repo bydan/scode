@@ -1,0 +1,3 @@
+EXTRA ADICIONAL
+
+1.- En commonCode en public string GetControlVariablesC SE ADICIONO GetExtraAdicionalCampoFormularioC

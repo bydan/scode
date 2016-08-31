@@ -1,0 +1,11 @@
+2013_Educacion
+Data Source=localhost;Initial Catalog=2013_Educacion;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa
+
+Erp
+Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa
+
+ErpProcesoReporte
+Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa
+
+JH
+Data Source=localhost;Initial Catalog=Erp2000;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa

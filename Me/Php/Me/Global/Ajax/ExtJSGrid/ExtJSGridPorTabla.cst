@@ -1,0 +1,106 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" %>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"
+	Category="Context"%>
+
+
+<script runat="template">
+
+public static string GetSetEntityColumna(ColumnSchema column)
+{				
+	String strSetEntity=string.Empty;
+	
+	if(column.Name.Equals("id")||column.Name.Equals("isActive")||column.Name.Equals("isExpired")||column.Name.Equals("versionRow"))
+	{
+		return strSetEntity;
+	}
+	String strEntityInit="entity.set";
+	String strEntityMiddle="(rs.get";
+	String strEntityFinal="\"));";
+	//entity.setNombre(rs.getString("nombre"));	
+    strSetEntity=strEntityInit+GetNombreCompletoColumnaClaseC(column)+strEntityMiddle+GetTipoColumnaClaseC(column)+"(\""+GetNombreCampoTablaC(column)+strEntityFinal;
+	
+	return strSetEntity;
+}
+
+public static string GetNombreClase(string strTablaBase)
+{				
+		return GetNombreClaseC(strTablaBase);
+}
+public static string GetNombreClaseObjeto(string strTablaBase)
+{				
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+
+public static string GetNombreColumnaClase(ColumnSchema column)
+{				
+		return GetNombreColumnaClaseC(column);
+}
+public static string GetNombreCompletoColumnaClase(ColumnSchema column)
+{				
+		return GetNombreCompletoColumnaClaseC(column);
+}
+</script>
+
+package Utils.Presentation.Web.Ajax.JMaki.<%= Package%>;
+
+import java.util.ArrayList;
+
+import Business.Entities.<%= Package%>.<%=GetNombreClase(TablaBase.ToString())%>;
+
+public class ExtJSGrid<%=GetNombreClase(TablaBase.ToString())%> extends ExtJSGrid{
+	public static String Traer<%=GetNombreClase(TablaBase.ToString())%>sArgs(ArrayList<<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjeto(TablaBase.ToString())%>s) 
+	{	
+		StringBuilder tableAjax=new StringBuilder();
+		
+		StartCreateColumns(tableAjax) ;		
+		
+		<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+			 CreateColumn(tableAjax,"<%=  GetNombreColumnaClase(TablaBase.Columns[i]) %>","width : 200, locked:false" <% if(!i.Equals(TablaBase.Columns.Count-1)) {%>,true);<%}else{%>,false);<%}%>
+ 			 <% } %>
+		EndCreateColums(tableAjax) ;
+		
+		
+		
+		return tableAjax.toString();
+	}
+	
+	public static String Traer<%=GetNombreClase(TablaBase.ToString())%>sValue(ArrayList<<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjeto(TablaBase.ToString())%>s) 
+	{	
+		StringBuilder tableAjax=new StringBuilder();
+		
+		Integer count=1;
+		
+		StartCreateFiles(tableAjax) ;	
+		
+		String columnsFile[]=new String[<% =TablaBase.Columns.Count.ToString()%>];
+		
+		for(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjeto(TablaBase.ToString())%>:<%=GetNombreClaseObjeto(TablaBase.ToString())%>s)
+		{
+			 <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+			columnsFile[<%=i.ToString()%>]="'"+<%=GetNombreClaseObjeto(TablaBase.ToString())%>.get<%=  GetNombreCompletoColumnaClase(TablaBase.Columns[i]) %>()<%=  GetTipoColumnaToString(TablaBase.Columns[i]) %>+"'"; 
+ 			 <% } %>			
+			 
+			if(<%=GetNombreClaseObjeto(TablaBase.ToString())%>s.size()!=count)
+			{
+				CreateFile(tableAjax,columnsFile,true);
+			}
+			else
+			{
+				CreateFile(tableAjax,columnsFile,false);
+				
+			}
+			count++;
+		}		
+		EndCreateFiles(tableAjax) ;	
+		
+		return tableAjax.toString();
+	}
+}
+
+
+

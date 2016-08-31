@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=AulaVirtualTame;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Documents and Settings\Administrador\Mis documentos\CodeSmith\Samples\v5.0\Templates\Me\MeTAME2\Global\GenerateDataBase.cst">
+      <property name="Ip">127.0.0.1</property>
+      <property name="NombreProgramador">Byron Chavez</property>
+      <property name="Empresa">Tame</property>
+      <property name="Schema">TAMEAULA</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConStoreProceduresBorrar">False</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="Aplicacion">SISTEMA DE AULA VIRTUAL</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">True</property>
+      <property name="ConAuditoriaInterna">True</property>
+      <property name="SchemaAuditoria">Auditoria</property>
+      <property name="ConexionIp">10.1.1.2</property>
+      <property name="ConexionUsuario">dbadmin1</property>
+      <property name="ConexionSchema">TAMEAULA</property>
+      <property name="ConexionSeguridadIp">10.1.1.2</property>
+      <property name="ConexionSeguridadUsuario">dbadmin1</property>
+      <property name="ConexionSeguridadSchema">TAMESEGURI</property>
+      <property name="ConexionAuditoriaIp">10.1.1.2</property>
+      <property name="ConexionAuditoriaUsuario">dbadmin1</property>
+      <property name="ConexionAuditoriaSchema">TAMEAULAAD</property>
+      <property name="OutputDirectory">C:\output\DataBase\AulaVirtualTame\</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="Package">AulaVirtual</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Agrupacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Alumno</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AlumnoCapacitacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AlumnoRespuesta</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Auditoria</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CaracteristicaControlAjax</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CatalogoArchivo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CatalogoArchivoPagina</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CatalogoUrl</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CatalogoUrlPagina</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ControlAjax</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Curso</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CursoCapacitacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>DetalleAgrupacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Imagen</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Pagina</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Parrafo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Pregunta</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PreguntaPractica</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Regulacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ReporteTestsUnidadCurricular</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Respuesta</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>RespuestaPractica</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Test</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoArchivo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoCertificacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoImagen</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoParrafo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoTest</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoTitulo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoUrl</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Titulo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Tutor</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TutorCapacitacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Tutoria</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TutoriaAlumno</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadCurricular</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadCurricularCapacitacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadCurricularTutor</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadCurricularTutorAlumno</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>UnidadCurricularTutorAlumnoPagina</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="ConexionPassword">a1b2c3</property>
+      <property name="ConexionSeguridadPassword">a1b2c3</property>
+      <property name="ConexionAuditoriaPassword">a1b2c3</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

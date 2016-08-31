@@ -1,0 +1,523 @@
+<%@ Template Language="C#" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ColumnaImagen" Type="ColumnSchema" Category="Context"%>
+<%@ Property Name="Ip" Type="System.String" Default="127.0.0.1" Category="Options" Description="Ip aplicacion" %>
+<%@ Property Name="Puerto" Type="System.String" Default="" Category="Options" Description="Ip aplicacion" %>
+<%@ Property Name="ConRichFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+public String GetOrderFuncionesColumns() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsPrimaryKeyMember||columnSchema.IsForeignKeyMember||columnSchema.Name.Equals(strId)||columnSchema.Name.Equals(strIsActive)||columnSchema.Name.Equals(strIsExpired)||columnSchema.Name.Equals(strVersionRow))
+				{
+					continue;
+				}
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\tif(args.value==\""+GetNombreColumnaClaseMinusculaC(columnSchema)+"\")"+"\r\n\t\t\t\t\t\t\t{";					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t\tarrData"+GetNombreClase(TablaBase.ToString())+"s.sort(orderBy"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+");\r\n\t";
+					strTablaClaseRelacionada+="\t\t\t\t\t\t}\r\n";
+			}
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="\t<script type=\"text/javascript\" language=\"javascript\" src=\"JavaScript/";
+	String strNameFin="\"><//script>";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="ValidacionText.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="ValidacionDate.js";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strHtmlInicial="<table width=\"250\" align=\"center\">\r\n<tr>\r\n<td width=\"10%\">";
+			String strHtmlFinal="</tr>\r\n</table>";
+			String strTitulo=string.Empty;
+			String strCombo=string.Empty;
+			String strBoton=string.Empty;
+			
+			String strFuncion=string.Empty;
+			
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"\" name=\"dojo.combobox\"/></td>";					
+				}
+				else
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s\" name=\"dojo.combobox\"/></td>";								
+				}
+				
+			strFuncion+=strHtmlInicial+	strTitulo+strCombo+strBoton+strHtmlFinal+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public string GetTituloControlVariables(ColumnSchema column)
+{
+	
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetWebNombreTituloColumnFromPropertiesC(column);
+	
+	String strTitleControl="";
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired) )
+	{
+			return string.Empty;
+	}
+	else if(column.Name.Equals(strVersionRow))
+	{
+			return "\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t</td>";
+	}
+	else if(column.Name.Equals(strId))
+	{
+		return "\r\n\t\t\t\t\t\t<td><h2>"+strCodigoUnico+"</h2>\r\n\t\t\t\t\t\t</td>";
+	}
+	else
+	{
+		if(!column.IsForeignKeyMember)
+		{
+			strTitleControl="\r\n\t\t\t\t\t\t<td><h2>"+ strColumna +"</h2>\r\n\t\t\t\t\t\t</td>";
+		}
+		else
+		{
+			/*
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			*/
+			strTitleControl="\r\n\t\t\t\t\t\t<td><h2>"+ strColumna +"</h2>\r\n\t\t\t\t\t\t</td>";
+		}
+	}	
+	return strTitleControl;
+}
+
+public string GetColumnsTableMaintenance(ColumnSchema column)
+{
+	
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);
+	
+	String strColumnName="";
+	String strColumnLabel="'"+GetWebNombreTituloColumnFromPropertiesC(column)+"'";
+	String strColumn="";
+	
+	if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow)||column.DataType==DbType.Binary)
+	{
+			return string.Empty;
+	}
+	else
+	{
+		if(!column.IsForeignKeyMember&&column.DataType!=DbType.Boolean)
+		{
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+		}
+		else if(column.DataType==DbType.Boolean)
+		{
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"Control'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";	
+		}
+		else if(column.IsForeignKeyMember)
+		{
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"Descripcion'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+		}
+	}	
+			
+	return strColumn;
+}
+
+public string GetControlVariables(ColumnSchema column,bool ConFaces)
+{			
+	String strControl="";
+	String strTituloControl="";
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+	else if(column.Name.Equals(strId))
+	{
+			strControl="\r\n\t\t\t\t\t\t<td>"+"<input name=\"hdnIdActual\" type=\"text\" readonly=\"readonly\">"+"\r\n\t\t\t\t\t\t</td>";
+			
+	}
+	else
+	{
+		strControl="\r\n\t\t\t\t\t\t<td>"+GetControlHtml(column,ConFaces,ConRichFaces)+"\r\n\t\t\t\t\t\t</td>";	
+	
+	}
+	
+	
+	strTituloControl=GetTituloControlVariables(column);
+	
+	return "\r\n\t\t\t\t\t<tr style=\"visibility:visible\">"+strTituloControl+strControl+"\r\n\t\t\t\t\t</tr>";
+}
+
+public string GetNombreColumnaClaseTituloTablaC(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		String strParamtroInit="<td>";
+		String strParamtroEnd="</td>";
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		
+		strParamtro=strParamtroInit+GetNombreColumnaClaseTituloC(column)+strParamtroEnd;
+		return strParamtro;
+}
+
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+"("+GetTipoColumnaClaseC(column)+")"+"request.getAttribute(\""+GetNombreColumnaClaseC(column)+"\""+");";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="request.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+
+public string GetSetVariablesObjetoTabla(ColumnSchema column,String table)
+{
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	String strColumnaInit="<td><!%=";	
+	String strColumnaEnd="%></td>";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+	 strColumna=strId;
+	}
+	
+	return strColumnaInit+GetNombreClaseObjetoC(table)+".get"+GetNombreCompletoColumnaClaseC(column)+"()"+strColumnaEnd;
+}
+
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+".get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strTipo+strPrefijo+strColumna+";";
+}
+public string GetNombreVariablesStringDefault(ColumnSchema column)
+{
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"=\"\""+";";
+}
+
+public string GetFormVariablesEdit(ColumnSchema column)
+{
+	String strPrefijoInit="<td><input type=\"hidden\" name=\"";
+	String strPrefijoType="txt";
+	String strPrefijoMiddle="\" value=\"<!%="; 
+	String strPrefijoEnd="%>\"></td>";
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijoInit+strPrefijoType+strColumna+strPrefijoMiddle+strPrefijo+strColumna+strPrefijoEnd;
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+</script>
+<%=strStartPageInclude%> page contentType="text/html; charset=UTF-8" %>
+
+<%=strStartPageInclude%> taglib prefix="a" uri="http://jmaki/v1.0/jsp" %>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+
+<title><%=GetWebNombreTituloColumnFromPropertiesC(ColumnaImagen)%> del <%=GetTituloNombreTableFromPropertiesC(TablaBase)%></title>
+<link rel="stylesheet" type="text/css" href="Css/style.css" media="screen" />
+</head>
+<body>
+ 
+<%=strStartPageIncludeOnly%>
+
+String str<%=GetNombreClaseC(TablaBase.ToString())%>Descripcion="";
+  
+if(request.getSession().getAttribute("str<%=GetNombreClaseC(TablaBase.ToString())%>Descripcion")!=null)
+{
+	str<%=GetNombreClaseC(TablaBase.ToString())%>Descripcion=(String) request.getSession().getAttribute("str<%=GetNombreClaseC(TablaBase.ToString())%>Descripcion");
+}
+ 
+<%=strFinishPageInclude%>
+
+<table width="100%" height="100%" border="0">
+		  <tr class="cabecera">
+          	<td align="left">
+			<h1><%=GetWebNombreTituloColumnFromPropertiesC(ColumnaImagen)%> del <%=GetTituloNombreTableFromPropertiesC(TablaBase)%></h1>
+			</td>
+		  </tr>
+          <tr  class="busqueda">
+          	<td align="left">
+			<h1><%=strStartPageIncludeOnly%>=str<%=GetNombreClaseC(TablaBase.ToString())%>Descripcion<%=strFinishPageInclude%></h1>
+			</td>
+		  </tr>
+		  <tr>
+            <td align="center">
+			<img src="http://<%=Ip%><%=Puerto%>/<%=strStartPageIncludeOnly%>=request.getContextPath().replace("/","")<%=strFinishPageInclude%>/<%=GetNombreClaseC(TablaBase.ToString())%><%=GetNombreColumnaClaseC(ColumnaImagen)%>ImagenServlet" name="imagen"/>
+			</td> 
+          </tr>
+</table>
+
+</body>
+</html>
+

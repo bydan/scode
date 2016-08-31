@@ -1,0 +1,202 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="ByDan" Category="Options" Description="Nombre de la Empresa" %>
+
+
+<script runat="template">
+
+public string GetNombreClase(string strTablaBase)
+{
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="funcionGeneral.Import('JavaScript/Library/Validacion/";
+	String strNameFin="');";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="Text.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="Date.js";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+
+public  string GetLibreriasForeignKeysColumnsForCombos()
+	{
+		
+		String strNameLibrary="";
+	String strNameLibraries="";
+	
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember)
+		{
+		
+			strNameLibrary="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/WebPageInteraction/"+GetNombreClaseRelacionadaFromColumn(column)+"WebPageInteraction.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"GeneralFunctions.js');\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constants.js');\r\n";
+			strNameLibraries+=strNameLibrary+"\r\n";
+		}
+		
+		
+	}
+		
+	return strNameLibraries;
+}
+
+
+</script>
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene la definicion de variable entidad de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+
+var funcionGeneral=new FuncionGeneral();
+
+/* General */
+funcionGeneral.Import('JavaScript/Library/Ajax/Ajax.js');
+funcionGeneral.Import('JavaScript/Library/Ajax/AjaxFuncionGeneral.js');
+
+/* Validacion */
+funcionGeneral.Import('JavaScript/Library/Validacion/Validacion.js');
+
+/* Foreign Keys */
+
+<%=GetLibreriasForeignKeysColumnsForCombos()%>
+
+/* Arquitectura */
+funcionGeneral.Import('JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional.js');
+funcionGeneral.Import('JavaScript/Entities/<%=GetNombreClase(TablaBase.ToString())%>Entity.js');
+funcionGeneral.Import('JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccess.js');
+funcionGeneral.Import('JavaScript/WebPageInteraction/<%=GetNombreClase(TablaBase.ToString())%>WebPageInteraction.js');
+funcionGeneral.Import('JavaScript/WebPageInteraction/<%=GetNombreClase(TablaBase.ToString())%>WebPageInteractionEventsAdditional.js');
+funcionGeneral.Import('JavaScript/Services/<%=GetNombreClase(TablaBase.ToString())%>Services.js');
+funcionGeneral.Import('JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>Logic.js');
+funcionGeneral.Import('JavaScript/LayerCommunication/<%=GetNombreClase(TablaBase.ToString())%>LayerCommunication.js');
+funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>GeneralFunctions.js');
+funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>Constants.js');

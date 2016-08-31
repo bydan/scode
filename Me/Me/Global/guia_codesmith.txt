@@ -1,0 +1,2 @@
+ConSwingComboTabla	(true)	Permite combo en tabla de datos (Renderer Fk)
+CONEVENTDEPENDQUERY-->(Para que no se tome en cuenta = en valor, Split en 2 partes solamente y con primer =)

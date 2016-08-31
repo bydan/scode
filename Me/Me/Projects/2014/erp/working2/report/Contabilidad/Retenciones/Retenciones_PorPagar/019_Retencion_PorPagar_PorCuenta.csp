@@ -1,0 +1,188 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">True</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">False</property>
+      <property name="A03_ConGroupBy">False</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">False</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="TablaReporteCreada">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Contabilidad</owner>
+      <name>RetencionesPorPagarPorCuentas</name>
+    </table>
+      </property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="A01_Esquema">Contabilidad</property>
+      <property name="A02_NombreTabla">RetencionesPorPagarPorRetenciones</property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Contabilidad</owner>
+      <name>AsientoContable</name>
+    </table>
+      </property>
+      <property name="A02_TablaPrincipalColumns">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>FechaEmision</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>idTipoMovimiento</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>NumeroMayor</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo">a</property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>idEmpresa</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>idSucursal</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>idEjercicio</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>AsientoContable</tableName>
+        <name>idPeriodo</name>
+      </column>
+      <column>
+        <tableOwner>Tesoreria</tableOwner>
+        <tableName>TipoRetencionFuenteIva</tableName>
+        <name>idTipoRetencion</name>
+      </column>
+      <column>
+        <tableOwner>Tesoreria</tableOwner>
+        <tableName>TipoRetencionFuenteIva</tableName>
+        <name>EsDebito</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A01_Tabla1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Facturacion</owner>
+      <name>Retencion</name>
+    </table>
+      </property>
+      <property name="A02_TablaColumns1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>idCuentaContableRetencion</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>idFactura</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>Porcentaje</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>BaseImponible</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>Valor</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>Numero</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>NombreBenef</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>Retencion</tableName>
+        <name>RucBenef</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo1">r</property>
+      <property name="B01_Tabla2">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Tesoreria</owner>
+      <name>TipoRetencionFuenteIva</name>
+    </table>
+      </property>
+      <property name="B02_TablaColumns2">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Tesoreria</tableOwner>
+        <tableName>TipoRetencionFuenteIva</tableName>
+        <name>idCuentaContable</name>
+      </column>
+      <column>
+        <tableOwner>Tesoreria</tableOwner>
+        <tableName>TipoRetencionFuenteIva</tableName>
+        <name>idCuentaContableCredito</name>
+      </column>
+      <column>
+        <tableOwner>Tesoreria</tableOwner>
+        <tableName>TipoRetencionFuenteIva</tableName>
+        <name>EsDebito</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="B03_Prefijo2">tr</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

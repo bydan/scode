@@ -1,0 +1,155 @@
+UPDATE
+ <table>
+        <owner>Inventario</owner>
+        <name>Bodega</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>BodegaSucursal</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Definicion</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>DetalleMovimientoInventario</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>MovimientoInventario</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>ParametroInven</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Precio</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Servicio</name>
+      </table>
+
+
+
+
+
+NEW
+
+<table>
+        <owner>Inventario</owner>
+        <name>AutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CabeceraSerie</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CentroCostoValor</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>ConversionUnidad</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CuentasContablesLineaProducto</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>DetalleAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Embarcador</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>EstadoDetalleAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>EstadoNovedadSeguimiento</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>NovedadSeguimiento</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>PresupuestoLinea</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>RecargoCompra</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoDefinicion</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoServicio</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>UtilidadTipoPrecio</name>
+      </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table>
+        <owner>Facturacion</owner>
+        <name>CuentaContableTipo</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>DetaFormaPagoFactu</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>Especialidad</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>Responsable</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>SecuencialUsuario</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>TipoCuentaContableTipo</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>TipoDevolucion</name>
+      </table>
+      <table>
+        <owner>Facturacion</owner>
+        <name>Transportista</name>
+      </table>
+      <table>
+        <owner>Comisiones</owner>
+        <name>Vendedor</name>
+      </table>

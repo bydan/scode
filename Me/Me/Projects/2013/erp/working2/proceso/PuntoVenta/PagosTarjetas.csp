@@ -1,0 +1,162 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">True</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">False</property>
+      <property name="GeneracionCreation">False</property>
+      <property name="EsProceso">False</property>
+      <property name="EsProcesoParametro">False</property>
+      <property name="EsProcesoConRetorno">False</property>
+      <property name="A03_ConGroupBy">False</property>
+      <property name="A06_ConReporteGuardarBaseDatos">False</property>
+      <property name="A07_SchemaReporteAuxiliar">NINGUNO</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">False</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="A01_Esquema">PuntoVenta</property>
+      <property name="A02_NombreTabla">PagosTarjetas</property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>PuntoVenta</owner>
+      <name>FacturaPuntoVenta</name>
+    </table>
+      </property>
+      <property name="A03_Prefijo">f</property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idEmpresa</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="ColumnsParametrosHasta">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>Fecha</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A01_Tabla1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>PuntoVenta</owner>
+      <name>FormaPagoTarjetaPunVen</name>
+    </table>
+      </property>
+      <property name="A02_TablaColumns1">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idAsientoContable</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idTarjetaCredito</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idTipoInteresTarjeta</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idConexion</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>idMes</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>Numero</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>Lote</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>Valor</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>ValorRetencion</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>ValorComision</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>ValorCalculado</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>ValorCancelado</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>ValorDifiere</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>NumeroRetencion</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>NumeroLiquidacion</name>
+      </column>
+      <column>
+        <tableOwner>PuntoVenta</tableOwner>
+        <tableName>FormaPagoTarjetaPunVen</tableName>
+        <name>Fecha</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo1">fp</property>
+      <property name="B03_Prefijo2" />
+    </propertySet>
+  </propertySets>
+</codeSmith>

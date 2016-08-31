@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=192.168.1.4;Initial Catalog=EnvioMails;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;&#xD;&#xA;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Php\Me\Global\GenerateDataBase.cst">
+      <property name="GeneracionPorTablas">False</property>
+      <property name="TiposGeneracion">GX</property>
+      <property name="Ip">127.0.0.1</property>
+      <property name="Puerto">80</property>
+      <property name="Package">enviomail</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">True</property>
+      <property name="GenerarFilesAdditionalCakeEjemplos">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConFuncionesSqlNativas">False</property>
+      <property name="ConJSInclude">False</property>
+      <property name="CodigoEmpresa">ME</property>
+      <property name="NombreEmpresa">ME</property>
+      <property name="Empresa">com/bydan</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">False</property>
+      <property name="PackageSeguridad">seguridad</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConNamespaces">True</property>
+      <property name="Aplicacion">SISTEMA ENVIOMAILS</property>
+      <property name="ConFaces">False</property>
+      <property name="ConRichFaces">True</property>
+      <property name="ConSwing">False</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">enviomails</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">seguridad</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">auditoria</property>
+      <property name="PhpVersion">5.2.17</property>
+      <property name="PackageFrameworkGlobal">seguridad</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>CssBackground</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CssFrase</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CssResumen</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>CssTitulo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>FrasePrincipal</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>GrupoContacto</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>GrupoMail</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Imagen</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Intervalo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>IntervaloMail</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Link</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Lugar</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Mail</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Noticia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ParametroGeneral</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Profecia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ProfeciaNoticia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>SubGrupoNoticia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoNoticia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoProfecia</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="OutputDirectory">C:\o\MePhp\enviomail\</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

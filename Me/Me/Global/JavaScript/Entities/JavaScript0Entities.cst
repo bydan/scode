@@ -1,0 +1,44 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="ByDan" Category="Options" Description="Nombre de la Empresa" %>
+
+
+<script runat="template">
+
+public string GetNombreClase(string strTablaBase)
+{
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+</script>
+<%=strJSInitialJavaScript%>
+
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene la definicion de variable entidad de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+
+var <%=GetNombreClase(TablaBase.ToString())%>=function(isNew,isChanged, isDeleted,<% for (int i = 0,j=1; i <TablaBase.Columns.Count; i++,j++){ %><%=GetNombreColumnaClaseJavaScriptFiltradosC(TablaBase.Columns[i],true)%> <%if((i!=TablaBase.Columns.Count-1)&&TablaBase.Columns[i].Name!=strIsActive&&TablaBase.Columns[i].Name!=strIsExpired&&!(TablaBase.Columns[i].DataType==DbType.Binary&&TablaBase.Columns[i].Name!=strVersionRow)&&!(TablaBase.Columns[j].DataType==DbType.Binary&&TablaBase.Columns[j].Name!=strVersionRow)){%>,<% } %><% } %>) {
+	this.isNew=isNew;
+	this.isChanged=isChanged;
+	this.isDeleted=isDeleted; 
+	<% for (int i = 0; i <TablaBase.Columns.Count; i++){%><%=GetNombreColumnaClaseJavaScriptFiltradosC(TablaBase.Columns[i])%><%if((i!=TablaBase.Columns.Count)&&TablaBase.Columns[i].Name!=strIsActive&&TablaBase.Columns[i].Name!=strIsExpired&&!(TablaBase.Columns[i].DataType==DbType.Binary&&TablaBase.Columns[i].Name!=strVersionRow)){%>;
+	<% } %><% } %>
+};
+
+<%=strJSEndJavaScript%>

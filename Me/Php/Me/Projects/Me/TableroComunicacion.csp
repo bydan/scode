@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=192.168.1.4;Initial Catalog=TableroMire;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="D:\Documents and Settings\bydan\Mis documentos\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBase.cst">
+      <property name="Ip">127.0.0.1</property>
+      <property name="NombreProgramador">Arias Santillan</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="Empresa">FundacionHM</property>
+      <property name="Aplicacion">SISTEMA DE CAPACITACION</property>
+      <property name="ConFaces">False</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">True</property>
+      <property name="PackageSeguridad">SeguridadBasico</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">admin</property>
+      <property name="ConexionSchema">tableromire_dbo</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">admin</property>
+      <property name="ConexionSeguridadSchema">seguridads_dbo</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">admin</property>
+      <property name="ConexionAuditoriaSchema">auditoria_dbo</property>
+      <property name="OutputDirectory">E:\o\</property>
+      <property name="Package">TableroComunicacion</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Citas</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Especialista</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Evaluacion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>EvaluacionTerapia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>EvaluacionTerapiaTemas</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Historial</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>HistorialEspecialista</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Paciente</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Temas</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Terapia</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=ErpSeguridad;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBaseCreation.cs" output="GenerateDataBaseCreation.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBaseCreation.cst">
+      <property name="EsMySql">False</property>
+      <property name="EsPostgres">True</property>
+      <property name="EsDb2">False</property>
+      <property name="EsDb2Windows">False</property>
+      <property name="WithDrop">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="EsParaProduccion">False</property>
+      <property name="SinIgnorar">False</property>
+      <property name="NombreEmpresa">BYDAN</property>
+      <property name="EsGeneracionDescripcion">False</property>
+      <property name="EsInsertDeleteOrden">False</property>
+      <property name="EsInsertDeleteDelete">False</property>
+      <property name="EsAlterTable">False</property>
+      <property name="PrefijoSchemaDb2" />
+      <property name="Schema">bydan_erp</property>
+      <property name="SchemaSoloSusTablas">False</property>
+      <property name="GeneracionPorTablas">False</property>
+      <property name="EsParaMigracion">False</property>
+      <property name="EsParaMigracionConTodosDatos">False</property>
+      <property name="EsParaAutoAuditoria">False</property>
+      <property name="MySqlTypeStorage">InnoDB</property>
+      <property name="PrefijoDBNombreTablasGlobal">segu_</property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceTablesForGenerate" />
+    </propertySet>
+  </propertySets>
+</codeSmith>

@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="UtilTemplate.cs" output="UtilTemplate.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\UtilTemplate.cst">
+      <property name="GeneracionNuevaOpcion">True</property>
+      <property name="GeneracionNuevaOpcionSql">True</property>
+      <property name="GeneracionNuevaOpcionSqlDefinicionStandard">False</property>
+      <property name="GeneracionNuevoGrupoOpcion">False</property>
+      <property name="GeneracionTest">False</property>
+      <property name="GeneracionSobreEscribirAdditional">False</property>
+      <property name="IdOpcion">219</property>
+      <property name="IdOpcionPadre">null</property>
+      <property name="IdGrupoOpcion">34</property>
+      <property name="IdModulo">15</property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+ <table>
+        <owner>Inventario</owner>
+        <name>AutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CabeceraSerie</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CentroCostoValor</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>ConversionUnidad</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>CuentasContablesLineaProducto</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>DetalleAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>Embarcador</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>EstadoDetalleAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>EstadoNovedadSeguimiento</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>NovedadSeguimiento</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>PresupuestoLinea</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>RecargoCompra</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoAutoriConsep</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoDefinicion</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>TipoServicio</name>
+      </table>
+      <table>
+        <owner>Inventario</owner>
+        <name>UtilidadTipoPrecio</name>
+      </table>
+
+    </tableList>
+      </property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="ModuloMenu">CuentasPorPagar</property>
+      <property name="ClaveEscribir">//CLAVE</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

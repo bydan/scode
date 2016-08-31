@@ -1,0 +1,1099 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Assembly Name="SchemaExplorer.SqlSchemaProvider" %>
+<%@ Import NameSpace="Me" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Xml" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Collections.Generic" %>
+
+<%@ Property Name="GeneracionPorTablas" Type="System.Boolean" Default="false" Category="0. Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionTodos" Type="System.Boolean" Default="true" Category="0. Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="GeneracionReportes" Type="System.Boolean" Default="false" Category="0. Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionProcesos" Type="System.Boolean" Default="false" Category="0. Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="TipoGeneracionGrupo" Type="Me.TiposGeneracionGrupo" Default="TODOS" Category="0. Tipo Generacion" Description="" %>
+<%@ Property Name="TipoGeneracionRelaciones" Type="Me.TiposGeneracionRelaciones" Default="NINGUNO" Category="0. Tipo Generacion" Description="" %>
+
+<%@ Property Name="SourceTablesForGenerate" Type="SchemaExplorer.TableSchemaCollection" Category="0. Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="0. Tipo Generacion Source" Description="Database to get the extended properties from." %>
+<%@ Property Name="SourceDatabaseReportes" Type="SchemaExplorer.DatabaseSchema" Category="0. Tipo Generacion Source" Description="Database to get the extended properties from." Optional="true"%>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="0. Tipo Generacion Source" Optional="true"%>
+
+<%@ Property Name="html" Type="System.String" Default="NONE" %>
+<%@ Property Name="NombreTablaColumna" Type="System.String" Default="NONE" %>
+<%@ Property Name="NombreDescriptionTablaColumna" Type="System.String" Default="NONE" %>
+
+<%@ Property Name="ConColumnsDescriptions" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTablaDescriptions" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTablaDescriptionsGenerate" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTablaPropiedades" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTablaCargarMinimo" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTodasRelacionadas" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTodasAutoReferenciadas" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConReadXmlTable" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTest" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConAssembly" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConVerificarNombreTabla" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarNombreTabla" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarNombreTablaDescripcion" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarDescriptionTieneTabla" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarNombreColumna" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarNombreColumnaDescripcion" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConBuscarDescriptionTieneColumna" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConTotalNumeroTablas" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConSqlUpdate" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+
+<%@ Property Name="ConTablaDescriptionsGenerateIndicesNo" Type="System.Boolean" Default="false" Category="SubOptions" Description="json or xml" %>
+<script runat="template">
+TableSchemaCollection SourceDatabaseTables;
+Stopwatch stopWatch= new Stopwatch();
+
+public void ValidarTodos() {
+	if(!GeneracionTodos) {	
+		System.Windows.Forms.MessageBox.Show("DEBERIA SELECCIONAR TODOS PARA BUSQUEDA");
+	}
+}
+
+public void CargarTablas() {
+	SourceDatabaseTables = new TableSchemaCollection();
+	
+	if(GeneracionPorTablas) {
+		if(SourceTablesForGenerate!=null) {
+			SourceDatabaseTables=GetTablasNormalesReportesC(SourceTablesForGenerate,GeneracionReportes,GeneracionProcesos,TipoGeneracionGrupo,TipoGeneracionRelaciones);			
+		} else {
+			System.Windows.Forms.MessageBox.Show("SELECCIONE TABLAS A GENERAR");		
+		}				
+	} else if(GeneracionTodos){
+		SourceDatabaseTables=GetTablasNormalesReportesC(SourceDatabase.Tables,GeneracionReportes,GeneracionProcesos,TipoGeneracionGrupo,TipoGeneracionRelaciones);							
+	}	
+}
+
+public String GetSqlUpdate() {
+	String strReturn="";
+	
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			strReturn+="\r\nupdate seguridad.opcion set paquete_original='"+tableSchema.Owner+"' where nombre_clase='"+tableSchema.Name+"';";
+		}
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			strReturn+="\r\nupdate seguridad.opcion set paquete_original='"+tableSchema.Owner+"' where nombre_clase='"+tableSchema.Name+"';";
+		}
+	}
+	
+	return strReturn;
+}
+
+public String GetTotalNumeroTablas() {
+	String strReturn="";
+	
+	if(GeneracionTodos) {
+		strReturn="TOTAL TABLAS="+SourceDatabase.Tables.Count;
+	} else {
+		strReturn="TOTAL TABLAS="+SourceDatabaseTables.Count;
+	}
+	
+	return strReturn;
+}
+
+public String GetBuscarNombreTabla(bool conBuscarNombreTablaDescripcion) {
+	String strReturn="";
+	int intTotalTablas=0;
+	bool existe=false;
+	
+	ValidarTodos();
+	
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(NombreTablaColumna!=null) {
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+				if(!conBuscarNombreTablaDescripcion) {
+					if(tableSchema.Name.Contains(NombreTablaColumna)) {						
+						strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;						
+						existe=true;					
+					}
+					
+				} else if(!GetVarGlobalNOTableFromPropertiesC(tableSchema).Equals("")){
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+					existe=true;
+				}
+				
+				//strReturn+="\r\n"+tableSchema.Name;
+				/*		
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					if(columnSchema.Name.Equals("TotalIva")) {
+						strReturn+="\r\nOwner:"+tableSchema.Owner+",Tabla:"+tableSchema.Name;
+					}
+					
+					//Trace.WriteLine(columnSchema.Name);
+				}
+				*/
+			}
+			
+			if(SourceDatabaseReportes!=null) {
+				foreach(TableSchema tableSchema in SourceDatabaseReportes.Tables) {
+					if(!conBuscarNombreTablaDescripcion) {
+						if(tableSchema.Name.Equals(NombreTablaColumna)) {
+							strReturn+="\r\nDATABASE: "+SourceDatabaseReportes.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+							existe=true;
+						}					
+					} else if(!GetVarGlobalNOTableFromPropertiesC(tableSchema).Equals("")){
+						strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+						existe=true;
+					}
+				}
+				
+				intTotalTablas=SourceDatabase.Tables.Count + SourceDatabaseReportes.Tables.Count;				
+				strReturn+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+				
+			} else {
+				System.Windows.Forms.MessageBox.Show("ESCOJA BASE DE DATOS REPORTES");
+				return "";
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				if(!conBuscarNombreTablaDescripcion) {
+					if(tableSchema.Name.Contains(NombreTablaColumna)) {
+						strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+						existe=true;					
+					}
+					
+				} else if(!GetVarGlobalNOTableFromPropertiesC(tableSchema).Equals("")){
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+					existe=true;
+				}
+			}
+			
+			intTotalTablas=SourceDatabaseTables.Count;				
+			strReturn+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+		}				
+	} else {
+		System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE DE TABLA A BUSCAR");
+		return "";
+	}
+		
+	if(!existe) {
+		//System.Windows.Forms.MessageBox.Show("NO EXISTE TABLA CON ESTE NOMBRE");
+		strReturn+="NO EXISTE TABLAS CON ESTE NOMBRE --> "+NombreTablaColumna;
+	}
+	
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetBuscarDescriptionTieneTabla() {
+	String strReturn="";
+	
+	int intTotalTablas=0;
+	bool existe=false;
+	String strValorDescription="";
+	
+	ValidarTodos();
+	
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(NombreDescriptionTablaColumna!=null) {
+		
+		if(GeneracionTodos) {
+			
+			foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+				strValorDescription=GetTipoDescriptionGenericoTableFromPropertiesC(tableSchema,NombreDescriptionTablaColumna);								
+				if(!strValorDescription.Equals("")) {
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name+" -> VALOR:"+strValorDescription;
+					existe=true;					
+				}
+			}
+			
+				
+			if(SourceDatabaseReportes!=null) {
+				foreach(TableSchema tableSchema in SourceDatabaseReportes.Tables) {
+					strValorDescription=GetTipoDescriptionGenericoTableFromPropertiesC(tableSchema,NombreDescriptionTablaColumna);
+				
+					if(!strValorDescription.Equals("")) {
+						strReturn+="\r\nDATABASE: "+SourceDatabaseReportes.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name+" -> VALOR:"+strValorDescription;
+						existe=true;
+					}										
+				}
+				
+				intTotalTablas=SourceDatabase.Tables.Count + SourceDatabaseReportes.Tables.Count;				
+				strReturn+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+				
+			} else {
+				//System.Windows.Forms.MessageBox.Show("ESCOJA BASE DE DATOS REPORTES");
+				Trace.WriteLine("NO SE HA BUSCADO EN BASE DE DATOS DE REPORTES PORQUE NO SE HA SELECCIONADO ALGUNO");
+				//return "";
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				if(tableSchema.Name.Contains(NombreTablaColumna)) {
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+					existe=true;					
+				}									
+			}
+			
+			intTotalTablas=SourceDatabaseTables.Count;				
+			strReturn+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+		}				
+	} else {
+		System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE DE DESCRIPTION A BUSCAR");
+		return "";
+	}
+		
+	if(!existe) {
+		//System.Windows.Forms.MessageBox.Show("NO EXISTE TABLA CON ESTE NOMBRE");
+		strReturn+="NO EXISTE TABLAS CON ESTE NOMBRE DE DESCRIPTION--> "+NombreDescriptionTablaColumna;
+	}
+	
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetBuscarNombreColumna(bool conBuscarNombreTablaDescripcion) {
+	String strReturn="";
+	String strResumenBusqueda="";
+	int intTotalTablas=0;
+	int intTotalResultados=0;
+	bool existe=false;
+	
+	//ValidarTodos();
+	
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(NombreTablaColumna!=null) {
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+				/*
+				if(tableSchema.Name.Contains(NombreTablaColumna)) {
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+					existe=true;
+				}
+				*/
+				
+				//strReturn+="\r\n"+tableSchema.Name;			
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					if(!conBuscarNombreTablaDescripcion) {
+						//if(columnSchema.Name.Contains(NombreTablaColumna)) {
+						if(EsTimeColumn(columnSchema)) {
+							//strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+							strReturn+="\r\nalter table "+GetNombreTablaC(tableSchema)+" modify "+GetNombreColumnFromProperties(columnSchema)+" date;";
+							intTotalResultados++;
+							existe=true;
+						}				
+						//Trace.WriteLine(columnSchema.Name);
+					} else {
+						if(!GetTituloNuevaFilaColumnFromPropertiesC(columnSchema).Equals("")) {
+							strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+							intTotalResultados++;
+							existe=true;
+						}	
+					}
+				}
+				
+			}
+			
+			if(SourceDatabaseReportes!=null) {
+				foreach(TableSchema tableSchema in SourceDatabaseReportes.Tables) {
+					/*
+					if(tableSchema.Name.Equals(NombreTablaColumna)) {
+						strReturn+="\r\nDATABASE: "+SourceDatabaseReportes.Name+" -> OWNER: "+tableSchema.Owner+" -> TABLA: "+tableSchema.Name;
+						existe=true;
+					}
+					*/
+									
+					foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+						if(!conBuscarNombreTablaDescripcion) {
+							if(columnSchema.Name.Contains(NombreTablaColumna)) {
+								strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+								intTotalResultados++;
+								existe=true;
+							}
+						} else {
+							if(!GetTituloNuevaFilaColumnFromPropertiesC(columnSchema).Equals("")) {
+								strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+								intTotalResultados++;
+								existe=true;
+							}
+						}
+					}
+				}
+				
+				intTotalTablas=SourceDatabase.Tables.Count + SourceDatabaseReportes.Tables.Count;				
+				
+				strResumenBusqueda+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+				strResumenBusqueda+="\r\n\r\nTOTAL RESULTADOS= "+intTotalResultados;
+				strReturn+=strResumenBusqueda;
+				
+				Trace.WriteLine(strResumenBusqueda);
+				
+			} else {
+				System.Windows.Forms.MessageBox.Show("ESCOJA BASE DE DATOS REPORTES");
+				return "";
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					if(!conBuscarNombreTablaDescripcion) {
+						if(columnSchema.Name.Contains(NombreTablaColumna)) {
+							strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+							intTotalResultados++;
+							existe=true;
+						}				
+						//Trace.WriteLine(columnSchema.Name);
+					} else {
+						if(!GetTituloNuevaFilaColumnFromPropertiesC(columnSchema).Equals("")) {
+							strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+							intTotalResultados++;
+							existe=true;
+						}	
+					}
+				}								
+			}
+			
+			intTotalTablas=SourceDatabaseTables.Count;				
+			strResumenBusqueda+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+			strResumenBusqueda+="\r\n\r\nTOTAL RESULTADOS= "+intTotalResultados;
+			strReturn+=strResumenBusqueda;
+			
+			Trace.WriteLine(strResumenBusqueda);
+		}
+	} else {
+		System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE DE COLUMNA A BUSCAR");
+		return "";
+	}
+		
+	if(!existe) {
+		//System.Windows.Forms.MessageBox.Show("NO EXISTE TABLA CON ESTE NOMBRE");
+		strReturn+="NO EXISTEN COLUMNAS CON ESTE NOMBRE --> "+NombreTablaColumna;
+	}
+	
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetBuscarDescriptionTieneColumna() {
+	String strReturn="";
+	String strResumenBusqueda="";
+	String strValorDescription="";
+	int intTotalTablas=0;
+	int intTotalResultados=0;
+	bool existe=false;
+	
+	//ValidarTodos();
+	
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(NombreDescriptionTablaColumna!=null) {
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					strValorDescription=GetTipoDescriptionGenericoColumnFromPropertiesC(columnSchema,NombreDescriptionTablaColumna);
+					
+					if(!strValorDescription.Equals("")) {
+						strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType+", VALOR:"+strValorDescription;
+						intTotalResultados++;
+						existe=true;
+					}				
+					//Trace.WriteLine(columnSchema.Name);				
+				}				
+			}
+			
+			if(SourceDatabaseReportes!=null) {
+				foreach(TableSchema tableSchema in SourceDatabaseReportes.Tables) {
+					foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+						strValorDescription=GetTipoDescriptionGenericoColumnFromPropertiesC(columnSchema,NombreDescriptionTablaColumna);
+					
+						if(!strValorDescription.Equals("")) {
+							strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType+", VALOR:"+strValorDescription;
+							intTotalResultados++;
+							existe=true;
+						}						
+					}
+				}
+				
+				intTotalTablas=SourceDatabase.Tables.Count + SourceDatabaseReportes.Tables.Count;				
+				
+				strResumenBusqueda+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+				strResumenBusqueda+="\r\n\r\nTOTAL RESULTADOS= "+intTotalResultados;
+				strReturn+=strResumenBusqueda;
+				
+				Trace.WriteLine(strResumenBusqueda);
+				
+			} else {
+				Trace.WriteLine("NO ESTA ESCOJIDO BASE DE DATOS REPORTES");
+				//System.Windows.Forms.MessageBox.Show("ESCOJA BASE DE DATOS REPORTES");
+				//return "";
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					if(columnSchema.Name.Contains(NombreTablaColumna)) {
+						strReturn+="\r\nDB: "+tableSchema.Database.Name+", OWNER: "+tableSchema.Owner+", TABLA: "+tableSchema.Name+", COLUMNA: "+columnSchema.Name+", TIPO: "+columnSchema.DataType;
+						intTotalResultados++;
+						existe=true;
+					}				
+				}								
+			}
+			
+			intTotalTablas=SourceDatabaseTables.Count;				
+			strResumenBusqueda+="\r\n\r\nBUSQUEDA REALIZADA EN "+intTotalTablas+" TABLAS ";
+			strResumenBusqueda+="\r\n\r\nTOTAL RESULTADOS= "+intTotalResultados;
+			strReturn+=strResumenBusqueda;
+			
+			Trace.WriteLine(strResumenBusqueda);
+		}
+	} else {
+		System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE DE DESCRIPTION A BUSCAR");
+		return "";
+	}
+		
+	if(!existe) {
+		//System.Windows.Forms.MessageBox.Show("NO EXISTE TABLA CON ESTE NOMBRE");
+		strReturn+="NO EXISTEN COLUMNAS CON ESTE NOMBRE DE DESCRIPTION --> "+NombreTablaColumna;
+	}
+	
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetVerificarNombreTabla() {
+	String strReturn="";
+	bool existe=false;
+	
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(NombreTablaColumna!=null) {
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+				if(tableSchema.Name.Equals(NombreTablaColumna)) {
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+"\r\nOWNER: "+tableSchema.Owner+"\r\nTABLA: "+tableSchema.Name;
+					existe=true;
+				}
+				
+				//strReturn+="\r\n"+tableSchema.Name;
+				/*		
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					if(columnSchema.Name.Equals("TotalIva")) {
+						strReturn+="\r\nOwner:"+tableSchema.Owner+",Tabla:"+tableSchema.Name;
+					}
+					
+					//Trace.WriteLine(columnSchema.Name);
+				}
+				*/
+			}
+			
+			if(SourceDatabaseReportes!=null) {
+				foreach(TableSchema tableSchema in SourceDatabaseReportes.Tables) {
+					if(tableSchema.Name.Equals(NombreTablaColumna)) {
+						strReturn+="\r\nDATABASE: "+SourceDatabaseReportes.Name+"\r\nOWNER: "+tableSchema.Owner+"\r\nTABLA: "+tableSchema.Name;
+						existe=true;
+					}
+				}
+			}else {
+				System.Windows.Forms.MessageBox.Show("ESCOJA BASE DE DATOS REPORTES");
+				return "";
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				if(tableSchema.Name.Equals(NombreTablaColumna)) {
+					strReturn+="\r\nDATABASE: "+SourceDatabase.Name+"\r\nOWNER: "+tableSchema.Owner+"\r\nTABLA: "+tableSchema.Name;
+					existe=true;
+				}								
+			}	
+		}
+	} else {
+		System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE DE TABLA A BUSCAR");
+		return "";
+	}
+		
+	if(!existe) {
+		//System.Windows.Forms.MessageBox.Show("NO EXISTE TABLA CON ESTE NOMBRE");
+		strReturn+="NO EXISTE TABLAS CON ESTE NOMBRE --> "+NombreTablaColumna;
+	}
+	
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetTestDatabaseSchema() {
+	String strReturn="";
+    //string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	//DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    	
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			//strReturn+="\r\n"+tableSchema.Name;
+						
+			foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+				if(columnSchema.Name.Equals("TotalIva")) {
+					strReturn+="\r\nOwner:"+tableSchema.Owner+",Tabla:"+tableSchema.Name;
+				}				
+				//Trace.WriteLine(columnSchema.Name);
+			}			
+		}
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			//strReturn+="\r\n"+tableSchema.Name;
+						
+			foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+				if(columnSchema.Name.Equals("TotalIva")) {
+					strReturn+="\r\nOwner:"+tableSchema.Owner+",Tabla:"+tableSchema.Name;
+				}				
+				//Trace.WriteLine(columnSchema.Name);
+			}			
+		}
+	}
+			
+	return strReturn;//databaseSchema.Name+strReturn;
+}
+
+public String GetAssemblyDatabaseSchema() {
+	String strReturn="";
+    string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    
+	
+	
+	foreach(TableSchema tableSchema in databaseSchema.Tables) {
+		strReturn+="\r\n"+tableSchema.Name;
+		
+		/*
+		foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+			Trace.WriteLine(columnSchema.Name);
+		}
+		*/
+	}
+	
+	string fullPath = System.Reflection.Assembly.GetAssembly(typeof(SqlSchemaProvider)).Location;
+		
+	string theDirectory = Path.GetDirectoryName( fullPath );
+
+	Trace.WriteLine(theDirectory);
+	
+	return databaseSchema.Name+strReturn;
+}
+
+public String GetDatabaseSchema() {
+	String strReturn="";
+    string connectionString = @"Server=(local);Database=Erp;Integrated Security=true;";
+	DatabaseSchema databaseSchema = new DatabaseSchema(new SqlSchemaProvider(), connectionString);
+    
+	
+	foreach(TableSchema tableSchema in databaseSchema.Tables) {
+		strReturn+="\r\n"+tableSchema.Name;
+		
+		/*
+		foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+			Trace.WriteLine(columnSchema.Name);
+		}
+		*/
+	}
+	
+	string fullPath = System.Reflection.Assembly.GetAssembly(typeof(SqlSchemaProvider)).Location;
+		
+	string theDirectory = Path.GetDirectoryName( fullPath );
+
+	Trace.WriteLine(theDirectory);
+	
+	return databaseSchema.Name+strReturn;
+}
+
+public void GetTableKeySchemaMeXml(TableSchema tableSchema,TableKeySchemaMe tableKeySchemaMe/*TablaBase*/) {
+	String strTableKeySchema="";
+	String strPrimaryKeyMemberColumns="";
+	String strForeignKeyMemberColumns="";
+	String strPrimaryKey="";
+	String strPrimaryKeyColumns="";
+	
+	//Trace.WriteLine(tableKeySchemaCollectionMe.Count);
+		
+		strTableKeySchema="";
+		strPrimaryKeyMemberColumns="";
+		strForeignKeyMemberColumns="";
+		strPrimaryKey="";
+		strPrimaryKeyColumns="";
+		
+		//TABLEKEYSCHEMA
+		strTableKeySchema+="TABLE_KEY_SCHEMA\r\n";
+		strTableKeySchema+="Name="+tableKeySchemaMe.Name+",DeepLoad="+tableKeySchemaMe.DeepLoad;
+		strTableKeySchema+=",PrimaryKeyTable="+tableKeySchemaMe.PrimaryKeyTable.Name+",ForeignKeyTable="+tableKeySchemaMe.ForeignKeyTable.Name;
+				
+		Trace.WriteLine(strTableKeySchema);
+		//TABLEKEYSCHEMA
+		
+		
+		//PRIMARYKEYMEMBER
+		strPrimaryKeyMemberColumns+="\r\nPRIMARY_KEY_COLUMNS--->";		
+		foreach(MemberColumnSchemaMe memberColumnSchemaMe in tableKeySchemaMe.PrimaryKeyMemberColumns) {
+			strPrimaryKeyMemberColumns+=GetMemberColumnSchemaMeDescription(memberColumnSchemaMe);
+		}				
+		Trace.WriteLine(strPrimaryKeyMemberColumns);
+		//PRIMARYKEYMEMBER
+		
+		
+		//FOREIGNKEYMEMBER
+		strForeignKeyMemberColumns+="\r\nFOREIGN_KEY_COLUMNS--->";
+		foreach(MemberColumnSchemaMe memberColumnSchemaMe in tableKeySchemaMe.ForeignKeyMemberColumns) {
+			strForeignKeyMemberColumns+=GetMemberColumnSchemaMeDescription(memberColumnSchemaMe);
+		}				
+		Trace.WriteLine(strForeignKeyMemberColumns);
+		//FOREIGNKEYMEMBER
+		
+		//PRIMARYKEY
+		strPrimaryKey+="\r\nPRIMARY_KEY--->";
+		strPrimaryKey+="\r\nName="+tableKeySchemaMe.PrimaryKey.Name+",DeepLoad="+tableKeySchemaMe.PrimaryKey.DeepLoad;
+		strPrimaryKey+=",Table="+tableKeySchemaMe.PrimaryKey.Table.Name+",Description="+tableKeySchemaMe.PrimaryKey.Description;
+		
+		Trace.WriteLine(strPrimaryKey);
+		
+			//PRIMARYKEY COLUMNS
+			strPrimaryKeyColumns+="\r\n\tPRIMARY_KEY_COLUMNS--->";
+			foreach(MemberColumnSchemaMe memberColumnSchemaMe in tableKeySchemaMe.PrimaryKey.MemberColumns) {
+				strPrimaryKeyColumns+=GetMemberColumnSchemaMeDescription(memberColumnSchemaMe);
+			}				
+			Trace.WriteLine(strPrimaryKeyColumns);
+			//PRIMARYKEY COLUMNS
+		//PRIMARYKEY
+}
+
+public void GetColumnSchemaXml(TableSchema tableSchema,ColumnSchema columnSchema) {
+	String strColumnSchema="";
+	
+	strColumnSchema+="\r\nName="+columnSchema.Name+",Table="+columnSchema.Table.Name;
+	
+	Trace.WriteLine(strColumnSchema);
+		
+}
+
+public string GetReadXmlTable(TableSchema tableSchema/*TablaBase*/) {
+	String strReturn="";
+	//TablaBase.PrimaryKeys
+	//ForeignKeyColumns
+	TableKeySchemaCollectionMe tableKeySchemaCollectionMe=new TableKeySchemaCollectionMe();
+	TableSchemaMe tableSchemaMe=new TableSchemaMe();
+	
+	String strPathBase="C:/o/Me/ME/erp/com.bydan/erp/";
+		
+	tableSchemaMe=ReadXmlTableSchemaMeC(strPathBase,TablaBase);
+	//tableKeySchemaCollectionMe=tableSchemaMe.ForeignKeys;
+	
+	Trace.WriteLine("----------------FOREIGN KEYS----------------");
+	foreach(TableKeySchemaMe tableKeySchemaMe in tableSchemaMe.ForeignKeys) {
+		GetTableKeySchemaMeXml(tableSchema,tableKeySchemaMe);		
+	}
+	
+	Trace.WriteLine("\r\n\r\n\r\n\r\n----------------PRIMARY KEYS----------------");
+	foreach(TableKeySchemaMe tableKeySchemaMe in tableSchemaMe.PrimaryKeys) {
+		GetTableKeySchemaMeXml(tableSchema,tableKeySchemaMe);		
+	}
+	
+	Trace.WriteLine("\r\n\r\n\r\n\r\n----------------COLUMNS FOREIGN KEYS----------------");
+	foreach(ColumnSchema columnSchema in tableSchemaMe.ForeignKeyColumns) {
+		GetColumnSchemaXml(tableSchema,columnSchema);		
+	}
+	return strReturn;
+}
+
+public string GetMemberColumnSchemaMeDescription(MemberColumnSchemaMe memberColumnSchemaMe) {
+	String strPrimaryKeyMemberColumns="";
+	
+	strPrimaryKeyMemberColumns="\r\nName="+memberColumnSchemaMe.Name+",DeepLoad="+memberColumnSchemaMe.DeepLoad;
+	strPrimaryKeyMemberColumns+=",Description="+memberColumnSchemaMe.Description+",AllowDBNull="+memberColumnSchemaMe.AllowDBNull;
+	strPrimaryKeyMemberColumns+=",Column="+memberColumnSchemaMe.Column.Name+",IsForeignKeyMember="+memberColumnSchemaMe.IsForeignKeyMember;
+	strPrimaryKeyMemberColumns+=",IsPrimaryKeyMember="+memberColumnSchemaMe.IsPrimaryKeyMember+",IsUnique="+memberColumnSchemaMe.IsUnique;
+	strPrimaryKeyMemberColumns+=",Precision="+memberColumnSchemaMe.Precision+",Scale="+memberColumnSchemaMe.Scale+",Size="+memberColumnSchemaMe.Size;
+	strPrimaryKeyMemberColumns+=",Table="+memberColumnSchemaMe.Table.Name;
+	strPrimaryKeyMemberColumns+=",DataType="+memberColumnSchemaMe.DataType+",NativeType="+memberColumnSchemaMe.NativeType+",SystemType="+memberColumnSchemaMe.SystemType;
+			
+	return strPrimaryKeyMemberColumns;
+}
+
+public string GetTablaCargarMinimo(TableSchema tableSchema) {//TablaBase
+	String strReturn="";
+		
+	bool ConDebug=true;
+	bool ConMostrarColumna=true;
+	bool ConMostrarFk=true;
+	
+	TableKeySchemaCollection tableKeySchemaCollection;
+	ColumnSchemaCollection columnSchemaCollection;
+	IndexSchemaCollection indexSchemaCollection;
+	PrimaryKeySchema primaryKeySchema;
+	ExtendedPropertyCollection extendedPropertyCollection;
+	
+	String strAux="";
+	bool blnHave=false;
+	
+	Stopwatch stopWatch = new Stopwatch();
+	Stopwatch stopWatchTotal = new Stopwatch();
+	
+	if(ConDebug){IniciarTiempoC(ref stopWatch,ConDebug);}
+	if(ConDebug){IniciarTiempoC(ref stopWatchTotal,ConDebug);}
+	
+	//foreach(TableSchema tableSchema in TablaBase.Database.Tables) {
+		//TableKeySchema tableKey=new TableKeySchema();
+		
+		//NOTIME
+		//indexSchemaCollection=tableSchema.Indexes;
+		//primaryKeySchema=tableSchema.PrimaryKey;
+		//columnSchemaCollection=tableSchema.Columns;
+		//strAux=tableSchema.FullName;
+		//blnHave=tableSchema.HasPrimaryKey;
+		//strAux=tableSchema.Name;
+		//strAux=tableSchema.Owner;
+		//strAux=tableSchema.SortName;
+		//NOTIME
+		
+		//TO_OPTIMIZE
+		tableKeySchemaCollection= tableSchema.ForeignKeys;						
+		tableKeySchemaCollection=tableSchema.PrimaryKeys;		
+		columnSchemaCollection=tableSchema.ForeignKeyColumns;
+		
+		//FALTA
+		//tableKeySchemaCollection=tableSchema.Keys;
+		//TO_OPTIMIZE		
+		
+		
+		
+		
+		if(ConMostrarFk) {
+			/*
+			foreach(TableKeySchema keyschema in fkeys) {
+				strReturn+="\r\nTABLA FK="+keyschema.PrimaryKeyTable;
+			}
+			*/
+			
+			/*
+			foreach(TableKeySchema keyschema in fkeys) {
+				strReturn+="\r\nNOMBRE="+keyschema.Name;
+				strReturn+="\r\nPK_TABLE="+keyschema.PrimaryKeyTable.Name;
+				
+				
+				foreach(MemberColumnSchema memberColumnSchema in keyschema.PrimaryKeyMemberColumns) {						
+					strReturn+="\r\nPK_COLUMN="+memberColumnSchema.Column.Name;							
+				}
+				
+				strReturn+="\r\nDEEPLOAD="+keyschema.DeepLoad;
+				strReturn+="\r\nDESCRIPCION="+keyschema.Description;
+				
+				strReturn+="\r\nFK_TABLE="+keyschema.ForeignKeyTable.Name;
+				
+				foreach(MemberColumnSchema memberColumnSchema in keyschema.ForeignKeyMemberColumns) {						
+					strReturn+="\r\nFK_COLUMN="+memberColumnSchema.Column.Name;							
+				}
+				
+				foreach(ExtendedProperty extendedProperty in keyschema.ExtendedProperties) {
+					strReturn+="\r\nPROPERTY="+extendedProperty.Name+"-"+extendedProperty.Value;
+				}
+			}
+			*/
+			String strPathBase="C:/o/Me/ME/erp/com.bydan/erp/";
+			strDirectorioBaseXmlCodesmith=strPathBase;
+			
+			Trace.WriteLine(strDirectorioBaseXmlCodesmith);
+			//InicializarVariablesPorTabla(tableSchema);
+		}
+		
+		//CreateXmlTableSchemaC("F:/xml_cs/",tableSchema);
+		
+		
+		//TableKeySchemaCollection tableKeySchemaCollection=ReadXmlTableSchemaC("F:/xml_cs/",tableSchema);
+		
+		
+		if(ConMostrarColumna) {
+			foreach(ColumnSchema column in tableSchema.Columns) {
+				/*
+				//NO_TIME
+				blnHave=column.AllowDBNull;
+				blnHave=column.DeepLoad;
+				strAux=column.Description;
+				blnHave=column.IsPrimaryKeyMember;
+				blnHave=column.IsUnique;
+				strAux=column.Table.Name;
+				extendedPropertyCollection=column.ExtendedProperties;
+				//NO_TIME
+				*/
+				
+				
+				/*
+				//TO_OPTIMIZE
+				blnHave=column.IsForeignKeyMember
+				//TO_OPTIMIZE
+				*/
+				
+				//TO_OPTIMIZE
+				if(column.IsForeignKeyMember) {
+					strReturn+="\r\nCOLUMNA="+tableSchema.Owner+"-"+column.Table+"-"+column.Name;			
+				}
+				
+				
+			}
+		}
+		
+		
+		if(ConDebug) {DetenerTiempoC(stopWatch,PaquetesGenerar.AUXILIAR,"Tiempo Por Tabla Ejecutsion "+tableSchema.Name,ConDebug); }
+	//}
+		
+	if(ConDebug) {DetenerTiempoC(stopWatchTotal,PaquetesGenerar.AUXILIAR,"Tiempo Ejecusion",ConDebug); }
+			
+	return strReturn;
+}
+	
+	
+public string GetTablaPropiedades() {
+	String strReturn="";
+		
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			strReturn+=GetTablaPropiedades(tableSchema);
+		}
+		
+		Trace.WriteLine("TOTAL TABLAS="+SourceDatabase.Tables.Count);
+		
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			strReturn+=GetTablaPropiedades(tableSchema);
+		}
+		
+		Trace.WriteLine("TOTAL TABLAS="+SourceDatabaseTables.Count);	
+	}
+	
+	return strReturn;
+}
+
+public string GetTablaPropiedades(TableSchema TablaBase) {
+		String strReturn="";
+		
+		IniciarTiempoC(ref stopWatch);
+		
+		
+		int count=0;				
+		
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in TablaBase.Database.Tables) {
+				count++;
+				
+				foreach(IndexSchema indexSchema in tableSchema.Indexes) {
+					if(tableSchema.Name.Contains("BusquedaRango")) {
+						strReturn+="\r\n"+tableSchema.Owner+"-"+tableSchema.Name;
+					}
+				}
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				count++;
+				
+				foreach(IndexSchema indexSchema in tableSchema.Indexes) {
+					if(tableSchema.Name.Contains("BusquedaRango")) {
+						strReturn+="\r\n"+tableSchema.Owner+"-"+tableSchema.Name;
+					}
+				}
+			}
+		}
+		
+		DetenerTiempoC(stopWatch,PaquetesGenerar.AUXILIAR,"TOTAL TIEMPO POR TABLA <-----------------------------------");					
+		
+		
+		return strReturn;
+}
+	
+public string GetTablaDescriptions() {
+	String strReturn="";
+	
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			strReturn+=GetTablaDescriptions(tableSchema);
+		}
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			strReturn+=GetTablaDescriptions(tableSchema);
+		}
+	}
+	
+	return strReturn;
+}
+
+public string GetTablaDescriptionsGenerateIndicesNo() {
+	String strReturn="";
+	bool conVarGlobal=true;
+	bool conIndicesOcultos=false;
+	
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			strReturn+="\r\n|INDICESNO=";
+			strReturn+=GetIndicesBusquedasTablaC(tableSchema,conVarGlobal,conIndicesOcultos,true);
+		}
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			strReturn+="\r\n|INDICESNO=";
+			strReturn+=GetIndicesBusquedasTablaC(tableSchema,conVarGlobal,conIndicesOcultos,true);				
+		}
+	}
+	
+	return strReturn;
+}
+
+public string GetTablaDescriptions(TableSchema TablaBase) {
+		String strReturn="";
+		
+		IniciarTiempoC(ref stopWatch);
+		
+		
+		int count=0;
+		
+		if(GeneracionTodos) {
+			foreach(TableSchema tableSchema in TablaBase.Database.Tables) {
+				count++;
+				
+				//if(GetEsGuardarRelacionesFromPropertiesC(tableSchema)) {
+				//if(GetDinamicoUnoAUnoTableFromPropertiesC(tableSchema)) {
+				//if(GetDinamicoNombreAdicionalTableFromPropertiesC(tableSchema)!="") {
+				
+				if(GetEsReporteVistaFromPropertiesC(tableSchema)) {
+					strReturn+="\r\n"+tableSchema.Owner+"-"+tableSchema.Name;
+				}			
+				
+				//if(count.Equals(350)) {
+					//break;	
+				//}			
+			}
+		} else {
+			foreach(TableSchema tableSchema in SourceDatabaseTables) {
+				count++;
+				
+				//if(GetEsGuardarRelacionesFromPropertiesC(tableSchema)) {
+				//if(GetDinamicoUnoAUnoTableFromPropertiesC(tableSchema)) {
+				//if(GetDinamicoNombreAdicionalTableFromPropertiesC(tableSchema)!="") {
+				
+				if(GetEsReporteVistaFromPropertiesC(tableSchema)) {
+					strReturn+="\r\n"+tableSchema.Owner+"-"+tableSchema.Name;
+				}			
+				
+				//if(count.Equals(350)) {
+					//break;	
+				//}			
+			}
+		}
+		
+		DetenerTiempoC(stopWatch,PaquetesGenerar.AUXILIAR,"TOTAL TIEMPO POR TABLA <-----------------------------------");					
+		
+			
+		return strReturn;
+	}
+	
+public string GetTablasAutoReferenciadas(DatabaseSchema SourceDatabase) {
+	String strReturn="";
+	TableSchema tableSchemaFk;
+	bool blnExiste=false;
+	
+	if(GeneracionTodos) {
+		foreach(TableSchema tableSchema in SourceDatabase.Tables) {
+			blnExiste=false;
+			
+			foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+				if(columnSchema.IsForeignKeyMember) {			
+					tableSchemaFk=GetTableSchemaFromColumnForeignKey(columnSchema);	
+											
+					if(tableSchemaFk.Name.Equals(tableSchema.Name)) {
+						blnExiste=true;
+						break;
+					}
+				}
+			}
+			
+			if(blnExiste) {
+				strReturn+="\r\n"+tableSchema.Name;
+			}
+		}
+	} else {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			blnExiste=false;
+			
+			foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+				if(columnSchema.IsForeignKeyMember) {			
+					tableSchemaFk=GetTableSchemaFromColumnForeignKey(columnSchema);	
+											
+					if(tableSchemaFk.Name.Equals(tableSchema.Name)) {
+						blnExiste=true;
+						break;
+					}
+				}
+			}
+			
+			if(blnExiste) {
+				strReturn+="\r\n"+tableSchema.Name;
+			}
+		}
+	}
+	
+	return strReturn;
+}
+	
+public String GetTableName() {
+	String strExtendClase=string.Empty;
+	
+	strExtendClase=TablaBase.Name;
+	
+	//<%=GetTableName()%>
+	return strExtendClase;
+}
+</script>
+<%CargarTablas();%>
+
+<%if(ConColumnsDescriptions){%>
+<%=GetColumnsDescriptionsC(TablaBase)%>
+
+<%} else if(ConTablaDescriptions){%>
+<%=GetTablaDescriptions()%>
+
+<%} else if(ConTablaPropiedades){%>
+<%=GetTablaPropiedades()%>
+
+<%} else if(ConTodasRelacionadas){%>
+<%=GetTodasRelacionadasC(TablaBase)%>
+
+<%} else if(ConTodasAutoReferenciadas){%>
+<%=GetTablasAutoReferenciadas(SourceDatabase)%>
+
+<%} else if(ConTablaCargarMinimo){%>
+<%=GetTablaCargarMinimo(TablaBase)%>
+
+<%} else if(ConReadXmlTable){%>
+<%=GetReadXmlTable(TablaBase)%>
+
+<%} else if(ConAssembly){%>
+<%=GetAssemblyDatabaseSchema()%>
+
+<%}else if(ConTest){%>
+<%=GetTestDatabaseSchema()%>
+
+<%}else if(ConVerificarNombreTabla){%>
+<%=GetVerificarNombreTabla()%>
+
+<%}else if(ConBuscarNombreTabla){%>
+<%=GetBuscarNombreTabla(ConBuscarNombreTablaDescripcion)%>
+
+<%}else if(ConBuscarDescriptionTieneTabla){%>
+<%=GetBuscarDescriptionTieneTabla()%>
+
+<%}else if(ConBuscarNombreColumna){%>
+<%=GetBuscarNombreColumna(ConBuscarNombreColumnaDescripcion)%>
+
+<%}else if(ConBuscarDescriptionTieneColumna){%>
+<%=GetBuscarDescriptionTieneColumna()%>
+
+<%}else if(ConTotalNumeroTablas){%>
+<%=GetTotalNumeroTablas()%>
+
+<%}else if(ConSqlUpdate){%>
+<%=GetSqlUpdate()%>
+
+<%}else if(ConTablaDescriptionsGenerate){%>
+	<%if(ConTablaDescriptionsGenerateIndicesNo){%>
+	<%=GetTablaDescriptionsGenerateIndicesNo()%>
+	<%}%>
+<%}%>

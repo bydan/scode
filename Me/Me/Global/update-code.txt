@@ -1,0 +1,4 @@
+1) QUERYWHERE(inicializar listas)
+
+	this.parametersSelectionGeneral=new ArrayList<ParameterSelectionGeneral>();
+	this.dbType=ParameterDbType.MYSQL;

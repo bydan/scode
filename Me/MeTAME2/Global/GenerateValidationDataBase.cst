@@ -1,0 +1,645 @@
+﻿<%@ Template Language="C#" Debug="true" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" %>    	
+<%@ CodeTemplate Src="CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import NameSpace="System.IO" %>
+
+<%@ Property Name="SourceDatabase" Type="SchemaExplorer.DatabaseSchema" Category="1. General" Description="Database to get the extended properties from." %>
+<%@ Register Name="ValidationTemplate" Template="Auxiliar/ValidationPorTabla.cst" %>
+<
+
+<script runat="template">
+
+public bool GetExistTablasClasesRelacionadasForWebCombo(TableSchema TablaBase) 
+		{
+			bool blnExist=false;
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+						
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					;//strTablaClaseRelacionada+=","+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable);
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					blnExist=true;
+					break;
+					;//strTablaClaseRelacionada+=",ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+				}
+			}
+			
+	return blnExist;		
+}
+
+public string GetValidationTagColumn(TableSchema table,out bool blnValidacionTag)
+{		
+	string strValidation ="<td>\r\n"; 
+	ColumnSchema columnSchemaPK=null;
+	bool blnExisteValidacion=false;
+	
+	bool blnTieneRelacionesForWebCombo=GetExistTablasClasesRelacionadasForWebCombo(table);
+	bool blnTieneWebCombo=false;
+	
+	foreach(ColumnSchema columnSchema in table.Columns)
+	{
+		blnExisteValidacion=false;
+		
+		if(!GetExistTagColumnaFromColumnPropiertiesC(columnSchema,strNOMBRE))
+		{
+			blnExisteValidacion=true;
+			strValidation +="Columna:"+columnSchema.Name+",Falta Tag "+strNOMBRE+"</br>\r\n";
+		}
+		
+		if(!GetExistTagColumnaFromColumnPropiertiesC(columnSchema,strWEBTITULO))
+		{
+			if(columnSchema.Name==strIsActive||columnSchema.Name==strIsExpired||columnSchema.Name==strId||columnSchema.Name==strVersionRow)
+			{
+				continue; 
+			}
+			
+			blnExisteValidacion=true;
+			strValidation +="Columna:"+columnSchema.Name+",Falta Tag "+strWEBTITULO+"</br>\r\n";
+		}
+		
+		if(columnSchema.DataType==DbType.AnsiStringFixedLength||columnSchema.DataType==DbType.StringFixedLength||columnSchema.DataType==DbType.String||columnSchema.DataType==DbType.AnsiString)
+		{
+			if(columnSchema.Size>50)
+			{
+				if(!GetExistTagColumnaFromColumnPropiertiesC(columnSchema,strWEBFILAS))
+				{
+					blnExisteValidacion=true;
+					strValidation +="Columna:"+columnSchema.Name+",Falta Tag "+strWEBFILAS+"</br>\r\n";
+				}
+			}
+			
+		}
+		
+		if(blnTieneRelacionesForWebCombo)
+		{
+			if(GetExistTagColumnaFromColumnPropiertiesC(columnSchema,strWEBCOMBO))
+			{
+				blnTieneWebCombo=true;
+				//System.Windows.Forms.MessageBox.Show(columnSchema.Name+" "+ blnTieneRelacionesForWebCombo.ToString());
+				//blnExisteValidacion=true;
+				//strValidation +="Columna:"+columnSchema.Name+",Falta Tag "+strWEBCOMBO+"</br>\r\n";
+			}
+		}
+		
+		if(blnExisteValidacion)
+		{
+			strValidation +="<hr>";
+		}
+	}
+	
+	foreach(ColumnSchema columnPK in table.Columns)
+	{
+		
+		if(columnPK.Name==strId)
+		{
+			if(GetExistTagColumnaFromColumnPropiertiesC(columnPK,strWEBCOMBO))
+			{
+				blnTieneWebCombo=true;
+			}
+			
+			break;
+		}
+	}
+	
+	if(blnTieneRelacionesForWebCombo&&!blnTieneWebCombo)
+	{
+		strValidation+="TABLA:"+table.Name+",Falta Tag "+strWEBCOMBO+"</br>\r\n<hr>\r\n" ;
+	}
+	
+	strValidation +=".</td>\r\n"; 
+	
+	blnValidacionTag=false;
+	
+	if(strValidation.Length>12)
+	{
+		 blnValidacionTag=true;
+	}
+	
+	return strValidation;
+}
+
+
+public string GetValidationTagTable(TableSchema table,out bool blnValidacionTag)
+{		
+	string strValidation ="<td>\r\n"; 
+	ColumnSchema columnSchemaPK=null;
+	
+	if(!GetExistTagTableFromPropertiesC(table,strNOMBRE))
+	{
+		strValidation +="Falta Tag "+strNOMBRE+"</br>\r\n";
+	}
+	
+	if(!GetExistTagTableFromPropertiesC(table,strWEBTITULO))
+	{
+		strValidation +="Falta Tag "+strWEBTITULO+"</br>\r\n";
+	}
+	
+	if(!GetExistTagTableFromPropertiesC(table,strWEBPLURAL))
+	{
+		strValidation +="Falta Tag "+strWEBPLURAL+"</br>\r\n";
+	}
+	
+	/*
+	if(GetExistTagTableFromPropertiesC(table,strCONAUD))
+	{
+		strValidation +="Falta Tag "+strCONAUD+"</br>\r\n";
+	}
+	
+	
+	if(GetExistTagTableFromPropertiesC(table,strESMENU))
+	{
+		strValidation +="Falta Tag "+strESMENU+"</br>\r\n";
+	}
+	*/
+	
+	strValidation +=".</td>\r\n"; 
+	
+	 blnValidacionTag=false;
+	
+	if(strValidation.Length>12)
+	{
+		 blnValidacionTag=true;
+	}
+	
+	return strValidation;
+}
+
+public string GetValidationIndexes(TableSchema table,out bool blnValidacionIndexes)
+{		
+	string strValidation ="<td>\r\n"; 
+	ColumnSchema columnSchemaPK=null;
+	bool blnValidarIndexPK=false;
+	
+	bool blnTieneFK=false;
+	bool blnValidarIndexFK=false;
+	bool blnValidarEsPrimerColumnaIndexFK=false;
+	int intContadorFK=0;
+	int intContadorIndexFK=0;
+	
+	foreach(ColumnSchema  columnSchema in table.Columns)
+	{
+		if(columnSchema.IsForeignKeyMember)
+		{
+			if(!blnTieneFK)
+			{
+				blnTieneFK=true;
+			}
+			
+			intContadorFK++;
+		}
+	}
+	
+	foreach(IndexSchema indexSchema in table.Indexes)
+	{
+		if(indexSchema.IsUnique)
+		{
+			foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+			{
+				if(memberColumnSchema.Column.IsPrimaryKeyMember)
+				{
+					blnValidarIndexPK=true;
+				}
+			}
+		}
+		else
+		{
+			
+			if(!indexSchema.Name.Contains("Busqueda"))
+			{
+				blnValidarEsPrimerColumnaIndexFK=false;
+				blnValidarIndexFK=false;
+				
+				foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+				{
+					if(memberColumnSchema.Column.IsForeignKeyMember)
+					{
+						
+						
+						if(!blnValidarEsPrimerColumnaIndexFK)
+						{
+							blnValidarEsPrimerColumnaIndexFK=true;
+							blnValidarIndexFK=true;
+						}
+						else
+						{
+							blnValidarIndexFK=false;
+							break;
+						}
+					}
+				}
+				
+				if(blnTieneFK)
+				{
+					if(blnValidarIndexFK)
+					{
+						intContadorIndexFK++;
+						
+						
+						if(!indexSchema.Name.Contains(strFK+"_"))
+						{
+							strValidation +="Falta prefijo FK_ en nombre indice "+indexSchema.Name+"</br>\r\n";
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	if(intContadorFK!=intContadorIndexFK)
+	{
+		strValidation +="Falta Indices FK, columns FK="+intContadorFK+",indicesFK"+intContadorIndexFK+"</br>\r\n";
+	}
+	
+	if(!blnValidarIndexPK)
+	{
+		
+		strValidation +="Falta PK Index </br>\r\n";
+		
+		
+	}
+	
+	strValidation +=".</td>\r\n"; 
+	
+	blnValidacionIndexes=false;
+	
+	if(strValidation.Length>12)
+	{
+		blnValidacionIndexes=true;
+	}
+	
+	return strValidation;
+}
+
+public string GetValidationPK(TableSchema table,out bool blnValidacionPK)
+{		
+	string strValidation ="<td>\r\n"; 
+	ColumnSchema columnSchemaPK=null;
+	
+	foreach(ColumnSchema columnSchema in table.Columns)
+	{
+		if(columnSchema.IsPrimaryKeyMember)
+		{
+			columnSchemaPK=columnSchema;
+			break;
+		}
+	}
+	
+	if(columnSchemaPK!=null)
+	{
+		if(!columnSchemaPK.Name.Equals(strId))
+		{
+			strValidation +="Error en nombre ("+strId+")</br>\r\n";
+		}
+		
+		if(!columnSchemaPK.IsUnique)
+		{
+			strValidation +="No es unico </br>\r\n";
+		}
+		
+		if(columnSchemaPK.AllowDBNull)
+		{
+			strValidation +="Permite nulos </br>\r\n";
+		}
+		
+		if(columnSchemaPK.DataType!=DbType.Int64)
+		{
+			strValidation +="No bigint </br>\r\n";
+		}
+		
+		
+		foreach(ExtendedProperty extendedProperty in columnSchemaPK.ExtendedProperties)
+		{
+			if(extendedProperty.Name.Equals("CS_IsIdentity"))
+			{
+				if(extendedProperty.Value.Equals(false))
+				{
+					strValidation +="No es identity </br>\r\n";
+				}
+			}
+		}
+	}
+	else
+	{
+		strValidation +="No Existe</br>\r\n";
+	}
+	
+	strValidation +=".</td>\r\n"; 
+	
+	blnValidacionPK=false;
+	
+	if(strValidation.Length>12)
+	{
+		blnValidacionPK=true;
+	}
+	
+	return strValidation;
+}
+
+public string GetValidationBasicColumns(TableSchema table,out bool blnValidacionBasicColumns)
+{		
+	string strValidation ="<td>\r\n"; 
+	bool blnExisteIsActive=true;
+	bool blnExisteIsExpired=true;
+	bool blnExisteVersionRow=false;
+	
+	foreach(ColumnSchema columnSchema in table.Columns)
+	{
+		/*
+		if(columnSchema.Name.Equals(strIsActive))
+		{
+			blnExisteIsActive=true;
+			
+			if(columnSchema.AllowDBNull)
+			{
+				strValidation +="IsActive Permite nulos </br>\r\n";
+			}
+			
+			if(columnSchema.DataType!=DbType.Boolean)
+			{
+				strValidation +="IsActive No es bit </br>\r\n";
+			}
+		}
+		else if(columnSchema.Name.Equals(strIsExpired))
+		{
+			
+			blnExisteIsExpired=true;
+			
+			if(columnSchema.AllowDBNull)
+			{
+				strValidation +="IsExpired Permite nulos </br>\r\n";
+			}
+			
+			if(columnSchema.DataType!=DbType.Boolean)
+			{
+				
+				strValidation +="IsExpired No es bit </br>\r\n";
+			}
+			
+		}
+		else */if(columnSchema.Name.Equals(strVersionRow))
+		{
+			blnExisteVersionRow=true;
+			if(columnSchema.AllowDBNull)
+			{
+				strValidation +="Utc Permite nulos </br>\r\n";
+			}
+			
+			if(columnSchema.NativeType!="timestamp")
+			{
+				strValidation +="Utc No es timestamp </br>\r\n";
+			}
+			
+		}
+	}
+	
+	if(!blnExisteIsActive)
+	{
+		strValidation +="No existe isActive </br>\r\n";
+	}
+	
+	if(!blnExisteIsExpired)
+	{
+		strValidation +="No existe isExpired </br>\r\n";
+	}
+	
+	if(!blnExisteVersionRow)
+	{
+		strValidation +="No existe Utc </br>\r\n";
+	}
+	
+	strValidation +=".</td>\r\n"; 
+	
+	blnValidacionBasicColumns=false;
+	
+	if(strValidation.Length>12)
+	{
+		blnValidacionBasicColumns=true;
+	}
+	
+	return strValidation;
+}
+
+public string GetValidationFK(TableSchema table,out bool blnValidacionFK)
+{		
+	string strValidation ="<td>\r\n"; 
+	ColumnSchema columnSchemaFK=null;
+	
+	foreach(ColumnSchema columnSchema in table.Columns)
+	{
+		if(columnSchema.IsForeignKeyMember)
+		{
+			columnSchemaFK=columnSchema;
+			
+			
+				if(!columnSchemaFK.Name.Contains(strId))
+				{
+					strValidation +="Error en nombre </br>\r\n";
+				}	
+						
+				if(columnSchemaFK.DataType!=DbType.Int64)
+				{
+					strValidation +="No bigint </br>\r\n";
+				}
+				
+				if(!VerificarNombreTablaRelacionada(columnSchemaFK))
+				{
+					strValidation +="No existe una tabla con el nombre "+columnSchemaFK.Name.Replace(strId,"");
+				}
+		}
+	}
+	
+	
+	
+	strValidation +=".</td>\r\n"; 
+	
+	
+	blnValidacionFK=false;
+	
+	if(strValidation.Length>12)
+	{
+		blnValidacionFK=true;
+	}
+	
+	return strValidation;
+}
+
+public bool VerificarNombreTablaRelacionada(ColumnSchema columnSchema)
+{
+	bool blnVerificado=false;
+	
+	String strNombreClase=columnSchema.Name.Substring(2,columnSchema.Name.Length-2);
+	
+	foreach(TableSchema tableSchema in SourceDatabase.Tables)
+	{
+		if(strNombreClase.Equals(tableSchema.Name))
+		{
+			blnVerificado=true;
+			break;
+		}
+	}
+	
+	return blnVerificado;
+}
+
+private string _outputDirectory = String.Empty;
+//<%@ Property Name="EntidadesNombre" Type="System.String" Default="ParametrosCompras" Category="Options" Description="Nombre de la Entidad" %>
+//<%@ Property Name="SourceTablesMaintenance" Type="SchemaExplorer.TableSchemaCollection" Category="Optional General" Optional="true" Description="Select a set of tables." %>
+
+[Editor(typeof(System.Windows.Forms.Design.FolderNameEditor), typeof(System.Drawing.Design.UITypeEditor))] 
+[Optional]
+[Category("1. General")]
+[Description("The directory to output the results to.")]
+public string OutputDirectory 
+{
+	get
+	{
+		
+		// default to the directory that the template is located in
+		//if (_outputDirectory.Length == 0)
+		//{ 
+		//return this.CodeTemplateInfo.DirectoryName + "output\\DataBase\\"+SourceDatabase.Name+"\\";
+		return "C:\\o\\";
+		//}
+		//return _outputDirectory;
+	}
+	set
+	{
+		if (!value.EndsWith("\\")) value += "\\";
+		_outputDirectory = value;
+	} 
+}
+
+public override void Render(TextWriter writer)
+{
+	PreserveRegionsMergeStrategy strategy = new PreserveRegionsMergeStrategy("^[ \t]*(?i:Custom)", "C#");
+		
+	DateTime startTime = DateTime.Now;
+	
+	string strDirectorioWeb=string.Empty;
+	strDirectorioWeb=this.OutputDirectory;
+	
+	
+	bool blnValidacionPK=false;
+	bool blnValidacionFK=false;
+    bool blnValidacionBasicColumns=false;
+	bool blnValidacionIndexes=false;
+	bool blnValidacionTableTag=false;
+	bool blnValidacionColumnTag=false;
+	
+	String stringHtml=String.Empty;
+	String stringHtmlTable=String.Empty;
+	
+	
+	stringHtml+="<html>\r\n";
+	stringHtml+="<head>";
+	//stringHtml+="Validaciones";
+	stringHtml+="</head>\r\n";
+	stringHtml+="<body>\r\n";
+	
+	
+	if (!strDirectorioWeb.EndsWith("\\")) strDirectorioWeb += "\\";
+	if (!Directory.Exists(strDirectorioWeb)) Directory.CreateDirectory(strDirectorioWeb);
+	
+
+	if (!Directory.Exists(strDirectorioWeb)) Directory.CreateDirectory(strDirectorioWeb);
+	
+		ValidationTemplate validationTemplate = new ValidationTemplate();
+	
+		String xmlServlets="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+		xmlServlets+="\r\n<web-app xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns=\"http://java.sun.com/xml/ns/javaee\" xmlns:web=\"http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd\" xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd\" id=\"WebApp_ID\" version=\"2.5\">";
+		xmlServlets+="\r\n<welcome-file-list>";
+  		xmlServlets+="\r\n<welcome-file>index.jsp</welcome-file>";
+ 	    xmlServlets+="\r\n<welcome-file>default.jsp</welcome-file>";
+  		xmlServlets+="\r\n</welcome-file-list>\r\n\r\n";
+		
+		
+		
+		for (int x = 0; x < SourceDatabase.Tables.Count; x++)
+		{
+			stringHtmlTable="";
+			
+			blnValidacionPK=false;
+			blnValidacionFK=false;
+			blnValidacionBasicColumns=false;
+			blnValidacionIndexes=false;
+			blnValidacionTableTag=false;
+			blnValidacionColumnTag=false;
+			
+			Trace.WriteLine("Validando...."+SourceDatabase.Tables[x].Name+ " Tabla "+x.ToString()+ " de "+SourceDatabase.Tables.Count.ToString());
+			
+			stringHtmlTable+="</br><b>"+x.ToString()+" "+SourceDatabase.Tables[x].Name+"</b>";
+			stringHtmlTable+="\r\n<table border=\"1\">\r\n";
+			
+			    stringHtmlTable+="<tr>\r\n";
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>PK</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>Basic Columns</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>FK</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>Indices</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>TABLE TAGs</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="<td>\r\n";
+				stringHtmlTable+="<b>COLUMNS TAGs</b>";
+				stringHtmlTable+="</td>\r\n";
+				
+				stringHtmlTable+="</tr>\r\n";
+			
+			
+			if(SourceDatabase.Tables[x].Name.Contains("BIN")||SourceDatabase.Tables[x].Name.Contains("EXCEPTIONS")||SourceDatabase.Tables[x].Name.Contains("sys"))
+			{
+					continue;
+			}
+		
+		stringHtmlTable+="<tr>\r\n";
+		stringHtmlTable+=GetValidationPK(SourceDatabase.Tables[x],out blnValidacionPK);
+		stringHtmlTable+=GetValidationBasicColumns(SourceDatabase.Tables[x], out blnValidacionFK);
+   		stringHtmlTable+=GetValidationFK(SourceDatabase.Tables[x],out blnValidacionBasicColumns);
+		stringHtmlTable+=GetValidationIndexes(SourceDatabase.Tables[x],out blnValidacionIndexes);
+		
+		stringHtmlTable+=GetValidationTagTable(SourceDatabase.Tables[x],out blnValidacionTableTag);
+		stringHtmlTable+=GetValidationTagColumn(SourceDatabase.Tables[x],out blnValidacionColumnTag);
+ 		stringHtmlTable+="</tr>\r\n";
+		
+		stringHtmlTable+="</table>\r\n";
+		
+		stringHtmlTable+="</br>\r\n";
+		
+		if(blnValidacionPK||blnValidacionFK||blnValidacionBasicColumns||blnValidacionIndexes||blnValidacionTableTag||blnValidacionColumnTag)
+		{
+			stringHtml+=stringHtmlTable;
+		}
+	}
+	
+	stringHtml+="</body>\r\n";
+	stringHtml+="</html>\r\n";
+	
+	validationTemplate.html=stringHtml;
+		
+	validationTemplate.RenderToFile(strDirectorioWeb+"Validacion"+SourceDatabase.Name+ ".html", strategy);
+	
+	Trace.WriteLine("Tiempo de ejecusion: " + (DateTime.Now - startTime).ToString());
+			
+}
+</script>
+

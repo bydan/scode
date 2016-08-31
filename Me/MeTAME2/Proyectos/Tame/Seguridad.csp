@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Seguridads;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Documents and Settings\Administrador\Mis documentos\CodeSmith\Samples\v5.0\Templates\Me\MeTAME2\Global\GenerateDataBase.cst">
+      <property name="Ip">127.0.0.1</property>
+      <property name="NombreProgramador">Byron Chavez</property>
+      <property name="Empresa">Tame</property>
+      <property name="Schema">TAMESEGURI</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="Aplicacion">SISTEMA DE SEGURIDAD</property>
+      <property name="ConSeguridad">False</property>
+      <property name="ConAuditoria">True</property>
+      <property name="ConAuditoriaInterna">True</property>
+      <property name="SchemaAuditoria">Auditoria</property>
+      <property name="ConexionIp">10.1.1.2</property>
+      <property name="ConexionUsuario">dbadmin1</property>
+      <property name="ConexionSchema">TAMESEGURI</property>
+      <property name="ConexionSeguridadIp">10.1.1.2</property>
+      <property name="ConexionSeguridadUsuario">dbadmin1</property>
+      <property name="ConexionSeguridadSchema">TAMESEGURI</property>
+      <property name="ConexionAuditoriaIp">10.1.1.2</property>
+      <property name="ConexionAuditoriaUsuario">dbadmin1</property>
+      <property name="ConexionAuditoriaSchema">TAMESEGUAD</property>
+      <property name="ConexionAuditoriaPassword">a1b2c3</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceTablesRelationshipsMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="ConexionPuerto" />
+      <property name="ConexionSeguridadPassword">a1b2c3</property>
+      <property name="ConexionPassword">a1b2c3</property>
+      <property name="OutputDirectory">C:\output\DataBase\Seguridads\</property>
+      <property name="Package">Seguridad</property>
+      <property name="ConexionSeguridadPuerto" />
+      <property name="ConexionAuditoriaPuerto" />
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Auditoria</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Opcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilOpcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Sistema</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

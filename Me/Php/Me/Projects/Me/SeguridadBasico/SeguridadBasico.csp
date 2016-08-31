@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=192.168.1.4;Initial Catalog=SeguridadBasico;Integrated Security=True;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="F:\Documents and Settings\Administrador\Mis documentos\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBase.cst">
+      <property name="Ip">127.0.0.1</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConJSInclude">False</property>
+      <property name="Empresa">bydan</property>
+      <property name="Aplicacion">SISTEMA DE SEGURIDAD</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConFaces">False</property>
+      <property name="ConSwing">False</property>
+      <property name="ConSeguridad">False</property>
+      <property name="ConAuditoria">True</property>
+      <property name="PackageSeguridad">seguridadbasico</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">seguridadbasico_dbo</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">seguridadbasico_dbo</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">auditoria_dbo</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="Package">seguridadbasico</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Accion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Campo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Opcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilAccion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilCampo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilOpcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Sistema</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="OutputDirectory">C:\o\</property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

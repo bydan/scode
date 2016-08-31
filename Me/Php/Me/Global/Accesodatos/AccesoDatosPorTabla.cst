@@ -1,0 +1,1407 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoJunction" Type="SchemaExplorer.TableSchemaCollection" Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoDetalle" Type="SchemaExplorer.TableSchemaCollection" 	Category="Context"%>
+<%@ Property Name="GenerarCompuestos" Type="System.Boolean" Default="false" Category="Context" Description="Nombre del Programdor" %>
+<%@ Property Name="TiposGeneracion" Type="System.String" Default=" " Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="ConNamespaces" Type="System.Boolean" Default="false" Category="4. Service Architecture" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+public String GetSelectForeignKey() {
+	String strFuncion=string.Empty;
+	strFuncion+="'select ";
+	
+	if(GetNumeroDeColumnasWebComboC(TablaBase,false)>0) {
+		//Trace.WriteLine("Else:"+TablaBase.Name);
+		for (int i = 0,j=0; i < TablaBase.Columns.Count; i++){ 
+			if(!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i]) && !(TablaBase.Columns[i].Name.Equals(strId) || TablaBase.Columns[i].Name.Equals(strVersionRow))){				
+				continue;
+			} else {
+				//Trace.WriteLine(TablaBase.Columns[i].Name);
+				j++;
+			} 
+			
+			strFuncion+=GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema);
+			
+			//Trace.WriteLine(GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema));
+			
+			if (j < GetNumeroDeColumnasWebComboC(TablaBase,false)+2) { 
+				strFuncion+=",";
+			} 
+		} 
+	} else {
+		//Trace.WriteLine("Else:"+TablaBase.Name);
+		for (int i = 0,j=0; i < TablaBase.Columns.Count; i++){ 
+			if(!(TablaBase.Columns[i].Name.Equals(strId) || TablaBase.Columns[i].Name.Equals(strVersionRow))
+				&& !(TablaBase.Columns[i].Name.Equals("Codigo") || TablaBase.Columns[i].Name.Equals("Nombre"))){
+				continue;
+			} else {
+				j++;
+			} 
+			
+			
+			strFuncion+=GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema);
+					
+			if(TablaBase.Columns[i].Name.Equals("Codigo") || TablaBase.Columns[i].Name.Equals("Nombre")) {
+				break;	
+			}
+			
+			//+1 de Codigo o Nombre
+			//if (j < GetNumeroDeColumnasWebComboC(TablaBase,false)+2+1) { 
+			if (j <2) {
+				strFuncion+=",";
+			}
+			//} 
+		} 
+	}
+	
+	strFuncion+=" from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME";
+	
+	
+	return strFuncion;
+}
+
+public String GetSetEntityColumnaForeignKey() {
+	String strFuncion=string.Empty;
+	bool existe=false;
+	
+	for (int i = 0; i < TablaBase.Columns.Count; i++){
+		if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){
+			continue; 
+		} 
+		if(!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i])){
+			continue; 
+		}
+		
+		strFuncion+=GetSetEntityColumna(TablaBase.Columns[i]);
+		
+		if(!existe) {
+			existe=true;
+		}
+	}
+	
+	if(!existe) {
+		for (int i = 0; i < TablaBase.Columns.Count; i++){
+			if(TablaBase.Columns[i].Name.Equals("Codigo")
+			   || TablaBase.Columns[i].Name.Equals("Nombre")
+				){
+					
+				strFuncion+=GetSetEntityColumna(TablaBase.Columns[i]);
+				
+				break; 
+			}
+		}
+	}
+	
+	return strFuncion;
+}	
+
+public String GetCompuestosIncludeUse() 
+		{
+			String strFuncion=string.Empty;
+			String strBodyFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			//String strInitFuncion="";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			
+			
+			String strMiddleFuncion="";
+			//String strMiddle2Funcion="";
+			//String strMiddle3Funcion="";
+			
+			
+			//strMiddleFuncion+="\r\n\t\t\tsQuery=DataAccessHelper.buildSqlGeneralGetEntities(entity,queryWhereSelectParameters);";
+			
+					
+				
+			if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+			{
+				
+				for(int i=0;i<TablasBaseCompuestoJunction.Count;i++)
+				{
+
+					//strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery."+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto::$QuerySelect;";				
+					strMiddleFuncion+="\r\n//include_once(Constantes::$PATH_REL.'"+Empresa+"\\"+ Package+"\\"+Module+strPackageBusiness+"\\"+strPackageEntities+"\\"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto.php');";
+					strMiddleFuncion+="\r\n"+strPhp53VersionComment+"use "+Empresa+"\\"+ Package+"\\"+Module+strPackageBusiness+"\\"+strPackageEntities+"\\"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto;";
+					strFuncion+=strMiddleFuncion;
+				}						
+				
+			
+			}
+			
+			return strFuncion; 
+		}
+		
+public bool TieneCompuesto() 
+{
+	bool blnTieneCompuesto=false;
+	
+		if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+		{
+			blnTieneCompuesto=true;
+		}
+	
+	return blnTieneCompuesto;
+}
+		
+public String GetFuncionesTablasClasesRelacionadasCompuestos() 
+		{
+			String strFuncion=string.Empty;
+			String strBodyFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t\t\t$entities->add($entity);\r\n\r\n\t\t\t}\r\n\r\n\t\t\t$statement->close();\r\n\t\t}\r\n\t\t";
+			strEndFuncion+=" catch(Exception $e) {\r\n\t\t\tthrow $e;\r\n\t\t}\r\n\r\n\t\treturn $entities;\r\n\t}";
+			
+			String strMiddleFuncion="";
+			String strMiddle2Funcion="";
+			String strMiddle3Funcion="";
+			strMiddleFuncion+="\r\n\r\n\t\t$sQuery='';\r\n\r\n\t\ttry {\r\n\t\t\t$statement = $connexion->getConnection()->createStatement();";
+			
+			
+			//strMiddleFuncion+="\r\n\t\t\tsQuery=DataAccessHelper.buildSqlGeneralGetEntities(entity,queryWhereSelectParameters);";
+			
+					
+			strMiddle3Funcion+="\r\n\t\t\t$resultSet = $statement->executeQuery($sQuery);";
+			strMiddle3Funcion+="\r\n\r\n\t\t\twhile ($resultSet->next()) {";
+			
+			if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+			{
+				
+				for(int i=0;i<TablasBaseCompuestoJunction.Count;i++)
+				{
+					strMiddleFuncion="\r\n\r\n\t\t$sQuery='';\r\n\r\n\t\ttry {\r\n\t\t\t$statement = $connexion->getConnection()->createStatement();";
+					strMiddleFuncion+="\r\n\r\n\t\t\t$strSqlSoloWhereBusqueda=\"\";";
+					strMiddleFuncion+="\r\n\r\n\t\t\tif($queryWhereSelectParameters!=$queryWhereSelectParameters2) {";
+					strMiddleFuncion+="\r\n\t\t\t\t$strSqlSoloWhereBusqueda=DataAccessHelper::buildSqlGeneralGetEntitiesCompuesto($queryWhereSelectParameters)->replace(DataAccessHelper::buildSqlGeneralGetEntitiesCompuesto($queryWhereSelectParameters2)->trim(), \"\");";			
+					strMiddleFuncion+="\r\n\t\t\t}";
+					strMiddleFuncion+="\r\n\r\n\t\t\t$sQuery=\"nselect * from (\";";		
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery."+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto::$QuerySelect;";				
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery.DataAccessHelper::buildSqlGeneralGetEntitiesCompuesto($queryWhereSelectParameters);";				
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery.\" union \";";				
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery."+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto::$QuerySelectNoSeleccionados+\"\"+"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto::$QuerySelecttIdSeleccionados;";	
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery.DataAccessHelper::buildSqlGeneralGetEntitiesCompuesto($queryWhereSelectParameters2);";							
+					strMiddleFuncion+="\r\n\t\t\t$sQuery=$sQuery.\")";
+					strMiddleFuncion+="\"+$strSqlSoloWhereBusqueda+\")as T  \"+$queryWhereSelectParameters->getFinalQuery();";	
+					
+						
+					strInitFuncion="\r\n\tpublic function "+/*"ArrayList<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+">*/" GetEntities"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"($connexion,$queryWhereSelectParameters,$queryWhereSelectParameters2)";
+					strInitFuncion+=" {";
+					strInitFuncion+="\r\n\t\t"+/*"ArrayList<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+">*/" $entities = array();";//new  ArrayList<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+">();";		
+					strInitFuncion+="\r\n\t\t"+/*GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+*/" $entity = new "+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();";
+					
+					strBodyFuncion="\r\n\t\t\t\t$entity = new "+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();";
+								
+					strBodyFuncion+="\r\n\r\n\t\t\t\tDataAccessHelper::getGeneralEntity(\"\",$entity->get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(),$resultSet);";
+					strBodyFuncion+="\r\n\t\t\t\t"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"DataAccess::getEntity"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(\"\", $entity->get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(), $resultSet);";
+								
+					strBodyFuncion+="\r\n\r\n\t\t\t\tDataAccessHelper::getGeneralEntity("+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess::$TABLENAME,$entity->get"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"(),$resultSet);";
+					strBodyFuncion+="\r\n\t\t\t\t"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess::getEntity"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"("+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess::$TABLENAME, $entity->get"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"(), $resultSet);";
+					
+					strMiddle2Funcion="\r\n\t\t\t$sQuery=$sQuery->replace(\"isActive=\","+"Constantes::getSSchema()+\".\"+"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"DataAccess::$TABLENAME+\".isActive=\");";
+					strFuncion+=strInitFuncion+strMiddleFuncion+strMiddle2Funcion+strMiddle3Funcion+strBodyFuncion+strEndFuncion;								
+				}						
+				
+			
+			}
+			
+			return strFuncion; 
+		}
+		
+public String GetFuncionesTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public function ";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t} catch(Exception $e)\r\n\t{\r\n\t;\r\n}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				strInitFuncion="\tpublic function ";
+				strEndFuncion=" catch(Exception $e) {\r\n\t;\r\n}\r\n\t}";
+				
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+					strInitFuncion+=/*GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+*/strInit2Funcion;
+					//setIsForForeingKeyData	
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+GetNombreCompletoClaseRelacionadaFromColumn(columnSchema))+ "(Connexion $connexion,"+/*GetNombreClaseC("dbo."+TablaBase.Name)+*/ "$rel"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+") {\r\n\r\n\t\t"+/*GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+*/"$"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"= new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"();\r\n\r\n\t\ttry {";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+/*GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess "+*/"$"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess=new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\t\t\t"+/*GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess "+*/"$"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess->setIsForForeingKeyData($this->isForForeingsKeysDataRelationships);\r\n";
+					strTablaClaseRelacionada+="\t\t\t$"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"=$"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess->getEntity($connexion,$rel"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+GetNombreCompletoColumnaClaseC(columnSchema)+ "());";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+					strEndFuncion="\r\n\t\t} catch(Exception $e) {\r\n\t\t\tthrow $e;\r\n\t\t}\r\n"+"\r\n\treturn $"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";"+ "\r\n\r\n\t}";
+					strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+			
+				}
+				
+			}
+								
+			return strFuncion; 
+		}
+
+public String GetFuncionesTablasClasesRelacionadas() {
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public function ";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();;
+			
+			String strEndFuncion="\r\n} catch(Exception $e) {\r\n;\r\n}\r\n}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			String strNombreAdicional="";
+			String strAsPrimaryTable="";
+			String strOnPrimaryTable="";
+			String strWherePrimaryTable="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values) {
+				strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				
+				strAsPrimaryTable="";
+				strOnPrimaryTable="";
+				strWherePrimaryTable="";
+				
+				strInitFuncion="\tpublic function ";
+				strEndFuncion="\r\n\t} catch(Exception $e) {\r\n\t;\r\n}\r\n\t}";
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne) {
+					strInitFuncion+=/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+*/strInit2Funcion;
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ "(Connexion $connexion,"+/*GetNombreClaseC("dbo."+TablaBase.Name)+*/ GetNombreClaseC(TablaBase.ToString())+ " $"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+") {\r\n\r\n\t\t"+/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"= new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"();\r\n\r\n\t\ttry {\r\n";
+					strTablaClaseRelacionada+="\t\t\t$strFinalQuery=\" INNER JOIN \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\" ON \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+""+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase)).ToLower()+"=\".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+" WHERE \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+"=\".$"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+strIdGetSet+"();\r\n\r\n";
+					strTablaClaseRelacionada+="\t\t\t$queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\t$queryWhereSelectParameters->setFinalQuery($strFinalQuery);\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\t\t\t$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"=$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess->getEntity($connexion,$"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+strIdGetSet+"());";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+					strEndFuncion="\r\n\t\t} catch(Exception $e) {\r\n\t\t\tthrow $e;\r\n\t\t}\r\n"+"\r\n\treturn $"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";"+ "\r\n\r\n\t}";
+				
+				} else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany) {	
+					strInitFuncion+=/*"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"*/strInit2Funcion;
+					
+					if(!GetNombreClaseC("dbo."+collectionInfo.SecondaryTable).Equals(GetNombreClaseC("dbo."+TablaBase.Name))) {
+						strOnPrimaryTable="Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME";
+						strWherePrimaryTable="Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME";
+					} else {
+						strAsPrimaryTable=" as "+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"_aux";
+						strOnPrimaryTable="\""+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"_aux\"";
+						strWherePrimaryTable="\""+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"_aux\"";
+					}
+					
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s(Connexion $connexion,"+/*GetNombreClaseC("dbo."+TablaBase.Name)+*/GetNombreClaseC(TablaBase.ToString())+" $"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")\r\n\t{\r\n\r\n\t\t"+/*"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s=array();\r\n\r\n\t\ttry {\r\n";// new "+ "ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">();\r\n\r\n\t\ttry\r\n\t\t{\r\n";
+					
+					//RESP
+					//strTablaClaseRelacionada+="\t\t\t$strFinalQuery=\" INNER JOIN \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\" "+strAsPrimaryTable+" ON \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+"_"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase)).ToLower()+"=\".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+" WHERE \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+"=\".$"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+strIdGetSet+"();\r\n\r\n";
+					
+					strTablaClaseRelacionada+="\t\t\t$strFinalQuery=\" INNER JOIN \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\" "+strAsPrimaryTable+" ON \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+"_"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase)).ToLower()+"=\"."+strOnPrimaryTable+".\"."+strId+" WHERE \"."+strWherePrimaryTable+".\"."+strId+"=\".$"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+strIdGetSet+"();\r\n\r\n";					
+					strTablaClaseRelacionada+="\t\t\t$queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\t$queryWhereSelectParameters->setFinalQuery($strFinalQuery);\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "+*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\t\t\t$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s=$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess->getEntities($connexion,$queryWhereSelectParameters);";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+					strEndFuncion="\r\n\t\t} catch(Exception $e) {\r\n\t\t\tthrow $e;\r\n\t\t}\r\n"+"\r\n\treturn $"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;"+"\r\n\r\n\t}";
+			
+				} else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany) {
+					strInitFuncion+=/*"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+*/strInit2Funcion;
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s(Connexion $connexion,"+/*GetNombreClaseC("dbo."+TablaBase.Name)+*/GetNombreClaseC(TablaBase.ToString())+" $"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+") {\r\n\r\n\t\t"+/*"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s= array();\r\n\r\n\t\ttry {\r\n";//"+ "ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">();\r\n\r\n\t\ttry\r\n\t\t{\r\n";
+					strTablaClaseRelacionada+="\t\t\t$strFinalQuery=\" INNER JOIN \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$TABLENAME.\" ON \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+"_"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)).ToLower()+"=\".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+" INNER JOIN \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\" ON \".Constantes::$STRPREFIJOSCHEMA."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$SCHEMA.\".\"."+GetNombreClase(collectionInfo.JunctionTableSchema.ToString())+"DataAccess::$TABLENAME.\"."+strId+""+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase))+"=\".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+" WHERE \".Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.\".\".self::$TABLENAME.\"."+strId+"=\".$"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+"->get"+strIdGetSet+"();\r\n\r\n";
+					strTablaClaseRelacionada+="\t\t\t$queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\t$queryWhereSelectParameters->setFinalQuery($strFinalQuery);\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "+*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\t\t\t$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s=$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess->getEntities($connexion,$queryWhereSelectParameters);";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+					strEndFuncion="\r\n\t\t} catch(Exception $e) {\r\n\t\t\tthrow $e;\r\n\t\t}\r\n"+"\r\n\treturn $"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;"+"\r\n\r\n\t}";
+			
+				}
+				
+				strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+	}
+		
+public string GetSetEntityColumna(ColumnSchema column)
+{				
+	String strSetEntity=string.Empty;
+	String sTipoCast="";
+	
+	if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)||column.Name.Equals(strIsExpired)||column.Name.Equals(strVersionRow)) {
+		return strSetEntity;
+	}
+	
+	if(blnEsReporte && GetEsReporteParametroFromPropertiesC(column)) {
+		return strSetEntity;
+	}
+	
+	String strEntityInit="$entity->set";
+	String strEntityMiddle0="(";
+	String strEntityMiddle="$resultSet[";//"->get";	
+	String strEntityFinal1=");";
+	String strEntityFinal="']";//"\"));";
+	//entity.setNombre(rs.getString("nombre"));	
+	
+	
+	sTipoCast=GetTipoColumnaCastC(column);
+	
+	/*
+	if(TieneColumnaTipoTexto(column)) {
+		sTipoCast="(string)";
+		
+	} else if(EsIntColumn(column) || EsSmallIntColumn(column) || EsBigIntColumn(column)) {
+		sTipoCast="(int)";
+		
+	} else if(EsDecimalColumn(column)) {
+		sTipoCast="(float)";
+		
+	} else if(EsBitColumn(column)) {
+		sTipoCast="(bool)";
+	}
+	*/
+	
+	
+	if(!EsBitColumn(column)) {
+    	strSetEntity=strEntityInit+GetNombreCompletoColumnaClaseC(column)+strEntityMiddle0+sTipoCast+strEntityMiddle+/*GetTipoColumnaClaseGetResulsetC(column)+*/"$strPrefijo.'"+/*column.Name+*/GetNombreColumnFromProperties(column)+strEntityFinal+strEntityFinal1;
+	
+	} else {
+		//SI ES POSTGREST PREGUNTAR 'f', SINO ES TRATADA COMO NORMAL
+		strSetEntity="\r\n\t\t\t\tif(Constantes::$BITESPOSTGRES==true) {";
+		strSetEntity+="\r\n\t\t\t\t\t"+strEntityInit+GetNombreCompletoColumnaClaseC(column)+strEntityMiddle0+strEntityMiddle+"$strPrefijo.'"+GetNombreColumnFromProperties(column)+strEntityFinal+"=='f'? false:true "+strEntityFinal1;
+		strSetEntity+="\r\n\t\t\t\t} else {";
+		strSetEntity+="\r\n\t\t\t\t\t"+strEntityInit+GetNombreCompletoColumnaClaseC(column)+strEntityMiddle0+sTipoCast+strEntityMiddle+/*GetTipoColumnaClaseGetResulsetC(column)+*/"$strPrefijo.'"+/*column.Name+*/GetNombreColumnFromProperties(column)+strEntityFinal+strEntityFinal1;
+		strSetEntity+="\r\n\t\t\t\t}";
+	}
+	
+	return strSetEntity;
+}
+
+public static string GetNombreClase(string strTablaBase)
+{				
+		return GetNombreClaseC(strTablaBase);
+}
+
+</script>
+<%//InicializarVariablesPorTabla(TablaBase);%>
+<%//InicializarVariablesEmpresaC(Empresa,false);%>
+<?php
+<%=GetByDanLicence()%>
+<%if(ConNamespaces){ %>
+<%=strPhp53VersionComment%>namespace <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageDataAccess%>;
+
+if(Constantes::$BIT_CONCARGA_INICIAL_POR_ARCHIVO) {
+	
+include_once('<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Constantes.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Funciones.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/PaqueteTipo.php');
+//include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=Package%>/<%=Module%><%=strPackageUtils%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesCarga.php');
+
+if(Constantes::$BIT_CONCARGA_INICIAL) {
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageEntities%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClase(TablaBase.ToString())%>.php');
+}
+
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>/DatoGeneral.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>/DatoGeneralMinimo.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>/DatoGeneralMaximo.php');
+//include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>/GeneralEntity.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageDataAccess%>/DataAccessHelper.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageDataAccess%>/GetEntitiesDataAccessHelper.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Connexion.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/ParametersType.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>/QueryWhereSelectParameters.php');
+include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>/Pagination.php');
+
+<%if(TieneCompuesto()){%>//include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageDataAccess%>/DataAccessHelper.php');<%}%>
+
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\GeneralEntity;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageEntities%>/<%=GetNombreClase(TablaBase.ToString())%>;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageEntities%>\*;<%//=GetNombreClase(TablaBase.ToString())%>
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\QueryWhereSelectParameters;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\Pagination;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageDataAccess%>/<%=strPackageBusiness%>\DataAccessHelper;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>\Connexion;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>\ParametersType;
+
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageDataAccess%>\DataAccessHelper;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageDataAccess%>\GetEntitiesDataAccessHelper;
+
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>\*;
+
+<%=GetCompuestosIncludeUse() %>
+
+}
+
+<% } %>
+class <%=GetNombreClase(TablaBase.ToString())%>DataAccess extends GetEntitiesDataAccessHelper {		
+	//OJO:SE REDEFINEN BIEN EN CONSTRUCTOR		
+	public static $SCHEMA='<%=GetSchemaTableFromProperties(TablaBase,Schema)%>';
+	public static $STRPREFIJOTABLE='<%=GetNombrePrefijoTableFromPropertiesC(TablaBase)%>';		
+	public static $TABLENAME='<%=GetNombrePrefijoTableFromPropertiesC(TablaBase)%><%=GetNombreTablaC(TablaBase)%>';		
+	
+	
+	public static $TABLENAME_<%=GetNombreTablaC(TablaBase)%>='<%=GetNombreTablaC(TablaBase)%>';	
+	
+	public static $QUERYINSERT='';
+	//'insert into '.self::$SCHEMA.'.'.self::$TABLENAME.' set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>';	
+	public static $QUERYUPDATE='';
+	//'update '.self::$SCHEMA.'.'.self::$TABLENAME.' set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterUpdateC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> where id=? AND version_row=?';
+	public static $QUERYDELETE='';
+	//'delete from '.self::$SCHEMA.'.'.self::$TABLENAME.' where id=?';
+	public static $QUERYSELECT='';
+	//'select <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema) %><% if (i < TablaBase.Columns.Count - 1) { %>,<% } %><% } %> from '.self::$SCHEMA.'.'.self::$TABLENAME;
+	public static $QUERYSELECTCOUNT='';
+	//'select count(*) as value from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME;
+	public static $QUERYSELECTFORFOREINGKEY='';
+	
+	public static $STOREPROCEDUREINSERT="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_INSERT(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %>,?)";
+	public static $STOREPROCEDUREUPDATE="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_UPDATE(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterUpdateC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %> ,? ,?,?)";
+	public static $STOREPROCEDUREDELETE="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_DELETE(?,?)";
+	public static $STOREPROCEDURESELECT="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_SELECT(?,?)";
+
+	public static $ISDELETECASCADE=<%=GetCascadeTableFromPropertiesC(TablaBase)%>;
+	
+	public static $ISWITHSCHEMA;
+	public static $ISWITHSTOREPROCEDURES;
+	
+	public $isForForeingKeyData=false;
+	public $isForForeingsKeysDataRelationships=false;
+	
+	protected $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional;
+	
+	function __construct (){
+		self::$TABLENAME=self::$STRPREFIJOTABLE.'<%=GetNombreTablaC(TablaBase)%>';
+		
+		<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$SCHEMA=Funciones::getSchemaMySqlFromOwner('<%=TablaBase.Owner.ToUpper()%>');
+		
+		self::$QUERYINSERT='insert into '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME.'(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterColumnNameInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>) values (<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterValuesInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>)';
+		self::$QUERYUPDATE='update '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME.' set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterUpdateC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> where id=%d AND version_row=\'%s\'';
+		self::$QUERYDELETE='delete from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME.' where id=%d';
+		self::$QUERYSELECT='select <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema) %><% if (i < TablaBase.Columns.Count - 1) { %>,<% } %><% } %> from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME;		
+		self::$QUERYSELECTFORFOREINGKEY=<%=GetSelectForeignKey()%>;  //'select <%// for (int i = 0,j=0; i < TablaBase.Columns.Count; i++){ %><%//if(/*!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i])*/ !(TablaBase.Columns[i].Name.Equals(strId) || TablaBase.Columns[i].Name.Equals(strVersionRow))){/*continue;*/ }else {j++;} %><%//= GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema) %><%// if (j < GetNumeroDeColumnasWebComboC(TablaBase,false)+2) { %>,<%// } %><%// } %> from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME;		
+		self::$QUERYSELECTCOUNT='select count(*) as value from '.Constantes::$STRPREFIJOSCHEMA.self::$SCHEMA.'.'.self::$TABLENAME;		
+		
+		$this->isForForeingKeyData=false;
+		$this->isForForeingsKeysDataRelationships=false;
+		
+		//AUTOREFERENCIA INFINITA TALVEZ
+		//$this-><%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional=new <%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional();
+	}
+	
+	public function get<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional() {
+		return $this-><%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional;
+	}
+
+	public function set<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional) {
+		$this-><%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional = $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>DataAccessAdditional;
+	}
+	
+	public function getIsForForeingKeyData() {
+		return $this->isForForeingKeyData;
+	}
+
+	public function setIsForForeingKeyData($isForForeingKeyData) {
+		$this->isForForeingKeyData = $isForForeingKeyData;
+	}
+			
+	public function getIsForForeingsKeysDataRelationships() {
+		return $this->isForForeingsKeysDataRelationships;
+	}
+
+	public function setIsForForeingsKeysDataRelationships($isForForeingsKeysDataRelationships) {
+		$this->isForForeingsKeysDataRelationships = $isForForeingsKeysDataRelationships;
+	}
+	
+	public static function getISWITHSCHEMA() {
+		return self::$ISWITHSCHEMA;
+	}
+
+	public static function setISWITHSCHEMA($ANISWITHSCHEMA) {
+		self::$ISWITHSCHEMA = $ANISWITHSCHEMA;
+	}		
+	
+	public static function getISWITHSTOREPROCEDURES() {
+		return self::$ISWITHSTOREPROCEDURES;
+	}
+
+	public static function setISWITHSTOREPROCEDURES($ANISWITHSTOREPROCEDURES) {
+		self::$ISWITHSTOREPROCEDURES =$ANISWITHSTOREPROCEDURES;
+	}
+	
+	public function getStrSchema() {
+		return self::$SCHEMA;
+	}
+
+	public static function setSCHEMA($SCHEMA) {
+		self::$SCHEMA = $SCHEMA;
+	}
+		
+	public static function getTABLENAME() {
+		return self::$TABLENAME;
+	}
+
+	public static function setTABLENAME($strTABLENAME) {
+		self::$TABLENAME = $strTABLENAME;
+	}
+	
+	public static function getISDELETECASCADE() {
+		return self::$ISDELETECASCADE;
+	}
+
+	public static function setISDELETECASCADE($ANISDELETECASCADE) {
+		self::$ISDELETECASCADE = $ANISDELETECASCADE;
+	}
+	
+	public function set<%=GetNombreClase(TablaBase.ToString())%>Original($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>) {
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->set<%=GetNombreClaseC(TablaBase.ToString())%>Original(clone $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);		
+	}
+	
+	public function set<%=GetNombreClase(TablaBase.ToString())%>sOriginal($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) {
+		foreach($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s as $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>){
+			$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->set<%=GetNombreClase(TablaBase.ToString())%>Original(clone $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);
+		}
+	}
+	
+	public static function set<%=GetNombreClase(TablaBase.ToString())%>OriginalStatic($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>) {
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->set<%=GetNombreClase(TablaBase.ToString())%>Original(clone $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);		
+	}
+	
+	public static function set<%=GetNombreClase(TablaBase.ToString())%>sOriginalStatic($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) {		
+		foreach($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s as $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>){
+			$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->set<%=GetNombreClase(TablaBase.ToString())%>Original(clone $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);
+		}
+	}
+	
+	public function executeQuery(Connexion $connexion, $sQueryExecute) {	
+        try {		
+			$mysql=null;
+			$mysql=$connexion->getConnection()->getMysqLink();
+			
+			if(!Constantes::$ISDEVELOPING_QUERY_EXPORT) {
+							
+				if(Constantes::$BITESPOSTGRES==false) {	
+					if(!mysql_query($sQueryExecute,$mysql)) throw new Exception(mysql_error());// or die('Query failed: ' . mysql_error());
+				} else {
+					if(!pg_query($mysql,$sQueryExecute)) throw new Exception(pg_errormessage());// or die('Query failed: ');
+				}										        
+			} else {
+   				Funciones::writeQueryFile($sQueryExecute);
+   			}
+			
+      	} catch(Exception $e) {
+			throw $e;
+      	}		    	
+    }
+	
+	public function getEntity(Connexion $connexion, $id) {		
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		
+		$strQuerySelect='';
+		$strQuerySelectFinal='';
+		
+        try {
+			
+			if(!$this->isForForeingKeyData) {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+			} else {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+			}
+			
+			if($id==null || $id=='') {
+				$id=0;	
+			}
+			
+			$strQuerySelectFinal=$strQuerySelect.' WHERE id='.$id;
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($strQuerySelectFinal);
+            }
+			
+			$result = $connexion->ejecutarQuery($strQuerySelectFinal);//<%=TablaBase.ToString().Replace("dbo.","")%>.isActive=1 AND 
+      	    
+			$resultSet =Connexion::getResultSet($result);
+      	    
+			if($resultSet) {				
+				$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(new <%=GetNombreClase(TablaBase.ToString())%>());
+				
+				<%=strEsReporteComment%>$entity=parent::getEntityPrefijoEntityResult("",$entity,$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA);         	    
+				//$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet); 
+				$entity=$this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet); 
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%><%=strEsReporteComment%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(parent::getEntityPrefijoEntityResult("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA));         						
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>//$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original($this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+      	    } else {
+				$entity =null;
+			}
+			
+			if($entity!=null) {
+				parent::setGeneralEntityIsNewFalseIsChangedFalse($entity);
+			}
+			
+			Connexion::liberarResult($result); 
+
+       	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entity;	
+    }
+	  
+	public function getEntityConnexionWhereSelect(Connexion $connexion,QueryWhereSelectParameters $queryWhereSelectParameters) {
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		
+		
+        try {
+      	    $sQuery='';
+      	    $strQuerySelect='';
+			
+			if(!$this->isForForeingKeyData) {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+			} else {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+			}
+			
+			
+      	    $sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityTableNameQueryWhere($entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$TABLENAME.".",$queryWhereSelectParameters,$strQuerySelect);
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+      	  	$result = $connexion->ejecutarQuery($sQuery);//" WHERE ".<%=TablaBase.ToString().Replace("dbo.","")%>.isActive=1
+        	
+			$resultSet =Connexion::getResultSet($result);
+			
+			if($resultSet) {				
+				$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(new <%=GetNombreClase(TablaBase.ToString())%>());
+				
+				<%=strEsReporteComment%>$entity=parent::getEntityPrefijoEntityResult("",$entity,$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA);         	    
+				//$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);    
+				$entity=$this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);    
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%><%=strEsReporteComment%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(parent::getEntityPrefijoEntityResult("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA));         		
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>//$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original($this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+      	    } else {
+				$entity =null;
+			}
+			
+			if($entity !=null) {
+				parent::setGeneralEntityIsNewFalseIsChangedFalse($entity);
+			}
+			
+			Connexion::liberarResult($result); 
+
+      	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entity;	
+    }
+	  
+	public function getEntities(Connexion $connexion,QueryWhereSelectParameters $queryWhereSelectParameters) {
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+		$strQuerySelect='';
+		
+        try {     	   
+        	
+			if(!$this->isForForeingKeyData) {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+			} else {
+				$strQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+			}
+			
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityTableNameQueryWhere($entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$TABLENAME.".",$queryWhereSelectParameters,$strQuerySelect);
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+			
+      	    while ($resultSet) {
+      	    	$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				<%=strEsReporteComment%>$entity=parent::getEntityPrefijoEntityResult("",$entity,$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA);         		
+				//$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+				$entity=$this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%><%=strEsReporteComment%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(parent::getEntityPrefijoEntityResult("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA));         		
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>//$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original($this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+								
+      	    	$entities[]=$entity;
+				
+				$resultSet =Connexion::getResultSet($result);
+      	    }
+    		
+			parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+      	   
+			Connexion::liberarResult($result);  
+			
+			if($queryWhereSelectParameters->getPagination()->getBlnConNumeroMaximo() && !$this->isForForeingKeyData) {
+				$this->setCountSelect($queryWhereSelectParameters,$entity,$connexion);
+			}
+			
+      	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entities;	
+    }	
+	
+	public function getEntitiesConnexionQuerySelectQueryWhere(Connexion $connexion,$strQuerySelect,QueryWhereSelectParameters $queryWhereSelectParameters) {
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+	
+        try {     	   
+        	
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityQueryWhereSelect($entity,$queryWhereSelectParameters,$strQuerySelect);
+				
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+			
+      	    while ($resultSet) {
+      	    	$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				<%=strEsReporteComment%>$entity=parent::getEntityPrefijoEntityResult("",$entity,$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA);         		
+				//$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+				$entity=$this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%><%=strEsReporteComment%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(parent::getEntityPrefijoEntityResult("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA));         		
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>//$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original($this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				
+      	    	$entities[]=$entity;
+				
+				$resultSet =Connexion::getResultSet($result);
+      	    }
+			
+			parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+			
+			Connexion::liberarResult($result); 
+ 			
+			if($queryWhereSelectParameters->getPagination()->getBlnConNumeroMaximo() && !$this->isForForeingKeyData) {
+				$this->setCountSelect($queryWhereSelectParameters,$entity,$connexion);
+			}
+      	} catch(Exception $e) {
+			throw $e;
+      	}		
+    	
+		return $entities;	
+    }
+	
+	public function getEntitiesSimpleQueryBuild(Connexion $connexion,$strQuerySelect,QueryWhereSelectParameters $queryWhereSelectParameters) {
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+	
+        try {     	   
+        					
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesSimpleQueryBuild($queryWhereSelectParameters,$strQuerySelect);
+							
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+			
+      	    while ($resultSet) {
+      	    	$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				<%=strEsReporteComment%>$entity=parent::getEntityPrefijoEntityResult("",$entity,$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA);         		
+				//$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+				$entity=$this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity,$resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%><%=strEsReporteComment%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(parent::getEntityPrefijoEntityResult("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSCHEMA));         		
+				
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>//$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>$entity->set<%=GetNombreClase(TablaBase.ToString())%>Original($this->getEntity<%=GetNombreClase(TablaBase.ToString())%>("",$entity->get<%=GetNombreClase(TablaBase.ToString())%>Original(),$resultSet));
+				
+      	    	$entities[]=$entity;
+				
+				$resultSet =Connexion::getResultSet($result);
+      	    }
+			
+			parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+			
+			Connexion::liberarResult($result); 
+			
+			if($queryWhereSelectParameters->getPagination()->getBlnConNumeroMaximo() && !$this->isForForeingKeyData) {
+				$this->setCountSelect($queryWhereSelectParameters,$entity,$connexion);
+			}
+       	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entities;	
+    }
+	
+	//PARA SQL ESCALAR O QUE TRAIGA 1 FILA Y POCOS CAMPOS
+	public function getEntityDatoGeneralMinimoGenerico(Connexion $connexion,QueryWhereSelectParameters $queryWhereSelectParameters,array $classes) {
+		$datoGeneralMinimo= new DatoGeneralMinimo();
+		
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {			
+			$sQuery='';
+      	    $sQuerySelect='';
+			
+			
+			if($queryWhereSelectParameters->getSelectQuery()!="") {
+				$sQuerySelect=$queryWhereSelectParameters->getSelectQuery();
+				
+			} else {
+				if(!$this->isForForeingKeyData) {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+				} else {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+				}
+			}
+			
+      	    $sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityTableNameQueryWhere($entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$TABLENAME.".",$queryWhereSelectParameters,$sQuerySelect);
+						
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+			
+      	  	$resultSet =Connexion::getResultSet($result);
+        	 
+			//if($queryWhereSelectParameters->getIsGetGeneralObjects()) {
+				if($resultSet) {
+					foreach($classes as $classe) {					
+						DataAccessHelper::setFieldDynamicDatoGeneralMinimo($datoGeneralMinimo,$classe,$resultSet);
+					}
+										
+				} else {
+					$entity =null;
+				}
+			//}
+			
+			if($entity!=null) {
+				//parent::setGeneralEntityIsNewFalseIsChangedFalse($entity);
+			}
+			
+      	    $resultSet =Connexion::getResultSet($result);
+		
+		} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $datoGeneralMinimo;
+    }
+	
+	public function getEntitiesDatoGeneralMaximoGenerico(Connexion $connexion,QueryWhereSelectParameters $queryWhereSelectParameters,array $classes) {
+		$datoGeneralMaximos = array();
+		$datoGeneralMaximo=new DatoGeneralMaximo();
+		
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+		$sQuerySelect='';
+		
+        try { 
+						
+			if($queryWhereSelectParameters->getSelectQuery()!="") {			
+				$sQuerySelect=$queryWhereSelectParameters->getSelectQuery();				
+			
+			} else {
+				if(!$this->isForForeingKeyData) {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+				} else {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+				}
+			}
+			
+			
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityQueryWhereSelect($entity,$queryWhereSelectParameters,$sQuerySelect);
+				
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+        	
+			//if($queryWhereSelectParameters->getIsGetGeneralObjects()) {				
+				
+				 while ($resultSet) {
+					
+					$datoGeneralMaximo=new DatoGeneralMaximo();
+					
+					foreach($classes as $classe) {
+						DataAccessHelper::setFieldDynamicDatoGeneralMaximo($datoGeneralMaximo,$classe,$resultSet);
+					}
+														
+					$datoGeneralMaximos[]=$datoGeneralMaximo;
+				
+					$resultSet =Connexion::getResultSet($result);
+				}
+			
+			//parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+			
+			Connexion::liberarResult($result); 
+			
+		} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $datoGeneralMaximos;
+    }
+	
+	public function getEntitiesDatoGeneralGenerico(Connexion $connexion,QueryWhereSelectParameters $queryWhereSelectParameters,array $classes) {
+		$datoGenerals = array();
+		$datoGeneral=new DatoGeneral();
+		
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+		$sQuerySelect='';
+		
+        try { 
+					
+			if($queryWhereSelectParameters->getSelectQuery()!="") {			
+				$sQuerySelect=$queryWhereSelectParameters->getSelectQuery();				
+			
+			} else {
+				if(!$this->isForForeingKeyData) {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECT;
+				} else {
+					$sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTFORFOREINGKEY;
+				}
+			}
+			
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityQueryWhereSelect($entity,$queryWhereSelectParameters,$sQuerySelect);
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+			      	   
+			//if(queryWhereSelectParameters.getIsGetGeneralObjects()) {				
+					
+				 while($resultSet) {
+					$datoGeneral=new DatoGeneral();
+					
+					foreach($classes as $classe) {
+						DataAccessHelper::setFieldDynamicDatoGeneral($datoGeneral,$classe,$resultSet);
+					}
+					
+					$datoGenerals[]=$datoGeneral;
+					
+					$resultSet =Connexion::getResultSet($result);
+				}
+			//}
+			
+			//parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+			
+			Connexion::liberarResult($result); 
+			
+		} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $datoGenerals;
+    }
+	
+	public function getEntitiesGenerico(Connexion $connexion,$sQuerySelect,QueryWhereSelectParameters $queryWhereSelectParameters,array $listColumns,$deepLoadType,$conMapGenerico) {
+		$entities = array();
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		
+        try {
+							
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityQueryWhereSelect($entity,$queryWhereSelectParameters,$sQuerySelect);
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+        	 
+      	     while ($resultSet) {
+      	    	$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				if($conMapGenerico) {
+					$entity->inicializarMap<%=GetNombreClase(TablaBase.ToString())%>();
+					
+					foreach($listColumns  as $sColumn) {						
+						$entity->setMap<%=GetNombreClase(TablaBase.ToString())%>Value($sColumn, $resultSet[''.$sColumn]);						
+					}
+				} else {				
+					$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntityGenericoBase<%=GetNombreClase(TablaBase.ToString())%>('',$entity,$resultSet,$listColumns,$deepLoadType);
+					
+					//entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         							
+				}
+				
+      	    	$entities[]=$entity;
+				
+				$resultSet =Connexion::getResultSet($result);
+      	    }
+
+			//parent::setGeneralEntitiesIsNewFalseIsChangedFalse($entities);
+			
+      	    Connexion::liberarResult($result);  
+						
+		} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entities;	
+    }
+	
+	public function getEntityGenerico(Connexion $connexion,$sQuerySelect,QueryWhereSelectParameters $queryWhereSelectParameters,array $listColumns,$deepLoadType,$conMapGenerico) {
+		$entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		$sQuery='';
+	
+        try {
+							
+			$sQuery=DataAccessHelper::buildSqlGeneralGetEntitiesEntityQueryWhereSelect($entity,$queryWhereSelectParameters,$sQuerySelect);
+			
+			if(Constantes::$ISDEVELOPING_SQL)  {
+            	Funciones::mostrarMensajeDeveloping($sQuery);
+            }
+			
+			$result = $connexion->ejecutarQuery($sQuery);
+        	
+			$resultSet =Connexion::getResultSet($result);
+        	 
+      	    while ($resultSet) {
+      	    	$entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				if($conMapGenerico) {
+					$entity->inicializarMap<%=GetNombreClase(TablaBase.ToString())%>();
+					
+					foreach($listColumns as $sColumn) {
+						$entity->setMap<%=GetNombreClase(TablaBase.ToString())%>Value($sColumn, $resultSet[''.$sColumn]);
+					}
+				} else {				
+					$entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::getEntityGenericoBase<%=GetNombreClase(TablaBase.ToString())%>('',$entity,$resultSet,$listColumns,$deepLoadType);
+					
+					//entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         							
+				}
+				
+      	    	//entities[]=entity;								
+      	    }
+
+			//parent::setGeneralEntityIsNewFalseIsChangedFalse($entity);
+			
+      	    Connexion::liberarResult($result);  
+			
+		} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entity;	
+    }
+	
+	public static function getEntityGenericoBase<%=GetNombreClase(TablaBase.ToString())%>($strPrefijo,$entity,$resultSet,array $listColumns,$deepLoadType) {		
+        try {     	  
+			if($deepLoadType==DeepLoadType::$NONE || $deepLoadType==DeepLoadType::$INCLUDE) {
+				foreach($listColumns as $sColumn) {
+					$entity->{$sColumn}=$resultSet[$strPrefijo.$sColumn];
+					
+					/*
+					Field field =null;
+					try {
+						field = TipoBanco.class.getDeclaredField(sColumn);//getField
+						field.setAccessible(true);
+						
+					} catch(Exception e) {
+						field = TipoBanco.class.getSuperclass().getDeclaredField(sColumn);//getField
+						field.setAccessible(true);
+					}
+					
+					TipoBancoDataAccess.setFieldReflectionTipoBanco(field,strPrefijo,sColumn,entity,resultSet);
+					//field.set(entity, resultSet.getLong(strPrefijo+"id_opcion"));
+					*/
+				}  
+			
+			} else if($deepLoadType==DeepLoadType::$EXCLUDE) {
+				$listTiposColumnas=array();
+				$existe=false;
+				
+				//$listTiposColumnasTipoBanco=TipoBancoConstantesFunciones.getTodosTiposColumnasTipoBanco();				
+				
+				foreach($listTiposColumnas as $sColumn) {
+					$existe=false;
+					
+					foreach($listColumns as $sColumnExlude) {	        	
+						if($sColumn==$sColumnExlude) {
+							$existe=true;
+							break;
+						}
+					} 
+					
+					
+					if(!existe) {
+						$entity->{$sColumn}=$resultSet[$strPrefijo.$sColumn];
+						
+						/*
+						//ESTE PROCESO ES REPETIDO DE INCLUDE
+						Field field =null;
+						try {
+							field = TipoBanco.class.getDeclaredField(sColumn);//getField
+							field.setAccessible(true);
+							
+						} catch(Exception e) {
+							field = TipoBanco.class.getSuperclass().getDeclaredField(sColumn);//getField
+							field.setAccessible(true);
+						}
+						
+						TipoBancoDataAccess.setFieldReflectionTipoBanco(field,strPrefijo,sColumn,entity,resultSet);
+						//field.set(entity, resultSet.getLong(strPrefijo+"id_opcion"));
+						*/
+					}					
+				}
+			}
+      	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entity;	
+    }
+	
+	public function setCountSelect(QueryWhereSelectParameters $queryWhereSelectParameters,$entity,Connexion $connexion) {
+		$sQueryCount='';
+		$queryWhereSelectParametersCount=null;
+		$paginationAux=new Pagination();
+		
+		$paginationAux=$queryWhereSelectParameters->getPagination();
+				
+		$queryWhereSelectParametersCount=$queryWhereSelectParameters;			
+		$queryWhereSelectParametersCount->setPagination(new Pagination());
+		
+		$sQueryCount=DataAccessHelper::buildSqlGeneralGetEntitiesEntityTableNameQueryWhere($entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$TABLENAME.'.',$queryWhereSelectParametersCount,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYSELECTCOUNT);
+				
+		if(Constantes::$ISDEVELOPING_SQL)  {
+            Funciones::mostrarMensajeDeveloping($sQueryCount);
+        }
+			
+		$resultCount = $connexion->ejecutarQuery($sQueryCount);
+        	
+		$resultSetCount =Connexion::getResultSet($resultCount);
+				
+	    if($resultSetCount) {
+	       	$count=$resultSetCount['value'];
+	       	$paginationAux->setIntNumeroMaximo($count);
+	    }
+				
+		$queryWhereSelectParameters->setPagination($paginationAux);
+				
+		Connexion::liberarResult($resultCount);				
+	}
+	
+	//static
+	public function getEntity<%=GetNombreClase(TablaBase.ToString())%>($strPrefijo,<%=GetNombreClaseC(TablaBase.ToString())%> $entity,$resultSet) {
+        try {     	
+			if(!$this->isForForeingKeyData) {
+				<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+				<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+				<%=  GetSetEntityColumna(TablaBase.Columns[i]) %>
+				<% } %>
+			} else {
+				<%=GetSetEntityColumnaForeignKey()%>
+				
+				<%// for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+				<%//if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+				<%//if(!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i])){continue; } %>
+				<%//=  GetSetEntityColumna(TablaBase.Columns[i]) %>
+				<%//} %>
+			}
+      	} catch(Exception $e) {
+			throw $e;
+      	}
+		
+    	return $entity;	
+    }
+
+	public static function save(<%=GetNombreClaseC(TablaBase.ToString())%> $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>,Connexion $connexion) {	
+		try {
+			$parametersType=null;
+			$strQuerySave='';
+			$strQuerySaveComplete='';
+			//$statement=null;
+			
+			if ($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->getIsDeleted()) {
+				$parametersType=ParametersType::$DELETE;
+				$strQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYDELETE;
+				$strQuerySaveComplete=sprintf($strQuerySave,mysql_real_escape_string($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>()));
+				//$statement=null;
+				
+			} else if ($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->getIsChanged()) {
+				if($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->getIsNew()) {
+					$parametersType=ParametersType::$INSERT;
+					$strQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYINSERT;
+					
+					<%if(!blnEsProceso) { //$<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%//= GetNombreCompletoColumnaClaseC(TablaBase.Columns[i]) %>
+					
+					<%=GetSetTipoParametroObjetoStatementColumnaClaseC(TablaBase)%>
+					
+					$strQuerySaveComplete=sprintf($strQuerySave,<% if (!blnTieneIdentityColumn) {%>mysql_real_escape_string($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>()),<% } %><% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%><%= GetTipoParametroObjetoStatementColumnaClaseC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> );					
+					<%}%>
+					//$statement=$connexion->getConnection()->getMysqLink()->prepare($sQuerySave);			
+					//$statement->bind_param('<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%><%=GetTipoParametroStatementColumnaClaseC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>',<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%><%=GetTipoParametroObjetoStatementColumnaClaseC(TablaBase.Columns[i])%><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> ); 	
+					
+				} else {
+					$parametersType=ParametersType::$UPDATE;
+					$strQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$QUERYUPDATE;			
+					
+					<%if(!blnEsProceso){//$<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%//= GetNombreCompletoColumnaClaseC(TablaBase.Columns[i]) %>
+					
+					<%=GetSetTipoParametroObjetoStatementColumnaClaseC(TablaBase)%>
+					
+					$strQuerySaveComplete=sprintf($strQuerySave,<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%><%=GetTipoParametroObjetoStatementColumnaClaseC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>, mysql_real_escape_string($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>()), mysql_real_escape_string($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strVersionRowGetSet%>()));
+					<%}%>
+					//$statement=$connexion->getConnection()->getMysqLink()->prepare($sQuerySave);			
+					//$statement->bind_param('<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%><%= GetTipoParametroStatementColumnaClaseC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>,i,s',<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%>$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%= GetNombreCompletoColumnaClaseC(TablaBase.Columns[i]) %>()<% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>, $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>(), $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strVersionRowGetSet%>()); 	
+				}	
+			} 
+			
+			//<%=GetNombreClase(TablaBase.ToString())%>DataAccess::buildParametersMaintenance($connexion->getDbType(), $parametersType, $entity)
+			//,$statement
+			
+			DataAccessHelper::save($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>, $connexion,$strQuerySaveComplete,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$TABLENAME,<%=GetNombreClase(TablaBase.ToString())%>DataAccess::$ISWITHSTOREPROCEDURES);
+			
+			<%=GetNombreClase(TablaBase.ToString())%>DataAccess::set<%=GetNombreClase(TablaBase.ToString())%>OriginalStatic($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);
+			
+		} catch(Exception $e) {
+            throw $e;
+        }
+	}
+	
+	<%= GetFuncionesTablasClasesRelacionadasForeigKeys() %>
+	
+	<%= GetFuncionesTablasClasesRelacionadas() %>
+	
+<%if(GenerarTipoGeneracionC(strTipoGeneracionCompuestos,TiposGeneracion)) {%>
+	
+	<%if(!GetEsReporteFromPropertiesC(TablaBase)){%>
+	
+	<%= GetFuncionesTablasClasesRelacionadasCompuestos() %>
+	
+	<%}%>	
+
+<%}%>
+}
+?>
+<script runat="template">
+/*
+//CARCAR ARCHIVO-PAQUETE
+$arrPaquetesTipos=array();$arrPaquetesTipos[]=PaqueteTipo::$ENTITIES;
+<%=GetNombreClase(TablaBase.ToString())%>ConstantesCarga::cargarArchivosPaquetes($arrPaquetesTipos);
+		
+*/
+/*
+public static $<%=strId.ToUpper()%>='<%=strId%>';			
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetNombreCampoTablaC(TablaBase.Columns[i]) %>
+	<% } %>
+	
+	public static $COLUMNNAME_<%=strId%>='<%=strId%>';			
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetNombreCampoTablaC(TablaBase.Columns[i],true) %>
+	<% } %>
+*/
+/*
+		public static function BuildParametersMaintenance($newDbType,$parametersType, $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>) {
+		$parametersMaintenance=parent::getParametersMaintenance();		
+			
+		try {
+			$parametersTemp=array();
+			$parameterMaintenance=null;
+			$parameterMaintenanceValueId=null;
+			
+			<% int iCount=0; %>
+				if(!$parametersType==ParametersType::$DELETE) {		
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%>
+					<% iCount++; %>				
+					$parameterMaintenance=new ParameterMaintenance();
+					$parameterMaintenance->setOrder(<% =iCount.ToString()%>);		
+					$parameterMaintenance->setParameterMaintenanceType(ParameterType.<%= GetTipoColumnaClaseEnumC(TablaBase.Columns[i]) %>);
+					$parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>=new ParameterValue();
+					$parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>->setValue($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%= GetNombreCompletoColumnaClaseC(TablaBase.Columns[i]) %>());
+					$parameterMaintenance->setParameterMaintenanceValue(parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>);
+					$parametersTemp->add($parameterMaintenance);
+					
+					<% if(TablaBase.Columns[i].Name.Equals(strVersionRow)){iCount--;} %>
+					<% } %>				
+						if($parametersType==ParametersType::$UPDATE) {					
+							$parameterMaintenance=new ParameterMaintenance();
+							$parameterMaintenance->setOrder(<%= GetParameterNoLastIndexC(TablaBase) %>);
+							$parameterMaintenance->setParameterMaintenanceType(ParameterType::LONG);
+							$parameterMaintenanceValueId=new ParameterValue();
+							$parameterMaintenanceValueId->setValue($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>());
+							$parameterMaintenance->setParameterMaintenanceValue($parameterMaintenanceValueId);		
+							$parametersTemp->add($parameterMaintenance);
+							
+							$parameterMaintenance=new ParameterMaintenance();
+							$parameterMaintenance->setOrder(<%= GetParameterLastIndexC(TablaBase) %>);
+							$parameterMaintenance->setParameterMaintenanceType(ParameterType::TIMESTAMP);
+							$parameterMaintenanceValueVersionRow=new ParameterValue();
+							$parameterMaintenanceValueVersionRow->setValue($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strVersionRowGetSet%>());
+							$parameterMaintenance->setParameterMaintenanceValue($parameterMaintenanceValueVersionRow);		
+							$parametersTemp->add($parameterMaintenance);					
+						}
+				} else {
+					$parameterMaintenance=new ParameterMaintenance();
+					$parameterMaintenance->setOrder(1);
+					$parameterMaintenance->setParameterMaintenanceType(ParameterType::$LONG);
+					$parameterMaintenanceValueId=new ParameterValue();
+					$parameterMaintenanceValueId->setValue($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>->get<%=strIdGetSet%>());
+					$parameterMaintenance->setParameterMaintenanceValue($parameterMaintenanceValueId);		
+					$parametersTemp->add($parameterMaintenance);
+				}
+			
+			$parametersMaintenance= new ParametersMaintenance();
+			$parametersMaintenance->setDbType($newDbType);
+			$parametersMaintenance->setParametersMaintenance($parametersTemp);
+			//parent::setParametersMaintenance($parametersMaintenance);		
+		} catch(Exception $e) {
+			throw $e;
+		}
+		
+		return $parametersMaintenance;
+	}
+*/
+</script>

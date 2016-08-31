@@ -1,0 +1,3222 @@
+﻿<%@ Template Language="C#" Debug="true" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" %>    	
+<%@ CodeTemplate Src="CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Windows.Forms" %>
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="1. General" Description="Database to get the extended properties from." %>
+<%@ Property Name="SourceTablesForGenerate" Type="SchemaExplorer.TableSchemaCollection" Category="1. General" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnasForGenerate" Type="SchemaExplorer.ColumnSchemaCollection" Category="1. General" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="TablaBaseActual" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="1. General" Optional="true"%>
+<%@ Property Name="ColumnaBaseActual" Type="SchemaExplorer.ColumnSchema" EXCLUDED="true"	Category="1. General" Optional="true"%>
+
+<%@ Property Name="EsParaProduccion" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+<%@ Property Name="SinIgnorar" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<%@ Property Name="NombreEmpresa" Type="System.String" Default="ME" Category="0. Typo Generacion" Description="Nombre de la Empresa" %>
+<%@ Property Name="EsLoteTablas" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsLoteColumnas" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsTablaDescripcion" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsColumnaDescripcion" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="Schema" Type="System.String" Default="schemaname" Category="0. Typo Generacion" Description="Nombre de la Empresa" %>
+<%@ Property Name="SchemaSoloSusTablas" Type="System.Boolean" Default="true" Category="0. Typo Generacion" Description="Nombre de la Empresa" %>
+<%@ Property Name="GeneracionPorTablas" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionPorColumnas" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionReportes" Type="System.Boolean" Default="false" Category="0. Typo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsParaMigracion" Type="System.Boolean" Default="false" Category="0. Typo Generacion Auxiliar" Description="Funciona junto con es insert delete" %>
+<%@ Property Name="EsParaAutoAuditoria" Type="System.Boolean" Default="false" Category="0. Typo Generacion Auxiliar" Description="Funciona junto con es insert delete" %>
+<%@ Property Name="EsCorreccion" Type="System.Boolean" Default="false" Category="0. Typo Generacion Auxiliar" Description="Funciona junto con es insert delete" %>
+
+<%@ Property Name="LoteDescription" Type="System.String" Default="" Category="0.Lote Parametro" Optional="true" Description="Aplicara a todos" %>
+<%@ Property Name="LoteDescriptionBuscar" Type="System.String" Default="" Category="0.Lote Parametro" Optional="true" Description="Aplicara a todos" %>
+<%@ Property Name="LoteNombreTablaColumna" Type="System.String" Default="" Category="0.Lote Parametro" Optional="true" Description="Aplicara a todos" %>
+<%@ Property Name="EsLoteNombreContains" Type="System.Boolean" Default="false" Category="0.Lote Parametro" Description="Nombre del Programdor" %>
+<%@ Property Name="EsLoteNombreIgual" Type="System.Boolean" Default="false" Category="0.Lote Parametro" Description="Nombre del Programdor" %>
+<%@ Property Name="EsLoteDescripcionReemplazo" Type="System.Boolean" Default="false" Category="0.Lote Parametro" Description="Nombre del Programdor" %>
+
+<%@ Property Name="_CARGAR" Type="System.Boolean" Default="false" Category="2.Table Descriptions" Description="Funciona junto con es insert delete" %>
+
+<%@ Property Name="_CARGAR_C" Type="System.Boolean" Default="false" Category="3.Column Descriptions" Description="Funciona junto con es insert delete" %>
+
+
+<%@ Property Name="EsMySql" Type="System.Boolean" Default="true" Category="0. Tipo Generacion DB" Description="Nombre del Programdor" %>
+<%@ Property Name="EsPostgres" Type="System.Boolean" Default="false" Category="0. Tipo Generacion DB" Description="Nombre del Programdor" %>
+<%@ Property Name="EsDb2" Type="System.Boolean" Default="false" Category="0. Tipo Generacion DB" Description="Nombre del Programdor" %>
+<%@ Property Name="EsDb2Windows" Type="System.Boolean" Default="false" Category="0. Tipo Generacion DB" Description="Nombre del Programdor" %>
+<%@ Property Name="EsMSSql" Type="System.Boolean" Default="false" Category="0. Tipo Generacion DB" Description="Nombre del Programdor" %>
+
+
+<script runat="template">
+TableSchemaCollection SourceDatabaseTables =new TableSchemaCollection();
+ColumnSchemaCollection SourceDatabaseColumnas =new ColumnSchemaCollection();
+ArrayList arrayListTableDescription=new ArrayList();
+ArrayList arrayListColumnDescription=new ArrayList();
+
+String strPrefijoNombre=string.Empty;
+String strSufijoNombre=string.Empty;
+String strSchema=string.Empty;
+bool EsCreateTable=false;
+
+public bool ExisteTableDescription(TableSchema tableSchema) {
+	bool validado=false;
+	bool validado_final=true;
+	
+	String strDescriptionsError="";
+	String[] descripciones=new String[0];
+	String[] tipo=new String[0];
+	String strTipoDescription="";
+	
+	descripciones=tableSchema.Description.Split('|');
+				
+	this.CargarTableDescriptions();
+	
+	foreach(String strDescription in descripciones) {
+		tipo=strDescription.Split('=');
+		
+		strTipoDescription=tipo[0];
+						
+		validado=ExisteDescription(false,strTipoDescription);
+		
+		//Trace.WriteLine("TIPO_:"+strTipoDescription+"-"+validado);
+		
+		if(!validado) {
+			strDescriptionsError+=","+strTipoDescription;
+			validado_final=false;
+			//break;
+		}
+	}
+		
+	if(!validado_final) {
+		System.Windows.Forms.MessageBox.Show("ERROR, NO EXISTE TIPOS:"+strDescriptionsError);
+	}
+	
+	return validado;
+}
+
+public bool ExisteColumnDescription(ColumnSchema columnSchema) {
+	bool validado=false;
+	bool validado_final=true;
+	
+	String strDescriptionsError="";
+	String[] descripciones=new String[0];
+	String[] tipo=new String[0];
+	String strTipoDescription="";
+	
+	foreach(ExtendedProperty extendedProperty in columnSchema.ExtendedProperties) {
+		if(extendedProperty.Name.Equals("CS_Description")) {
+			descripciones=((String)extendedProperty.Value).Split('|');
+			break;
+		}
+	}
+	
+	CargarColumnDescriptions();
+	
+	foreach(String strDescription in descripciones) {
+		tipo=strDescription.Split('=');
+		
+		strTipoDescription=tipo[0];
+		
+		//Trace.WriteLine("TIPO:"+strTipoDescription);
+		
+		validado=ExisteDescription(true,strTipoDescription);
+		
+		if(!validado) {
+			strDescriptionsError+=","+strTipoDescription;
+			validado_final=false;
+			//break;
+		}
+	}
+		
+	if(!validado_final) {
+		System.Windows.Forms.MessageBox.Show("ERROR, NO EXISTE TIPOS:"+strDescriptionsError);
+	}
+	
+	return validado;
+}
+
+public bool ExisteDescription(bool esColumna,String strDescription) {
+	bool validado=false;
+	
+	if(!esColumna) {
+		//CargarTableDescriptions();		
+		
+		foreach(String strTableDescription in arrayListTableDescription) {
+			//Trace.WriteLine("TIPO_USED:"+strTableDescription);
+			
+			if(strTableDescription.Equals(strDescription)) {
+				validado=true;
+				break;				
+			}
+		}
+	} else {
+		//CargarColumnDescriptions();
+		
+		foreach(String strColumnDescription in arrayListColumnDescription) {
+			if(strColumnDescription.Equals(strDescription)) {
+				validado=true;
+				break;				
+			}
+		}
+	}
+	
+	return validado;
+}
+		
+public void CargarTableDescriptions() {
+	arrayListTableDescription=new ArrayList();
+	
+	arrayListTableDescription.Add(strNOMBRE);
+	arrayListTableDescription.Add(strPREFIJOTABLA);
+	arrayListTableDescription.Add(strESROMPIMIENTO );
+	arrayListTableDescription.Add(strESGUARDARREL );
+	arrayListTableDescription.Add(strESGUARDARRELHIJO );
+	arrayListTableDescription.Add(strWEBTITULO );
+	arrayListTableDescription.Add(strWEBPLURAL );
+	arrayListTableDescription.Add(strWEBRELACIONESNO );
+	arrayListTableDescription.Add(strDELCASCADE );
+	arrayListTableDescription.Add(strESMENU);
+	arrayListTableDescription.Add(strCONAUD);
+	arrayListTableDescription.Add(strCLASESNO );
+	arrayListTableDescription.Add(strCLASESPERSISTENCENO);
+	arrayListTableDescription.Add(strWEBCONATRAS);
+	arrayListTableDescription.Add(strESINTERNO);
+	arrayListTableDescription.Add(strINDICESNO);
+	arrayListTableDescription.Add(strKEYINDICESNO);
+	arrayListTableDescription.Add(strINSERTNO);
+	arrayListTableDescription.Add(strDELETENO);
+	arrayListTableDescription.Add(strCONAUDAUTO);
+	arrayListTableDescription.Add(strSINAUDET);
+	arrayListTableDescription.Add(strCONSTORE);
+	arrayListTableDescription.Add(strCONORIG);
+	arrayListTableDescription.Add(strFINALQUERY);
+	arrayListTableDescription.Add(strSESSIONKEYQUERY);
+	arrayListTableDescription.Add(strNEWCODE);
+	arrayListTableDescription.Add(strESREPORTEAUX);
+	arrayListTableDescription.Add(strESREPORTE);
+	arrayListTableDescription.Add(strESREPORTEGROUP);
+	arrayListTableDescription.Add(strESREPORTEPARAM);
+	arrayListTableDescription.Add(strPREFIJOID);
+	arrayListTableDescription.Add(strCONJAVASCRIPTIE);
+	arrayListTableDescription.Add(strPAQUETE);
+	arrayListTableDescription.Add(strPAQUETEJAVA);
+	arrayListTableDescription.Add(strALIGN);
+	arrayListTableDescription.Add(strTAMBUSQUEDA);
+	arrayListTableDescription.Add(strIGNORAR);
+	arrayListTableDescription.Add(strSCHEMA);
+	arrayListTableDescription.Add(strPCKG);
+	arrayListTableDescription.Add(strPCKGENTCLASES);
+	arrayListTableDescription.Add(strCONPERSISTENCIA);
+	arrayListTableDescription.Add(strNOEJB);
+	arrayListTableDescription.Add(strWHAUX);
+	arrayListTableDescription.Add(strFINALJSPVERSION);
+	arrayListTableDescription.Add(strFINALJSFVERSION);
+	arrayListTableDescription.Add(strESPOPUP);
+	arrayListTableDescription.Add(strNUMCOLUMNAS);
+	arrayListTableDescription.Add(strNUMCOLUMNASEXTRA);
+	arrayListTableDescription.Add(strNUMPAG);
+	arrayListTableDescription.Add(strCONPAQUETEJAVAGLOBAL);
+		
+}
+
+public void CargarColumnDescriptions() {
+	arrayListColumnDescription=new ArrayList();
+	
+	arrayListColumnDescription.Add(strNOMBRE);	
+	arrayListColumnDescription.Add(strTABLA);
+	arrayListColumnDescription.Add(strTIPO);
+	arrayListColumnDescription.Add(strWEBTITULO);
+	arrayListColumnDescription.Add(strWEBFILAS);
+	arrayListColumnDescription.Add(strWEBCOLUMNS);
+	arrayListColumnDescription.Add(strWEBCOMBO);
+	arrayListColumnDescription.Add(strWEBORDEN);
+	arrayListColumnDescription.Add(strDEFAULT);
+	//arrayListColumnDescription.Add(strESPARAROMPIMIENTO);
+	arrayListColumnDescription.Add(strCONBUSQUEDA);
+	arrayListColumnDescription.Add(strCONEVENTCHANGE);
+	arrayListColumnDescription.Add(strCONEVENTDEPEND);
+	arrayListColumnDescription.Add(strFKNOLOAD);
+	arrayListColumnDescription.Add(strFKNOSAVE);
+	arrayListColumnDescription.Add(strCONRANGOINDICES);
+	arrayListColumnDescription.Add(strJSVALIDACION);
+	arrayListColumnDescription.Add(strEDITNO);
+	arrayListColumnDescription.Add(strINSERTEDITNO);
+	arrayListColumnDescription.Add(strSHOWTABLE);
+	arrayListColumnDescription.Add(strIDHIDDEN);
+	arrayListColumnDescription.Add(strESREPORTE);
+	arrayListColumnDescription.Add(strCONAUD);
+	arrayListColumnDescription.Add(strVALIDACIONTODO);
+	arrayListColumnDescription.Add(strVALIDACION);
+	arrayListColumnDescription.Add(strLISTAVALOR);
+	arrayListColumnDescription.Add(strKEYLISTA);
+	arrayListColumnDescription.Add(strCONSEG);
+	arrayListColumnDescription.Add(strNUMTABUL);
+	arrayListColumnDescription.Add(strESNULL);
+}
+
+public bool ValidarTipoGeneracion() {
+	bool validado=false;
+	String strDetalleGeneracion="";
+	
+	int countGeneracion=0;
+	int countGeneracionFiltro=0;
+	
+	strDetalleGeneracion+="\r\n/*************DETALLE GENERACION*********/";
+	strDetalleGeneracion+="\r\n";
+	
+	if(GeneracionPorTablas) {
+		strDetalleGeneracion+="\r\n* TIPO GENERACION: GENERACION POR TABLAS - (GeneracionPorTablas)";
+		strDetalleGeneracion+="\r\n* TABLES GENERAR - (SourceTablesForGenerate): "+GetListaNombresTablasC(SourceTablesForGenerate);
+	
+	} else if(GeneracionPorColumnas) {
+		strDetalleGeneracion+="\r\n* TIPO GENERACION: GENERACION POR COLUMNAS - (GeneracionPorColumnas)";
+	
+	} else {
+		strDetalleGeneracion+="\r\n* TIPO GENERACION: GENERACION TODOS";
+		strDetalleGeneracion+="\r\n* DB - (SourceDataBase): "+SourceDataBase.Name;
+	}
+	
+	if(GeneracionReportes) {
+		strDetalleGeneracion+="\r\n* SUB-TIPO GENERACION - (GeneracionReportes): GENERACION DE REPORTES";
+	}
+	
+	if(EsLoteTablas) {
+		strDetalleGeneracion+="\r\n* TIPO: LOTE POR TABLAS - (EsLoteTablas)";
+		
+		countGeneracion++;
+	}
+	
+	if(EsLoteColumnas) {
+		strDetalleGeneracion+="\r\n* TIPO: LOTE POR COLUMNAS - (EsLoteColumnas)";
+		
+		if(ColumnaBaseActual==null && (LoteNombreTablaColumna==null || LoteNombreTablaColumna.Equals(""))) {
+			System.Windows.Forms.MessageBox.Show("Debe seleccionar una columna");	
+			
+			return validado;
+		}
+		
+		countGeneracion++;
+	}
+	
+	if(EsTablaDescripcion) {
+		if(TablaBaseActual==null) {
+			System.Windows.Forms.MessageBox.Show("Debe seleccionar una tabla");	
+			
+			return validado;
+		
+		} else {
+			strDetalleGeneracion+="\r\n* TABLA ACTUAL - (EsTablaDescripcion): "+TablaBaseActual.Owner+":"+TablaBaseActual.Name;	
+		}		
+		
+		countGeneracion++;
+	}
+	
+	if(EsColumnaDescripcion) {
+		if(ColumnaBaseActual==null) {
+			System.Windows.Forms.MessageBox.Show("Debe seleccionar una columna");	
+			
+			return validado;
+		} else {
+			strDetalleGeneracion+="\r\n* COLUMNA ACTUAL - (EsColumnaDescripcion): "+ColumnaBaseActual.Name;	
+		}
+		
+		countGeneracion++;
+	}
+	
+	if(EsLoteDescripcionReemplazo) {
+		if(LoteDescriptionBuscar.Equals("") || LoteDescription.Equals("")) {
+			
+			System.Windows.Forms.MessageBox.Show("Debe ingresar valores de Busqueda y Reemplazo");	
+			
+			return validado;
+		}
+		
+		strDetalleGeneracion+="\r\n* SUB-TIPO: REEMPLAZO DESCRIPTION - (EsLoteDescripcionReemplazo)";
+		strDetalleGeneracion+="\r\n* REEMPLAZO BUSCAR - (LoteDescriptionBuscar): " + LoteDescriptionBuscar;
+		strDetalleGeneracion+="\r\n* REEMPLAZO FINAL - (LoteDescription): " + LoteDescription;
+	}
+	
+	if(EsLoteNombreContains) {
+		countGeneracionFiltro++;
+		strDetalleGeneracion+="\r\n* FILTRO: NOMBRE CONTAINS - (EsLoteNombreContains) --->\""+LoteNombreTablaColumna+"\"";
+	}
+	
+	if(EsLoteNombreIgual) {
+		countGeneracionFiltro++;
+		strDetalleGeneracion+="\r\n* FILTRO: NOMBRE IGUAL - (EsLoteNombreIgual) --->\""+LoteNombreTablaColumna+"\"";
+	}
+		
+	strDetalleGeneracion+="\r\n* DB OBJETIVO: "+getDataBaseObjetivo();
+	
+	if(countGeneracion.Equals(1) && countGeneracionFiltro<=1) {
+		validado=true;
+		
+		strDetalleGeneracion+="\r\n";
+		strDetalleGeneracion+="\r\n/*************DETALLE GENERACION*********/";
+		
+		Trace.WriteLine(strDetalleGeneracion);
+		
+	} else {
+		System.Windows.Forms.MessageBox.Show("Debe seleccionar solo 1 tipo de generacion y solo 1 filtro");	
+	}
+	
+	return validado;
+}
+
+public String getDataBaseObjetivo() {
+	String strDabaBaseObjetivo="";	
+	
+	if(EsDb2) {
+		strDabaBaseObjetivo="DB2 - (EsDb2)";
+		
+	} else if(EsDb2Windows) {
+		strDabaBaseObjetivo="DB2 WINDOWS - (EsDb2Windows)";
+		
+	} else if(EsMSSql) {
+		strDabaBaseObjetivo="MS-SQL - (EsMSSql)";
+		
+	} else if(EsMySql) {
+		strDabaBaseObjetivo="MYSQL - (EsMySql)";
+		
+	} else if(EsPostgres) {
+		strDabaBaseObjetivo="POSTGRES - (EsPostgres)";
+	}
+	
+	return strDabaBaseObjetivo;
+}
+
+/*TABLA-DESCRIPTION*/
+
+//private string _A000_TABLAXXX_NOMBRE = string.Empty;
+private string _A000_T_NOMBRE = string.Empty;
+private string _A003_T_PREFIJOTABLA = string.Empty;
+private bool _A004_T_ESROMPIMIENTO = false;
+private bool _A004_T_ESGUARDARRELHIJO = false;
+private bool _A004_T_ESGUARDARREL = false;
+private string _A001_T_WEBTITULO = string.Empty;
+private string _A002_T_WEBPLURAL = string.Empty;
+private bool _A005_T_WEBRELACIONESNO = false;
+private bool _A003_T_DELCASCADE = false;
+private bool _A004_T_ESMENU= false;
+private bool _A005_T_CONAUD= false;
+private string _A006_T_CLASESNO = string.Empty;
+private string _A007_T_CLASESPERSISTENCENO= string.Empty;
+private bool _A008_T_WEBCONATRAS= false;
+private bool _A009_T_ESINTERNO= false;
+private string _A010_T_INDICESNO= string.Empty;
+private string _A011_T_KEYINDICESNO=string.Empty;
+private bool _A012_T_INSERTNO=false;
+private bool _A013_T_DELETENO=false;
+private bool _A015_T_CONAUDAUTO=false;
+private bool _A016_T_SINAUDET=false;
+private bool _A017_T_CONSTORE=false;
+private bool _A018_T_CONORIG=false;
+private string _A019_T_FINALQUERY=string.Empty;
+private string _A020_T_SESSIONKEYQUERY=string.Empty;
+private string _A021_T_NEWCODE=string.Empty;
+private bool _A022_T_ESREPORTEAUX=false;
+private bool _A023_T_ESREPORTE=false;
+private string _A024_T_ESREPORTEGROUP=string.Empty;
+private bool _A025_T_ESREPORTEPARAM=false;
+private string _A026_T_PREFIJOID=string.Empty;
+private bool _A028_T_CONJAVASCRIPTIE=false;
+private string _A029_T_PAQUETE=string.Empty;
+private string _A030_T_PAQUETEJAVA=string.Empty;
+private string _A031_T_ALIGN=string.Empty;
+private string _A032_T_TAMBUSQUEDA=string.Empty;
+private bool _A033_T_IGNORAR=false;
+private string _A034_T_SCHEMA=string.Empty;
+private string _A035_T_PCKG=string.Empty;
+private string _A036_T_PCKGENTCLASES=string.Empty;
+private bool _A037_T_CONPERSISTENCIA=false;
+private bool _A038_T_NOEJB=false;
+private string _A039_T_WHAUX=string.Empty;
+private bool _A040_T_FINALJSPVERSION=false;
+private bool _A041_T_FINALJSFVERSION=false;
+private bool _A043_T_ESPOPUP=false;
+private int _A044_T_NUMCOLUMNAS=-1;
+private int _A045_T_NUMCOLUMNASEXTRA=-1;
+private int _A046_T_NUMPAG=-1;
+private bool _A047_T_CONPAQUETEJAVAGLOBAL=false;
+
+
+/*COLUMNA-DESCRIPTION*/
+private string _A001_C_NOMBRE=string.Empty;
+private string _A002_C_TABLA=string.Empty;
+private string _A003_C_TIPO=string.Empty;
+private string _A004_C_WEBTITULO=string.Empty;
+private int _A005_C_WEBFILAS=-1;
+private int _A006_C_WEBCOLUMNS=-1;
+private bool _A007_C_WEBCOMBO=false;
+private string _A008_C_WEBORDEN=string.Empty;
+private string _A009_C_DEFAULT=string.Empty;
+//private string _A010_C_ESPARAROMPIMIENTO=string.Empty;
+private bool _A011_C_CONBUSQUEDA=false;
+private bool _A012_C_CONEVENTCHANGE=false;
+private string _A013_C_CONEVENTDEPEND=string.Empty;
+private bool _A014_C_FKNOLOAD=false;
+private bool _A015_C_FKNOSAVE=false;
+private bool _A016_C_CONRANGOINDICES=false;
+private string _A017_C_JSVALIDACION=string.Empty;
+private bool _A018_C_EDITNO=false;
+private bool _A019_C_INSERTEDITNO=false;
+private bool _A020_C_SHOWTABLE=false;
+private bool _A021_C_IDHIDDEN=false;
+private bool _A022_C_ESREPORTE=false;
+private bool _A023_C_CONAUD=false;
+private bool _A024_C_VALIDACIONTODO=false;
+private string _A025_C_VALIDACION=string.Empty;
+private string _A026_C_LISTAVALOR=string.Empty;
+private string _A027_C_KEYLISTA=string.Empty;
+private bool _A028_C_CONSEG=false;
+private string _A029_C_NUMTABUL=string.Empty;
+private bool _A031_C_ESNULL=false;
+
+
+//private string _A030_C_VALIDACIONTODO=string.Empty;
+
+/* FALTA
+CLASESFKDISABLE
+ULTIMO CLASESFKDISABLE
+*/
+
+//[Editor(typeof(System.Windows.Forms.Design.FolderNameEditor), typeof(System.Drawing.Design.UITypeEditor))] 
+[Category("2.Table Descriptions")]
+[Description("Nombre")]
+public string A000_T_NOMBRE {
+	get	{
+		if(_CARGAR) {			
+			String sValor="";		
+			sValor=GetNombreTableFromProperties(TablaBaseActual);		
+			//Trace.WriteLine(sValor);
+			//A000_T_NOMBRE2=sValor;
+			_A000_T_NOMBRE=sValor;
+		}
+		
+		return _A000_T_NOMBRE;
+	}	
+	
+	set	{ _A000_T_NOMBRE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PREFIJOTABLA")]
+public string A003_T_PREFIJOTABLA {
+	get	{
+		if(_CARGAR) {			
+			String sValor="";		
+			sValor=GetNombrePrefijoTableFromPropertiesC(TablaBaseActual);					
+			//Trace.WriteLine(sValor);
+			//A000_T_NOMBRE2=sValor;
+			_A003_T_PREFIJOTABLA=sValor;
+		}
+		
+		return _A003_T_PREFIJOTABLA;
+	}	
+	
+	set	{ _A003_T_PREFIJOTABLA = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESROMPIMIENTO")]
+public bool A004_T_ESROMPIMIENTO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";				
+			sValor=GetEsRompimientoFromPropertiesC(TablaBaseActual);
+			/*
+			if(sValorAux.Equals("true")) {
+				sValor=true;	
+			} 
+			*/
+					
+			_A004_T_ESROMPIMIENTO=sValor;
+		}
+		
+		return _A004_T_ESROMPIMIENTO;
+		
+	}	
+	set	{ _A004_T_ESROMPIMIENTO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESGUARDARREL")]
+public bool A004_T_ESGUARDARREL{
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";				
+			sValor=GetEsGuardarRelacionesFromPropertiesC(TablaBaseActual);
+			/*
+			if(sValorAux.Equals("true")) {
+				sValor=true;	
+			} 
+			*/
+					
+			_A004_T_ESGUARDARREL=sValor;
+		}
+		
+		return _A004_T_ESGUARDARREL;
+		
+	}	
+	set	{ _A004_T_ESGUARDARREL= value;} 
+}
+
+
+
+[Category("2.Table Descriptions")]
+[Description("ESGUARDARRELHIJO")]
+public bool A004_T_ESGUARDARRELHIJO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";				
+			sValor=GetEsGuardarRelacionesHijoFromPropertiesC(TablaBaseActual);
+			/*
+			if(sValorAux.Equals("true")) {
+				sValor=true;	
+			} 
+			*/
+					
+			_A004_T_ESGUARDARRELHIJO=sValor;
+		}
+		
+		return _A004_T_ESGUARDARRELHIJO;
+		
+	}	
+	set	{ _A004_T_ESGUARDARRELHIJO = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("WebTitulo")]
+public string A001_T_WEBTITULO {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetTituloNombreTableFromPropertiesC(TablaBaseActual);			
+			
+			_A001_T_WEBTITULO=sValor;
+		}
+		return _A001_T_WEBTITULO;
+	}	
+	set	{ _A001_T_WEBTITULO = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("WebPlural")]
+public string A002_T_WEBPLURAL {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetPluralTituloNombreTableFromPropertiesC(TablaBaseActual);				
+			
+			_A002_T_WEBPLURAL=sValor;
+		}
+		
+		return _A002_T_WEBPLURAL;
+	}	
+	set	{ _A002_T_WEBPLURAL = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("WEBRELACIONESNO")]
+public bool A005_T_WEBRELACIONESNO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";				
+			sValor=VerificarTablaRelacionFromPropertiesC(TablaBaseActual);							
+					
+			_A005_T_WEBRELACIONESNO=sValor;
+		}
+		
+		return _A005_T_WEBRELACIONESNO;
+		
+	}	
+	set	{ _A005_T_WEBRELACIONESNO = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("DelCascade")]
+public bool A003_T_DELCASCADE {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValorAux=GetCascadeTableFromPropertiesC(TablaBaseActual);			
+			
+			if(sValorAux.Equals("true")) {
+				sValor=true;	
+			} 
+					
+			_A003_T_DELCASCADE=sValor;
+		}
+		
+		return _A003_T_DELCASCADE;
+		
+	}	
+	set	{ _A003_T_DELCASCADE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CLASESNO")]
+public string A006_T_CLASESNO {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetNombresClasesNoNavegacionFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A006_T_CLASESNO=sValor;
+		}
+		
+		return _A006_T_CLASESNO;
+	}	
+	set	{ _A006_T_CLASESNO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CLASESPERSISTENCENO")]
+public string A007_T_CLASESPERSISTENCENO {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetNombresClasesNoPersistenciaFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A007_T_CLASESPERSISTENCENO=sValor;
+		}
+		
+		return _A007_T_CLASESPERSISTENCENO;
+	}	
+	set	{ _A007_T_CLASESPERSISTENCENO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("WEBCONATRAS")]
+public bool A008_WEBCONATRAS {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValorAux=GetConAtrasTableFromPropertiesC(TablaBaseActual);			
+			
+			if(sValorAux.Equals("true")) {
+				sValor=true;	
+			} 
+					
+			_A008_T_WEBCONATRAS=sValor;
+		}
+		
+		return _A008_T_WEBCONATRAS;
+		
+	}	
+	set	{ _A008_T_WEBCONATRAS = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESINTERNO")]
+public bool A009_ESINTERNO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsInternoFromPropertiesC(TablaBaseActual);						
+							
+			_A009_T_ESINTERNO=sValor;
+		}
+		
+		return _A009_T_ESINTERNO;
+	}	
+	set	{ _A009_T_ESINTERNO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("INDICESNO")]
+public string A010_INDICESNO {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetNombresIndicesNoBusquedanFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A010_T_INDICESNO=sValor;
+		}
+		
+		return _A010_T_INDICESNO;
+	}	
+	set	{ _A010_T_INDICESNO = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("ESMENU")]
+public bool A004_T_ESMENU {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsMenuFromPropertiesC(TablaBaseActual);						
+							
+			_A004_T_ESMENU=sValor;
+		}
+		
+		return _A004_T_ESMENU;
+	}	
+	set	{ _A004_T_ESMENU = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("CONAUD")]
+public bool A005_T_CONAUD {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConAuditoriaTableFromProperties(TablaBaseActual);						 			
+			
+			_A005_T_CONAUD=sValor;
+		}
+		
+		return _A005_T_CONAUD;
+	}	
+	set	{ _A005_T_CONAUD = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("KEYINDICESNO")]
+public string A011_KEYINDICESNO {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetKeyNombresIndicesNoBusquedaFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A011_T_KEYINDICESNO=sValor;
+		}
+		
+		return _A011_T_KEYINDICESNO;
+	}	
+	set	{ _A011_T_KEYINDICESNO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("INSERTNO")]
+public bool A012_INSERTNO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetPermiteInsertarFromPropertiesC(TablaBaseActual);						 			
+			
+			_A012_T_INSERTNO=sValor;
+		}
+		
+		return _A012_T_INSERTNO;
+	}	
+	set	{ _A012_T_INSERTNO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("DELETENO")]
+public bool A013_DELETENO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetPermiteEliminarFromPropertiesC(TablaBaseActual);						 			
+			
+			_A013_T_DELETENO=sValor;
+		}
+		
+		return _A013_T_DELETENO;
+	}	
+	set	{ _A013_T_DELETENO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CONAUDAUTO")]
+public bool A015_CONAUDAUTO {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConAutoAuditoriaTableFromProperties(TablaBaseActual);						 			
+			
+			_A015_T_CONAUDAUTO=sValor;
+		}
+		
+		return _A015_T_CONAUDAUTO;
+	}	
+	set	{ _A015_T_CONAUDAUTO = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("SINAUDET")]
+public bool A016_SINAUDET {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetSinAuditoriaDetalleTableFromProperties(TablaBaseActual);						 			
+			
+			_A016_T_SINAUDET=sValor;
+		}
+		
+		return _A016_T_SINAUDET;
+	}	
+	set	{ _A016_T_SINAUDET = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CONSTORE")]
+public bool A017_CONSTORE {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConStoreProceduresTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A017_T_CONSTORE=sValor;
+		}
+		
+		return _A017_T_CONSTORE;
+	}	
+	set	{ _A017_T_CONSTORE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CONORIG")]
+public bool A018_CONORIG {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConOriginalTableFromProperties(TablaBaseActual);						 			
+			
+			_A018_T_CONORIG=sValor;
+		}
+		
+		return _A018_T_CONORIG;
+	}	
+	set	{ _A018_T_CONORIG = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("FINALQUERY")]
+public string A019_FINALQUERY {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetFinalQueryTableFromPropertiesC(TablaBaseActual);				
+			
+			_A019_T_FINALQUERY=sValor;
+		}
+		
+		return _A019_T_FINALQUERY;
+	}	
+	set	{ _A019_T_FINALQUERY = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("SESSIONKEYQUERY")]
+public string A020_SESSIONKEYQUERY {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetSessionKeyQueryTableFromPropertiesC(TablaBaseActual);				
+			
+			_A020_T_SESSIONKEYQUERY=sValor;
+		}
+		
+		return _A020_T_SESSIONKEYQUERY;
+	}	
+	set	{ _A020_T_SESSIONKEYQUERY = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("NEWCODE")]
+public string A021_NEWCODE {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetNewCodeTableFromPropertiesC(TablaBaseActual);				
+			
+			_A021_T_NEWCODE=sValor;
+		}
+		
+		return _A021_T_NEWCODE;
+	}	
+	set	{ _A021_T_NEWCODE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESREPORTEAUX")]
+public bool A022_ESREPORTEAUX {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsReporteAuxiliarFromPropertiesC(TablaBaseActual);						 			
+			
+			_A022_T_ESREPORTEAUX=sValor;
+		}
+		
+		return _A022_T_ESREPORTEAUX;
+	}	
+	set	{ _A022_T_ESREPORTEAUX = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESREPORTE")]
+public bool A023_ESREPORTE {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsReporteFromPropertiesC(TablaBaseActual);						 			
+			
+			_A023_T_ESREPORTE=sValor;
+		}
+		
+		return _A023_T_ESREPORTE;
+	}	
+	set	{ _A023_T_ESREPORTE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ESREPORTEGROUP")]
+public string A024_ESREPORTEGROUP {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetReporteGrupoTableFromPropertiesC(TablaBaseActual);				
+			
+			_A024_T_ESREPORTEGROUP=sValor;
+		}
+		
+		return _A024_T_ESREPORTEGROUP;
+	}	
+	set	{ _A024_T_ESREPORTEGROUP = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("ESREPORTEPARAM")]
+public bool A025_ESREPORTEPARAM {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsReporteParametroFromPropertiesC(TablaBaseActual);						 			
+			
+			_A025_T_ESREPORTEPARAM=sValor;
+		}
+		
+		return _A025_T_ESREPORTEPARAM;
+	}	
+	set	{ _A025_T_ESREPORTEPARAM = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PREFIJOID")]
+public string A026_PREFIJOID {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetPrefijoSqlIdTableFromPropertiesC(TablaBaseActual);				
+			
+			_A026_T_PREFIJOID=sValor;
+		}
+		
+		return _A026_T_PREFIJOID;
+	}	
+	set	{ _A026_T_PREFIJOID = value;} 
+}
+
+
+[Category("2.Table Descriptions")]
+[Description("CONJAVASCRIPTIE")]
+public bool A028_CONJAVASCRIPTIE {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConJavaScriptIncludeTableFromProperties(TablaBaseActual);						 			
+			
+			_A028_T_CONJAVASCRIPTIE=sValor;
+		}
+		
+		return _A028_T_CONJAVASCRIPTIE;
+	}	
+	set	{ _A028_T_CONJAVASCRIPTIE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PAQUETE")]
+public string A029_PAQUETE {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A029_T_PAQUETE=sValor;
+		}
+		
+		return _A029_T_PAQUETE;
+	}	
+	set	{ _A029_T_PAQUETE = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PAQUETEJAVA")]
+public string A030_PAQUETEJAVA {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetModuloPaqueteJavaFromTableFromPropertiesC(TablaBaseActual);				
+			
+			_A030_T_PAQUETEJAVA=sValor;
+		}
+		
+		return _A030_T_PAQUETEJAVA;
+	}	
+	set	{ _A030_T_PAQUETEJAVA = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("ALIGN")]
+public string A031_ALIGN {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetAlignTableFromPropertiesC(TablaBaseActual);				
+			
+			_A031_T_ALIGN=sValor;
+		}
+		
+		return _A031_T_ALIGN;
+	}	
+	set	{ _A031_T_ALIGN = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("TAMBUSQUEDA")]
+public string A032_TAMBUSQUEDA {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetWidthBusquedaTableFromPropertiesC(TablaBaseActual);				
+			
+			_A032_T_TAMBUSQUEDA=sValor;
+		}
+		
+		return _A032_T_TAMBUSQUEDA;
+	}	
+	set	{ _A032_T_TAMBUSQUEDA = value;} 
+}
+
+
+
+[Category("2.Table Descriptions")]
+[Description("IGNORAR")]
+public bool A033_IGNORAR {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsIgnorarTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A033_T_IGNORAR=sValor;
+		}
+		
+		return _A033_T_IGNORAR;
+	}	
+	set	{ _A033_T_IGNORAR = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("SCHEMA")]
+public string A034_SCHEMA {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetSchemaTableFromProperties(TablaBaseActual,"");				
+			
+			_A034_T_SCHEMA=sValor;
+		}
+		
+		return _A034_T_SCHEMA;
+	}	
+	set	{ _A034_T_SCHEMA = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PCKG")]
+public string A035_PCKG {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetPackageTableFromProperties(TablaBaseActual);				
+			
+			_A035_T_PCKG=sValor;
+		}
+		
+		return _A035_T_PCKG;
+	}	
+	set	{ _A035_T_PCKG = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("PCKGENTCLASES")]
+public string A036_PCKGENTCLASES {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetPackageClasesTableFromPropertiesC(TablaBaseActual);				
+			
+			_A036_T_PCKGENTCLASES=sValor;
+		}
+		
+		return _A036_T_PCKGENTCLASES;
+	}	
+	set	{ _A036_T_PCKGENTCLASES = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CONPERSISTENCIA")]
+public bool A037_CONPERSISTENCIA {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConPersistenciaTableFromProperties(TablaBaseActual);						 			
+			
+			_A037_T_CONPERSISTENCIA=sValor;
+		}
+		
+		return _A037_T_CONPERSISTENCIA;
+	}	
+	set	{ _A037_T_CONPERSISTENCIA = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("NOEJB")]
+public bool A038_NOEJB {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConEjbServiceTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A038_T_NOEJB=sValor;
+		}
+		
+		return _A038_T_NOEJB;
+	}	
+	set	{ _A038_T_NOEJB = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("WHAUX")]
+public string A039_WHAUX {
+	get	{
+		if(_CARGAR) {
+			String sValor="";		
+			sValor=GetAnchoAltoAuxiliarTableFromPropertiesC(TablaBaseActual);				
+			
+			_A039_T_WHAUX=sValor;
+		}
+		
+		return _A039_T_WHAUX;
+	}	
+	set	{ _A039_T_WHAUX = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("FINALJSPVERSION")]
+public bool A040_FINALJSPVERSION {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetFinalJspVersionFromPropertiesC(TablaBaseActual);						 			
+			
+			_A040_T_FINALJSPVERSION=sValor;
+		}
+		
+		return _A040_T_FINALJSPVERSION;
+	}	
+	set	{ _A040_T_FINALJSPVERSION = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("FINALJSFVERSION")]
+public bool A041_FINALJSFVERSION {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			sValor=GetFinalJsfVersionFromPropertiesC(TablaBaseActual);				
+			
+			_A041_T_FINALJSFVERSION=sValor;
+		}
+		
+		return _A041_T_FINALJSFVERSION;
+	}	
+	set	{ _A041_T_FINALJSFVERSION = value;} 
+}
+
+
+
+[Category("2.Table Descriptions")]
+[Description("ESPOPUP")]
+public bool A043_ESPOPUP {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConPopupTableFromProperties(TablaBaseActual);						 			
+			
+			_A043_T_ESPOPUP=sValor;
+		}
+		
+		return _A043_T_ESPOPUP;
+	}	
+	set	{ _A043_T_ESPOPUP = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("NUMCOLUMNAS")]
+public int A044_NUMCOLUMNAS {
+	get	{
+		if(_CARGAR) {
+			int sValor=-1;		
+			String sValorAux="";	
+			
+			sValor=GetNumeroColumnasTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A044_T_NUMCOLUMNAS=sValor;
+		}
+		
+		return _A044_T_NUMCOLUMNAS;
+	}	
+	set	{ _A044_T_NUMCOLUMNAS = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("NUMCOLUMNASEXTRA")]
+public int A045_NUMCOLUMNASEXTRA {
+	get	{
+		if(_CARGAR) {
+			int sValor=-1;		
+			String sValorAux="";	
+			
+			sValor=GetNumeroColumnasExtraTablaTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A045_T_NUMCOLUMNASEXTRA=sValor;
+		}
+		
+		return _A045_T_NUMCOLUMNASEXTRA;
+	}	
+	set	{ _A045_T_NUMCOLUMNASEXTRA = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("NUMPAG")]
+public int A046_NUMPAG {
+	get	{
+		if(_CARGAR) {
+			int sValor=-1;		
+			String sValorAux="";	
+			
+			sValor=GetNumeroPaginacionTableFromPropertiesC(TablaBaseActual);						 			
+			
+			_A046_T_NUMPAG=sValor;
+		}
+		
+		return _A046_T_NUMPAG;
+	}	
+	set	{ _A046_T_NUMPAG = value;} 
+}
+
+[Category("2.Table Descriptions")]
+[Description("CONPAQUETEJAVAGLOBAL")]
+public bool A047_CONPAQUETEJAVAGLOBAL {
+	get	{
+		if(_CARGAR) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConOriginalTableFromProperties(TablaBaseActual);						 			
+			
+			_A047_T_CONPAQUETEJAVAGLOBAL=sValor;
+		}
+		
+		return _A047_T_CONPAQUETEJAVAGLOBAL;
+	}	
+	set	{ _A047_T_CONPAQUETEJAVAGLOBAL = value;} 
+}
+
+
+[Category("3.Column Descriptions")]
+[Description("NOMBRE")]
+public string A001_C_NOMBRE {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetNombreColumnFromPropertiesInterno(ColumnaBaseActual,true);				
+			
+			_A001_C_NOMBRE=sValor;
+		}
+		
+		return _A001_C_NOMBRE;
+	}	
+	set	{ _A001_C_NOMBRE = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("TABLA")]
+public string A002_C_TABLA {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetNombreClaseRelacionadaFromColumn(ColumnaBaseActual,true);				
+			
+			_A002_C_TABLA=sValor;
+		}
+		
+		return _A002_C_TABLA;
+	}	
+	set	{ _A002_C_TABLA = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("TIPO")]
+public string A003_C_TIPO {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetTipoColumnaFromColumn(ColumnaBaseActual);				
+			
+			_A003_C_TIPO=sValor;
+		}
+		
+		return _A003_C_TIPO;
+	}	
+	set	{ _A003_C_TIPO = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("WEBTITULO")]
+public string A004_C_WEBTITULO {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetWebNombreTituloColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A004_C_WEBTITULO=sValor;
+		}
+		
+		return _A004_C_WEBTITULO;
+	}	
+	set	{ _A004_C_WEBTITULO = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("WEBFILAS")]
+public int A005_C_WEBFILAS {
+	get	{
+		if(_CARGAR_C) {
+			int sValor=-1;		
+			sValor=GetWebNumeroFilasColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A005_C_WEBFILAS=sValor;
+		}
+		
+		return _A005_C_WEBFILAS;
+	}	
+	set	{ _A005_C_WEBFILAS = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("WEBCOLUMNS")]
+public int A006_C_WEBCOLUMNS {
+	get	{
+		if(_CARGAR_C) {
+			int sValor=-1;		
+			sValor=GetWebNumeroColumnasColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A006_C_WEBCOLUMNS=sValor;
+		}
+		
+		return _A006_C_WEBCOLUMNS;
+	}	
+	set	{ _A006_C_WEBCOLUMNS = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("WEBCOMBO")]
+public bool A007_C_WEBCOMBO {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			sValor=GetTieneComboColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A007_C_WEBCOMBO=sValor;
+		}
+		
+		return _A007_C_WEBCOMBO;
+	}	
+	set	{ _A007_C_WEBCOMBO = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("WEBORDEN")]
+public string A008_C_WEBORDEN {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetNombreOrderColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A008_C_WEBORDEN=sValor;
+		}
+		
+		return _A008_C_WEBORDEN;
+	}	
+	set	{ _A008_C_WEBORDEN = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("DEFAULT")]
+public string A009_C_DEFAULT {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetDefaultValueColumna(ColumnaBaseActual);				
+			
+			_A009_C_DEFAULT=sValor;
+		}
+		
+		return _A009_C_DEFAULT;
+	}	
+	set	{ _A009_C_DEFAULT = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A011_C_CONBUSQUEDA {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetBusquedaForeignKeyColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A011_C_CONBUSQUEDA=sValor;
+		}
+		
+		return _A011_C_CONBUSQUEDA;
+	}	
+	set	{ _A011_C_CONBUSQUEDA = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A012_C_CONEVENTCHANGE {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConEventChangeColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A012_C_CONEVENTCHANGE=sValor;
+		}
+		
+		return _A012_C_CONEVENTCHANGE;
+	}	
+	set	{ _A012_C_CONEVENTCHANGE = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A013_C_CONEVENTDEPEND {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetConEventDependColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A013_C_CONEVENTDEPEND=sValor;
+		}
+		
+		return _A013_C_CONEVENTDEPEND;
+	}	
+	set	{ _A013_C_CONEVENTDEPEND = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A014_C_FKNOLOAD {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConNoLoadForeignKeyColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A014_C_FKNOLOAD=sValor;
+		}
+		
+		return _A014_C_FKNOLOAD;
+	}	
+	set	{ _A014_C_FKNOLOAD = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A015_C_FKNOSAVE {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConNoSaveForeignKeyColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A015_C_FKNOSAVE=sValor;
+		}
+		
+		return _A015_C_FKNOSAVE;
+	}	
+	set	{ _A015_C_FKNOSAVE = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A016_C_CONRANGOINDICES {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConRangoBusquedasColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A016_C_CONRANGOINDICES=sValor;
+		}
+		
+		return _A016_C_CONRANGOINDICES;
+	}	
+	set	{ _A016_C_CONRANGOINDICES = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A017_C_JSVALIDACION {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetJavaScriptValidacionColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A017_C_JSVALIDACION=sValor;
+		}
+		
+		return _A017_C_JSVALIDACION;
+	}	
+	set	{ _A017_C_JSVALIDACION = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A018_C_EDITNO {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetNoEditColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A018_C_EDITNO=sValor;
+		}
+		
+		return _A018_C_EDITNO;
+	}	
+	set	{ _A018_C_EDITNO = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A019_C_INSERTEDITNO {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetNoInsertEditColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A019_C_INSERTEDITNO=sValor;
+		}
+		
+		return _A019_C_INSERTEDITNO;
+	}	
+	set	{ _A019_C_INSERTEDITNO = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("CONBUSQUEDA")]
+public bool A020_C_SHOWTABLE {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetShowTableColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A020_C_SHOWTABLE=sValor;
+		}
+		
+		return _A020_C_SHOWTABLE;
+	}	
+	set	{ _A020_C_SHOWTABLE = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("IDHIDDEN")]
+public bool A021_C_IDHIDDEN {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetIdNoVisibleColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A021_C_IDHIDDEN=sValor;
+		}
+		
+		return _A021_C_IDHIDDEN;
+	}	
+	set	{ _A021_C_IDHIDDEN = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("IDHIDDEN")]
+public bool A022_C_ESREPORTE {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetEsReporteParametroFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A022_C_ESREPORTE=sValor;
+		}
+		
+		return _A022_C_ESREPORTE;
+	}	
+	set	{ _A022_C_ESREPORTE = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("IDHIDDEN")]
+public bool A023_C_CONAUD {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConAuditoriaColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A023_C_CONAUD=sValor;
+		}
+		
+		return _A023_C_CONAUD;
+	}	
+	set	{ _A023_C_CONAUD = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("IDHIDDEN")]
+public bool A024_C_VALIDACIONTODO {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConValidacionTodoColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A024_C_VALIDACIONTODO=sValor;
+		}
+		
+		return _A024_C_VALIDACIONTODO;
+	}	
+	set	{ _A024_C_VALIDACIONTODO = value;} 
+}
+
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A025_C_VALIDACION {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetJavaScriptValidacionColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A025_C_VALIDACION=sValor;
+		}
+		
+		return _A025_C_VALIDACION;
+	}	
+	set	{ _A025_C_VALIDACION = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A026_C_LISTAVALOR {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetConListaValoresColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A026_C_LISTAVALOR=sValor;
+		}
+		
+		return _A026_C_LISTAVALOR;
+	}	
+	set	{ _A026_C_LISTAVALOR = value;} 
+}
+
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A027_C_KEYLISTA {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			
+			if(ColumnaBaseActual.IsForeignKeyMember) {
+				sValor=GetKeyListaColumnFromPropertiesC(ColumnaBaseActual);				
+			}
+			
+			_A027_C_KEYLISTA=sValor;
+		}
+		
+		return _A027_C_KEYLISTA;
+	}	
+	set	{ _A027_C_KEYLISTA = value;} 
+}
+
+
+
+[Category("3.Column Descriptions")]
+[Description("CONORIG")]
+public bool A028_C_CONSEG {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			String sValorAux="";	
+			
+			sValor=GetConSeguridadColumnFromPropertiesC(ColumnaBaseActual);						 			
+			
+			_A028_C_CONSEG=sValor;
+		}
+		
+		return _A028_C_CONSEG;
+	}	
+	set	{ _A028_C_CONSEG = value;} 
+}
+
+
+[Category("3.Column Descriptions")]
+[Description("INDICESNO")]
+public string A029_C_NUMTABUL {
+	get	{
+		if(_CARGAR_C) {
+			String sValor="";		
+			sValor=GetNumTabuladorForeignKeyColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A029_C_NUMTABUL=sValor;
+		}
+		
+		return _A029_C_NUMTABUL;
+	}	
+	set	{ _A029_C_NUMTABUL = value;} 
+}
+
+[Category("3.Column Descriptions")]
+[Description("ESNULL")]
+public bool A031_C_ESNULL {
+	get	{
+		if(_CARGAR_C) {
+			bool sValor=false;		
+			sValor=GetEsNullColumnFromPropertiesC(ColumnaBaseActual);				
+			
+			_A031_C_ESNULL=sValor;
+		}
+		
+		return _A031_C_ESNULL;
+	}	
+	set	{ _A031_C_ESNULL = value;} 
+}
+
+protected override void OnInit() {
+	/*
+	if(!_A000_T_NOMBRE.Equals(string.Empty)) {
+		Trace.WriteLine(_A000_T_NOMBRE);
+	} else {
+		Trace.WriteLine("vacio");
+	}
+	*/
+	
+	//if(A0000_CARGAR) {
+		//A000_T_NOMBRE_F=A000_T_NOMBRE;
+		
+		//System.Windows.Forms.MessageBox.Show("here");
+	//}
+}
+
+public bool TieneColumnaNombre(TableSchema tableSchema,string strNombreColumna) {			
+		bool tiene=false;
+		
+		foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+			if(columnSchema.Name.Equals(strNombreColumna)) {
+				tiene=true;
+				break;
+			}
+		}
+		
+		return tiene;
+	}
+	
+	public string GetColumnaTablaClases(TableSchema tableSchema,string strNombreColumna,string strTipo,string strDefault) {			
+		String strSql=string.Empty;
+			
+		TableSchema tableSchemaFK=null;//GetTableSchemaFromColumnForeignKey(columnSchemaFk);
+		String strTableSchemaFK=null;
+		
+		bool encontrado=false;			
+			
+		strSql+="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]"+" ADD "+strNombreColumna +" "+strTipo+" NOT NULL DEFAULT("+strDefault+")";
+		strSql+="\r\nGO";
+		
+		return strSql;
+	}
+	
+public String GetCreateLogicTodosForAllTables() {
+	String strComments=string.Empty;
+
+	for (int i = 0; i < SourceDatabaseTables.Count; i++) {
+		if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseTables[i])) {
+			continue;
+		}
+		
+		InicializarVariablesPorTabla(SourceDatabaseTables[i]);
+		
+		strComments+="\r\n\r\n\r\n"+GetNombreClaseC(SourceDatabaseTables[i].ToString())+"Logic "+GetNombreClaseObjetoC(SourceDatabaseTables[i].ToString())+"Logic=new "+GetNombreClaseC(SourceDatabaseTables[i].ToString())+"Logic();";
+		
+		//CABECERA
+		strComments+="\r\n\r\nSystem.out.println(";		
+		for (int j = 0; j < SourceDatabaseTables[i].Columns.Count; j++){	
+			if(SourceDatabaseTables[i].Columns[j].Name==strIsActive||SourceDatabaseTables[i].Columns[j].Name==strIsExpired||SourceDatabaseTables[i].Columns[j].Name==strId||SourceDatabaseTables[i].Columns[j].Name==strVersionRow){continue; }
+			
+			strComments+=GetNombreClaseC(SourceDatabaseTables[i].ToString())+"ConstantesFunciones.getColumnLabel"+SourceDatabaseTables[i].Columns[j].Name+"()";//GetParameterClaseMethodC(SourceDatabaseTables[i].Columns[j],true);
+			
+			if(j<SourceDatabaseTables[i].Columns.Count-1) {
+				strComments+="+\",\\t\"+";
+			}
+		}
+		strComments+=");";
+		//CABECERA
+		
+		strComments+="\r\n\r\nfor("+GetNombreClaseC(SourceDatabaseTables[i].ToString())+" "+GetNombreClaseObjetoC(SourceDatabaseTables[i].ToString())+":"+GetNombreClaseObjetoC(SourceDatabaseTables[i].ToString())+"Logic.get"+GetNombreClaseC(SourceDatabaseTables[i].ToString())+"s()) {";
+		
+		for (int j = 0; j < SourceDatabaseTables[i].Columns.Count; j++){	
+			if(SourceDatabaseTables[i].Columns[j].Name==strIsActive||SourceDatabaseTables[i].Columns[j].Name==strIsExpired||SourceDatabaseTables[i].Columns[j].Name==strId||SourceDatabaseTables[i].Columns[j].Name==strVersionRow){continue; }
+			
+			strComments+=GetNombreClaseObjetoC(SourceDatabaseTables[i].ToString())+"."+GetParameterClaseMethodC(SourceDatabaseTables[i].Columns[j],true,false,false,"");
+			
+			if(j<SourceDatabaseTables[i].Columns.Count-1) {
+				strComments+="+\",\\t\"+";
+			}
+		}
+		
+		strComments+="\r\n\r\nif("+GetNombreClaseObjetoC(SourceDatabaseTables[i].ToString())+"Logic.get"+GetNombreClaseC(SourceDatabaseTables[i].ToString())+"s()!=null) {";
+		
+	}
+	
+		return strComments; 
+}
+
+public String ExtraCodeForAllTablesSimple() {
+	String strComments=string.Empty;
+
+	for (int i = 0; i < SourceDatabaseTables.Count; i++) {	//break;
+		string strNombre1="NOMBRE="+GetNombreTableFromProperties(SourceDatabaseTables[i]);
+		string strNombre2="NOMBRE=gnr_"+GetNombreTableFromProperties(SourceDatabaseTables[i]);
+		
+		strComments+="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+SourceDatabaseTables[i].Description.Replace(strNombre1,strNombre2)+"' ,@level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'"+SourceDatabaseTables[i].Name+"'";				
+	}
+	
+	return strComments; 
+}
+
+public String GetCreateTables() {
+	String strDropTables=string.Empty;
+	
+	for (int i = 0; i < SourceDatabaseTables.Count; i++) {
+		if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseTables[i])) {
+			continue;
+		}
+		
+		InicializarVariablesPorTabla(SourceDatabaseTables[i]);		
+		strDropTables+=GetCreateTable(SourceDatabaseTables[i],i);
+	}
+    							
+	return strDropTables; 
+}
+
+public String GetColumnaActualDescription() {
+	String strDropTables=string.Empty;
+	String strDescritionsTabla=string.Empty;
+	
+	SourceDatabaseColumnas=new ColumnSchemaCollection();
+	
+	if(ExisteColumnDescription(ColumnaBaseActual)) {
+		
+		SourceDatabaseColumnas.Add(ColumnaBaseActual);
+		
+		for (int i = 0; i < SourceDatabaseColumnas.Count; i++) {
+			if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseColumnas[i].Table)) {
+				continue;
+			}
+			
+			InicializarVariablesPorTabla(SourceDatabaseColumnas[i].Table);	
+						
+			strDescritionsTabla=GetColumnaActualDescription(SourceDatabaseColumnas[i]);
+		
+			strDropTables+=GetSpDescriptionColumnC(SourceDatabaseColumnas[i].Table,SourceDatabaseColumnas[i],true,strDescritionsTabla);
+		}
+    }
+	
+	return strDropTables; 
+}
+
+public String GetColumnaActualDescription(ColumnSchema columnSchema) {
+	String strDesTable=string.Empty;
+	
+	//strDesTable+="NOMBRE="+A000_T_NOMBRE;
+	/*
+	if(!_A000_T_NOMBRE.Equals(string.Empty)) {
+		strDesTable+=strNOMBRE+"="+A000_T_NOMBRE;
+	}
+	
+	if(!_A003_T_PREFIJOTABLA.Equals(string.Empty)) {
+		strDesTable+=strPREFIJOTABLA+"="+_A003_T_PREFIJOTABLA;
+	}
+	*/
+	
+	if(!_A001_C_NOMBRE.Equals(string.Empty)) {
+		strDesTable+=strNOMBRE+"="+_A001_C_NOMBRE;
+	}
+	
+	if(!_A002_C_TABLA.Equals(string.Empty)) {
+		strDesTable+="|"+strTABLA+"="+_A002_C_TABLA;
+	}
+	
+	if(!_A003_C_TIPO.Equals(string.Empty)) {
+		strDesTable+="|"+strTIPO+"="+_A003_C_TIPO;
+	}
+	
+	if(!_A004_C_WEBTITULO.Equals(string.Empty)) {
+		strDesTable+="|"+strWEBTITULO+"="+_A004_C_WEBTITULO;
+	}
+	
+	if(!_A005_C_WEBFILAS.Equals(-1) && !_A005_C_WEBFILAS.Equals(0)) {
+		strDesTable+="|"+strWEBFILAS+"="+_A005_C_WEBFILAS;
+	}
+	
+	if(!_A006_C_WEBCOLUMNS.Equals(-1) && !_A006_C_WEBCOLUMNS.Equals(0)) {
+		strDesTable+="|"+strWEBCOLUMNS+"="+_A006_C_WEBCOLUMNS;
+	}
+	
+	if(!_A007_C_WEBCOMBO.Equals(false)) {
+		strDesTable+="|"+strWEBCOMBO+"="+_A007_C_WEBCOMBO.ToString().ToLower();
+	}
+	
+	if(!_A008_C_WEBORDEN.Equals(string.Empty)) {
+		strDesTable+="|"+strWEBORDEN+"="+_A008_C_WEBORDEN;
+	}
+	
+	if(!_A009_C_DEFAULT.Equals(string.Empty)) {
+		strDesTable+="|"+strDEFAULT+"="+_A009_C_DEFAULT;
+	}
+	
+	//_A010_C_ESPARAROMPIMIENTO.Equals(string.Empty;
+	if(!_A011_C_CONBUSQUEDA.Equals(false)) {
+		strDesTable+="|"+strCONBUSQUEDA+"="+_A011_C_CONBUSQUEDA.ToString().ToLower();
+	}
+	
+	if(!_A012_C_CONEVENTCHANGE.Equals(false)) {
+		strDesTable+="|"+strCONEVENTCHANGE+"="+_A012_C_CONEVENTCHANGE.ToString().ToLower();
+	}
+	
+	if(!_A013_C_CONEVENTDEPEND.Equals(string.Empty)) {
+		strDesTable+="|"+strCONEVENTDEPEND+"="+_A013_C_CONEVENTDEPEND;
+	}
+	
+	if(!_A014_C_FKNOLOAD.Equals(false)) {
+		strDesTable+="|"+strFKNOLOAD+"="+_A014_C_FKNOLOAD.ToString().ToLower();
+	}
+	
+	if(!_A015_C_FKNOSAVE.Equals(false)) {
+		strDesTable+="|"+strFKNOSAVE+"="+_A015_C_FKNOSAVE.ToString().ToLower();
+	}
+	
+	if(!_A016_C_CONRANGOINDICES.Equals(false)) {
+		strDesTable+="|"+strCONRANGOINDICES+"="+_A016_C_CONRANGOINDICES.ToString().ToLower();
+	}
+	
+	if(!_A017_C_JSVALIDACION.Equals(string.Empty)) {
+		strDesTable+="|"+strJSVALIDACION+"="+_A017_C_JSVALIDACION;
+	}
+	
+	if(!_A018_C_EDITNO.Equals(false)) {
+		strDesTable+="|"+strEDITNO+"="+_A018_C_EDITNO.ToString().ToLower();
+	}
+	
+	if(!_A019_C_INSERTEDITNO.Equals(false)) {
+		strDesTable+="|"+strINSERTEDITNO+"="+_A019_C_INSERTEDITNO.ToString().ToLower();
+	}
+	
+	if(!_A020_C_SHOWTABLE.Equals(false)) {
+		strDesTable+="|"+strSHOWTABLE+"="+_A020_C_SHOWTABLE.ToString().ToLower();
+	}
+	
+	if(!_A021_C_IDHIDDEN.Equals(false)) {
+		strDesTable+="|"+strIDHIDDEN+"="+_A021_C_IDHIDDEN.ToString().ToLower();
+	}
+	
+	if(!_A022_C_ESREPORTE.Equals(false)) {
+		strDesTable+="|"+strESREPORTE+"="+_A022_C_ESREPORTE.ToString().ToLower();
+	}
+	
+	if(!_A023_C_CONAUD.Equals(false)) {
+		strDesTable+="|"+strCONAUD+"="+_A023_C_CONAUD.ToString().ToLower();
+	}
+	
+	if(!_A024_C_VALIDACIONTODO.Equals(false)) {
+		strDesTable+="|"+strVALIDACIONTODO+"="+_A024_C_VALIDACIONTODO.ToString().ToLower();
+	}
+	
+	if(!_A025_C_VALIDACION.Equals(string.Empty)) {
+		strDesTable+="|"+strVALIDACION+"="+_A025_C_VALIDACION;
+	}
+	
+	if(!_A026_C_LISTAVALOR.Equals(string.Empty)) {
+		strDesTable+="|"+strLISTAVALOR+"="+_A026_C_LISTAVALOR;
+	}
+	
+	if(!_A027_C_KEYLISTA.Equals(string.Empty)) {
+		strDesTable+="|"+strKEYLISTA+"="+_A027_C_KEYLISTA;
+	}
+	
+	if(!_A028_C_CONSEG.Equals(false)) {
+		strDesTable+="|"+strCONSEG+"="+_A028_C_CONSEG.ToString().ToLower();
+	}
+	
+	if(!_A029_C_NUMTABUL.Equals(string.Empty)) {
+		strDesTable+="|"+strNUMTABUL+"="+_A029_C_NUMTABUL;
+	}
+	
+	if(!_A031_C_ESNULL.Equals(false)) {
+		strDesTable+="|"+strESNULL+"="+_A031_C_ESNULL;
+	}
+	
+	return strDesTable;
+}
+
+public String GetTablaActualDescription() {
+	String strDropTables=string.Empty;
+	String strDescritionsTabla=string.Empty;
+	
+	SourceDatabaseTables=new TableSchemaCollection();
+	
+	if(ExisteTableDescription(TablaBaseActual)) {
+		
+		SourceDatabaseTables.Add(TablaBaseActual);
+		
+		for (int i = 0; i < SourceDatabaseTables.Count; i++) {
+			if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseTables[i])) {
+				continue;
+			}
+			
+			InicializarVariablesPorTabla(SourceDatabaseTables[i]);	
+			
+			strDescritionsTabla=GetTablaActualDescription(SourceDatabaseTables[i]);
+		
+			strDropTables+=GetSpDescriptionTableC(SourceDatabaseTables[i],true,strDescritionsTabla);
+		}
+    }
+	
+	return strDropTables; 
+}
+
+
+public String GetTablaActualDescription(TableSchema tableSchema) {
+	String strDesTable=string.Empty;
+	
+	//strDesTable+="NOMBRE="+A000_T_NOMBRE;
+	
+	if(!_A000_T_NOMBRE.Equals(string.Empty)) {
+		strDesTable+=strNOMBRE+"="+A000_T_NOMBRE;
+	}
+	
+	if(!_A003_T_PREFIJOTABLA.Equals(string.Empty)) {
+		strDesTable+="|"+strPREFIJOTABLA+"="+_A003_T_PREFIJOTABLA;
+	}
+	
+	if(!_A004_T_ESROMPIMIENTO.Equals(false) ){
+		strDesTable+="|"+strESROMPIMIENTO+"="+_A004_T_ESROMPIMIENTO.ToString().ToLower();
+	}
+	
+	if(!_A004_T_ESGUARDARREL.Equals(false) ){
+		strDesTable+="|"+strESGUARDARREL+"="+_A004_T_ESGUARDARREL.ToString().ToLower();
+	}
+	
+	if(!_A004_T_ESGUARDARRELHIJO.Equals(false) ){
+		strDesTable+="|"+strESGUARDARRELHIJO+"="+_A004_T_ESGUARDARRELHIJO.ToString().ToLower();
+	}
+	
+	if(!_A001_T_WEBTITULO.Equals(string.Empty)) {
+		strDesTable+="|"+strWEBTITULO+"="+_A001_T_WEBTITULO;
+	}
+	
+	if(!_A002_T_WEBPLURAL.Equals(string.Empty)) {
+		strDesTable+="|"+strWEBPLURAL+"="+_A002_T_WEBPLURAL;
+	}
+	
+	if(!_A005_T_WEBRELACIONESNO.Equals(false)) {
+		strDesTable+="|"+strWEBRELACIONESNO+"="+_A005_T_WEBRELACIONESNO.ToString().ToLower();
+	}
+	
+	if(!_A003_T_DELCASCADE.Equals(false)) {
+		strDesTable+="|"+strDELCASCADE+"="+_A003_T_DELCASCADE.ToString().ToLower();
+	}
+	
+	if(!_A004_T_ESMENU.Equals(false)) {
+		strDesTable+="|"+strESMENU+"="+_A004_T_ESMENU.ToString().ToLower();
+	}
+	
+	if(!_A005_T_CONAUD.Equals(false)) {
+		strDesTable+="|"+strCONAUD+"="+_A005_T_CONAUD.ToString().ToLower();
+	}
+	
+	if(!_A006_T_CLASESNO.Equals(string.Empty)) {
+		strDesTable+="|"+strCLASESNO+"="+_A006_T_CLASESNO;
+	}
+	
+	if(!_A007_T_CLASESPERSISTENCENO.Equals(string.Empty)) {
+		strDesTable+="|"+strCLASESPERSISTENCENO+"="+_A007_T_CLASESPERSISTENCENO;
+	}
+	
+	if(!_A008_T_WEBCONATRAS.Equals(false)) {
+		strDesTable+="|"+strWEBCONATRAS+"="+_A008_T_WEBCONATRAS.ToString().ToLower();
+	}
+	
+	if(!_A009_T_ESINTERNO.Equals(false)) {
+		strDesTable+="|"+strESINTERNO+"="+_A009_T_ESINTERNO.ToString().ToLower();
+	}
+	
+	if(!_A010_T_INDICESNO.Equals(string.Empty)) {
+		strDesTable+="|"+strINDICESNO+"="+_A010_T_INDICESNO;
+	}
+	
+	if(!_A011_T_KEYINDICESNO.Equals(string.Empty)) {
+		strDesTable+="|"+strKEYINDICESNO+"="+_A011_T_KEYINDICESNO;
+	}
+	
+	if(!_A012_T_INSERTNO.Equals(false)) {
+		strDesTable+="|"+strINSERTNO+"="+_A012_T_INSERTNO.ToString().ToLower();
+	}
+	
+	if(!_A013_T_DELETENO.Equals(false)) {
+		strDesTable+="|"+strDELETENO+"="+_A013_T_DELETENO.ToString().ToLower();
+	}
+	
+	if(!_A015_T_CONAUDAUTO.Equals(false)) {
+		strDesTable+="|"+strCONAUDAUTO+"="+_A015_T_CONAUDAUTO.ToString().ToLower();
+	}
+	
+	if(!_A016_T_SINAUDET.Equals(false)) {
+		strDesTable+="|"+strSINAUDET+"="+_A016_T_SINAUDET.ToString().ToLower();
+	}
+	
+	if(!_A017_T_CONSTORE.Equals(false)) {
+		strDesTable+="|"+strCONSTORE+"="+_A017_T_CONSTORE.ToString().ToLower();
+	}
+	
+	if(!_A018_T_CONORIG.Equals(false)) {
+		strDesTable+="|"+strCONORIG+"="+_A018_T_CONORIG.ToString().ToLower();
+	}
+	
+	if(!_A019_T_FINALQUERY.Equals(string.Empty)) {
+		strDesTable+="|"+strFINALQUERY+"="+_A019_T_FINALQUERY;
+	}
+	
+	if(!_A020_T_SESSIONKEYQUERY.Equals(string.Empty)) {
+		strDesTable+="|"+strSESSIONKEYQUERY+"="+_A020_T_SESSIONKEYQUERY;
+	}
+	
+	if(!_A021_T_NEWCODE.Equals(string.Empty)) {
+		strDesTable+="|"+strNEWCODE+"="+_A021_T_NEWCODE;
+	}
+	
+	if(!_A022_T_ESREPORTEAUX.Equals(false)) {
+		strDesTable+="|"+strESREPORTEAUX+"="+_A022_T_ESREPORTEAUX.ToString().ToLower();
+	}
+	
+	if(!_A023_T_ESREPORTE.Equals(false)) {
+		strDesTable+="|"+strESREPORTE+"="+_A023_T_ESREPORTE.ToString().ToLower();
+	}
+	
+	if(!_A024_T_ESREPORTEGROUP.Equals(string.Empty)) {
+		strDesTable+="|"+strESREPORTEGROUP+"="+_A024_T_ESREPORTEGROUP;
+	}
+	
+	if(!_A025_T_ESREPORTEPARAM.Equals(false)) {
+		strDesTable+="|"+strESREPORTEPARAM+"="+_A025_T_ESREPORTEPARAM.ToString().ToLower();
+	}
+	
+	if(!_A026_T_PREFIJOID.Equals(string.Empty)) {
+		strDesTable+="|"+strPREFIJOID+"="+_A026_T_PREFIJOID;
+	}
+	
+	if(!_A028_T_CONJAVASCRIPTIE.Equals(false)) {
+		strDesTable+="|"+strCONJAVASCRIPTIE+"="+_A028_T_CONJAVASCRIPTIE.ToString().ToLower();
+	}
+	
+	if(!_A029_T_PAQUETE.Equals(string.Empty)) {
+		strDesTable+="|"+strPAQUETE+"="+_A029_T_PAQUETE;
+	}
+	
+	if(!_A030_T_PAQUETEJAVA.Equals(string.Empty)) {
+		strDesTable+="|"+strPAQUETEJAVA+"="+_A030_T_PAQUETEJAVA;
+	}
+	
+	if(!_A031_T_ALIGN.Equals(string.Empty)) {
+		strDesTable+="|"+strALIGN+"="+_A031_T_ALIGN;
+	}
+	
+	if(!_A032_T_TAMBUSQUEDA.Equals(string.Empty)) {
+		strDesTable+="|"+strTAMBUSQUEDA+"="+_A032_T_TAMBUSQUEDA;
+	}
+	
+	if(!_A033_T_IGNORAR.Equals(false)) {
+		strDesTable+="|"+strIGNORAR+"="+_A033_T_IGNORAR.ToString().ToLower();
+	}
+	
+	if(!_A034_T_SCHEMA.Equals(string.Empty)) {
+		strDesTable+="|"+strSCHEMA+"="+_A034_T_SCHEMA;
+	}
+	
+	if(!_A035_T_PCKG.Equals(string.Empty)) {
+		strDesTable+="|"+strPCKG+"="+_A035_T_PCKG;
+	}
+	
+	if(!_A036_T_PCKGENTCLASES.Equals(string.Empty)) {
+		strDesTable+="|"+strPCKGENTCLASES+"="+_A036_T_PCKGENTCLASES;
+	}
+	
+	if(!_A037_T_CONPERSISTENCIA.Equals(false)) {
+		strDesTable+="|"+strCONPERSISTENCIA+"="+_A037_T_CONPERSISTENCIA.ToString().ToLower();
+	}
+	
+	if(!_A038_T_NOEJB.Equals(false)) {
+		strDesTable+="|"+strNOEJB+"="+_A038_T_NOEJB.ToString().ToLower();
+	}
+	
+	if(!_A039_T_WHAUX.Equals(string.Empty)) {
+		strDesTable+="|"+strWHAUX+"="+_A039_T_WHAUX;
+	}
+	
+	if(!_A040_T_FINALJSPVERSION.Equals(false)) {
+		strDesTable+="|"+strFINALJSPVERSION+"="+_A040_T_FINALJSPVERSION.ToString().ToLower();
+	}
+	
+	if(!_A041_T_FINALJSFVERSION.Equals(false)) {
+		strDesTable+="|"+strFINALJSFVERSION+"="+_A041_T_FINALJSFVERSION.ToString().ToLower();
+	}
+	
+	if(!_A043_T_ESPOPUP.Equals(false)) {
+		strDesTable+="|"+strESPOPUP+"="+_A043_T_ESPOPUP.ToString().ToLower();
+	}
+	
+	if(!_A044_T_NUMCOLUMNAS.Equals(-1) && !_A044_T_NUMCOLUMNAS.Equals(0)) {
+		strDesTable+="|"+strNUMCOLUMNAS+"="+_A044_T_NUMCOLUMNAS;
+	}
+	
+	if(!_A045_T_NUMCOLUMNASEXTRA.Equals(-1) && !_A045_T_NUMCOLUMNASEXTRA.Equals(0)) {
+		strDesTable+="|"+strNUMCOLUMNASEXTRA+"="+_A045_T_NUMCOLUMNASEXTRA;
+	}
+	
+	if(!_A046_T_NUMPAG.Equals(-1) && !_A046_T_NUMPAG.Equals(0)) {
+		strDesTable+="|"+strNUMPAG+"="+_A046_T_NUMPAG;
+	}
+	
+	if(!_A047_T_CONPAQUETEJAVAGLOBAL.Equals(false)) {
+		strDesTable+="|"+strCONPAQUETEJAVAGLOBAL+"="+_A047_T_CONPAQUETEJAVAGLOBAL.ToString().ToLower();
+	}
+		
+	return strDesTable;
+}
+
+public String GetNameDescriptionTable(TableSchema tableSchema) {
+	String strDescritionTabla=string.Empty;
+	
+	strDescritionTabla+="NOMBRE="+A000_T_NOMBRE;	
+	
+	return strDescritionTabla;
+}
+
+public String GetLoteDescriptionTables() {
+	String strDropTables=string.Empty;
+	String strDescritionsTabla=string.Empty;
+	bool existe=false;
+	
+	for (int i = 0; i < SourceDatabaseTables.Count; i++) {
+		if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseTables[i])) {
+			continue;
+		}
+		
+		InicializarVariablesPorTabla(SourceDatabaseTables[i]);	
+		
+		existe=false;		
+		strDescritionsTabla=GetLoteDescriptioTable(SourceDatabaseTables[i],ref existe);
+	
+		if(existe) {
+			if(PermiteDescriptionTabla(strDescritionsTabla,SourceDatabaseTables[i])) {
+				strDropTables+=GetSpDescriptionTableC(SourceDatabaseTables[i],true,strDescritionsTabla);
+			}
+		}
+	
+		//strDropTables+="\r\n"+GetLoteTable(SourceDatabaseTables[i]);
+	}
+    							
+	return strDropTables; 
+}
+
+public bool PermiteDescriptionTabla(String strDescritionsColumna,TableSchema tableSchema ) {
+	//bool permite=false;
+	bool permite=true;
+	
+	if(EsLoteNombreContains || EsLoteNombreIgual) {
+		if(EsLoteNombreIgual) {
+			if(!tableSchema.Name.Equals(LoteNombreTablaColumna)) {
+				permite=false;
+			}
+			
+		} else if(EsLoteNombreContains) {
+			if(!tableSchema.Name.Contains(LoteNombreTablaColumna)) {
+				permite=false;
+			}
+		}
+	} else {
+		
+	}
+	
+	return permite;
+}
+
+public String GetLoteDescriptioTable(TableSchema tableSchema,ref bool existe) {
+	String strDescriptionActual=string.Empty;
+	
+	strDescriptionActual=GetActualDescriptionTableC(tableSchema);
+	
+	//strDropTable+="|"+LoteDescription;
+	
+	if(!EsLoteDescripcionReemplazo) {
+		strDescriptionActual=GetNuevoActualizarDescriptionTablaColumna(strDescriptionActual,LoteDescription,ref existe,tableSchema,null);
+	} else {				
+		if(strDescriptionActual.Contains(LoteDescriptionBuscar)) {
+			existe=true;
+			strDescriptionActual=strDescriptionActual.Replace(LoteDescriptionBuscar,LoteDescription);
+		}
+	}
+	
+	return strDescriptionActual;
+}
+
+public String GetLoteDescriptionColumnas() {
+	String strDropTables=string.Empty;
+	String strDescritionsColumna=string.Empty;
+	bool existe=false;
+	
+	for (int i = 0; i < SourceDatabaseColumnas.Count; i++) {
+		if(!SinIgnorar && GetEsIgnorarTableFromPropertiesC(SourceDatabaseColumnas[i].Table)) {
+			continue;
+		}				
+		
+		InicializarVariablesPorTabla(SourceDatabaseColumnas[i].Table);	
+		
+		existe=false;
+		strDescritionsColumna=GetLoteDescriptionColumna(SourceDatabaseColumnas[i],ref existe);
+	
+		//COMENTAR
+		//existe=true;	
+		
+		
+		if(existe) {				
+			if(PermiteDescriptionColumna(strDescritionsColumna,SourceDatabaseColumnas[i])) {
+				//AUX-NOMBRE TABLAS
+				//COMENTAR
+				//strDropTables+="\r\n"+SourceDatabaseColumnas[i].Table.Owner+","+SourceDatabaseColumnas[i].Table;
+			
+				//AUX-NOMBRE TABLAS PARA SQL
+				//COMENTAR
+				//strDropTables+=GetSqlAuxiliar(SourceDatabaseColumnas[i],"NULL");
+				
+				//AUX-NOMBRE TABLAS PARA GENERAR
+				//COMENTAR
+				//strDropTables+=GetXmlTablesGenerar(SourceDatabaseColumnas[i]);
+				
+				//NORMAL-DESCOMENTAR								
+				strDropTables+=GetSpDescriptionColumnC(SourceDatabaseColumnas[i].Table,SourceDatabaseColumnas[i],true,strDescritionsColumna);
+			}
+		}			
+	}
+    							
+	return strDropTables; 
+}
+
+public String GetSqlAuxiliar(ColumnSchema columnSchema,String strTipo) {
+	String strSqlAuxiliar="";
+	
+	if(strTipo.Equals("NULL")) {
+		strSqlAuxiliar="\r\nalter table "+columnSchema.Table.Owner.ToLower()+"."+GetNombreTableFromProperties(columnSchema.Table)+" alter "+GetNombreColumnFromProperties(columnSchema)+" drop not null;";
+	}
+	
+	return strSqlAuxiliar;
+}
+
+public String GetXmlTablesGenerar(ColumnSchema columnSchema) {
+	String strSqlAuxiliar="";
+	
+	//strSqlAuxiliar+="\r\n<tableList>";
+    strSqlAuxiliar+="\r\n<table>";
+   	strSqlAuxiliar+="\r\n\t<owner>"+columnSchema.Table.Owner+"</owner>";
+    strSqlAuxiliar+="\r\n\t<name>"+columnSchema.Table.Name+"</name>";
+    strSqlAuxiliar+="\r\n</table>";
+    //strSqlAuxiliar+="\r\n</tableList>";
+	
+	return strSqlAuxiliar;
+}
+
+public bool PermiteDescriptionColumna(String strDescritionsColumna,ColumnSchema columnSchema ) {
+	//bool permite=false;
+	bool permite=true;
+	
+	if(EsLoteNombreContains || EsLoteNombreIgual) {
+		if(EsLoteNombreIgual) {
+			if(!columnSchema.Name.Equals(LoteNombreTablaColumna)) {
+				permite=false;
+			}
+			
+		} else if(EsLoteNombreContains) {
+			if(!columnSchema.Name.Contains(LoteNombreTablaColumna)) {
+				permite=false;
+			}
+		}
+	} else {
+		//COMENTAR
+		//UTIL
+		/*
+		if(strDescritionsColumna.Contains("CONEVENTUPDATES")) {
+			permite=true;
+		} else {
+			permite=false;
+		}
+		*/
+	}
+	
+	return permite;
+}
+
+public String GetLoteDescriptionColumna(ColumnSchema columnSchema,ref bool existe) {
+	String strDescriptionActual=string.Empty;
+	
+	strDescriptionActual=GetActualDescriptionColumnaC(columnSchema);
+	
+	//strDescriptionActual+="|"+LoteDescription;
+	
+	if(!EsLoteDescripcionReemplazo) {
+		strDescriptionActual=GetNuevoActualizarDescriptionTablaColumna(strDescriptionActual,LoteDescription,ref existe,null,columnSchema);
+	} else {
+		if(strDescriptionActual
+		
+		
+		.Contains(LoteDescriptionBuscar)) {
+			existe=true;
+			strDescriptionActual=strDescriptionActual.Replace(LoteDescriptionBuscar,LoteDescription);		
+		}
+	}		
+	
+	return strDescriptionActual;
+}
+
+public String GetNuevoActualizarDescriptionTablaColumna(String strDescriptionActual,String strDescriptionNuevo,ref bool existe,TableSchema tableSchema,ColumnSchema columnSchema) {
+	String strDescriptionFinal=string.Empty;
+	String strDescriptionReemplazo=string.Empty;
+	String strNombreDescriptionNuevo=string.Empty;
+	String strValorDescriptionNuevo=string.Empty;
+	String strNombreDescriptionExistente=string.Empty;
+	String strValorDescriptionExistente=string.Empty;
+	String[] arrDescripciones;
+	bool existeReemplazo=false;
+	
+	strNombreDescriptionNuevo=strDescriptionNuevo.Split('=')[0];
+	strValorDescriptionNuevo=strDescriptionNuevo.Split('=')[1];
+
+	if(!strDescriptionActual.Contains(strNombreDescriptionNuevo)) {
+		existe=true;
+		
+		//NORMAL-DESCOMENTAR
+		strDescriptionFinal=strDescriptionActual+"|"+strDescriptionNuevo;
+		
+		
+		//1)	
+		//COMENTAR
+		//MANTIENE ACTUAL	
+		/*
+		strDescriptionFinal=strDescriptionActual;
+		
+		//SI EXISTE, ACTUALIZA + NUEVO VALOR
+		if(columnSchema!=null) {				
+			strValorDescriptionNuevo=GetEventUpdatesFromColumnEvent(columnSchema);
+			strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionNuevo;
+					
+			if(!strValorDescriptionNuevo.Equals("")) {
+				strDescriptionFinal=strDescriptionActual+"|"+strDescriptionNuevo;
+			}
+					
+			//Trace.WriteLine(GetWebNombreTituloColumnFromPropertiesC(columnSchema)+"->"+strValorDescriptionNuevo);
+					
+		}
+		*/
+		//1)-FIN
+				
+	} else {
+		arrDescripciones=strDescriptionActual.Split('|');
+		
+		foreach(String strDescripcion in arrDescripciones) {
+			strNombreDescriptionExistente=strDescripcion.Split('=')[0];
+			strValorDescriptionExistente=strDescripcion.Split('=')[1];
+			
+			if(strNombreDescriptionExistente.Contains(strNombreDescriptionNuevo)) {
+				existeReemplazo=true;
+				strDescriptionReemplazo=strDescripcion;
+				
+				break;
+			}
+		}
+		
+		if(existeReemplazo) {
+			if(!strDescriptionReemplazo.Equals(strDescriptionNuevo)) {
+				existe=true;
+				
+				//SOLO SI SE NECESITA
+				//strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionExistente.ToLower();
+				
+				/*TABLA-TABLA-TABLA-TABLA*/
+				
+				//CAMBIAR NOMBRE WEBTITULO TABLA
+				//1)
+				/*
+				if(tableSchema!=null) {
+					strValorDescriptionNuevo=GetNombreConMixedCaseC(GetTituloNombreTableFromPropertiesC(tableSchema),true);
+					//strDescriptionNuevo=strNombreDescriptionNuevo+"="+GetNombreConSeparacionC(tableSchema.Name).ToLower();
+					
+					strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionNuevo;					
+					
+					Trace.WriteLine("WEBTITULO TABLE "+GetTituloNombreTableFromPropertiesC(tableSchema)+" TO "+strValorDescriptionNuevo);
+				}
+				*/
+				//1)-FIN
+				
+				//2) CAMBIAR PLURAL
+				/*
+				if(tableSchema!=null) {
+					strValorDescriptionNuevo=GetPluralTituloNombreTableFromPropertiesC(tableSchema);
+					
+					if(strValorDescriptionNuevo.Equals("S")) {
+						strValorDescriptionNuevo="s";	
+						
+					} else if(strValorDescriptionNuevo.Equals("ES")) {
+						strValorDescriptionNuevo="es";	
+					}
+					//strDescriptionNuevo=strNombreDescriptionNuevo+"="+GetNombreConSeparacionC(tableSchema.Name).ToLower();
+					
+					strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionNuevo;					
+					
+					Trace.WriteLine("WEBTITULO TABLE "+GetTituloNombreTableFromPropertiesC(tableSchema)+" TO "+strValorDescriptionNuevo);
+				}
+				*/
+				//2)-FIN
+				
+				/*			
+				if(tableSchema!=null) {
+					strDescriptionNuevo=strNombreDescriptionNuevo+"="+GetNombreConSeparacionC(tableSchema.Name).ToLower();
+					
+					Trace.WriteLine("RENAME TABLE "+GetNombreConSeparacionC(tableSchema.Name).ToLower()+" TO av_"+GetNombreConSeparacionC(tableSchema.Name).ToLower()+";");
+				}
+				*/
+
+				//if(tableSchema!=null) {
+				//	Trace.WriteLine("ALTER SCHEMA Medico TRANSFER dbo."+tableSchema.Name+";");
+				//}
+				
+				/*TABLA-TABLA-TABLA-TABLA*/
+				
+				
+				/*COLUMNA-COLUMNA-COLUMNA*/
+				//SI SE UTILIZA COLUMNAS
+				//1)
+				/*
+				if(columnSchema!=null) {
+					strValorDescriptionNuevo=GetNombreConMixedCaseC(GetWebNombreTituloColumnFromPropertiesC(columnSchema),true);
+					strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionNuevo;
+					
+					//Trace.WriteLine(GetWebNombreTituloColumnFromPropertiesC(columnSchema)+"->"+strValorDescriptionNuevo);
+					
+				}
+				*/
+				//1)-FIN												
+				
+				
+				/*
+				3)
+				if(columnSchema!=null) {
+					//strDescriptionNuevo=strNombreDescriptionNuevo+"="+strValorDescriptionExistente.ToLower();
+					
+					if(GetNombreConSeparacionC(columnSchema.Name).ToLower().Contains("_")) {
+						//strDescriptionNuevo=strNombreDescriptionNuevo+"="+GetNombreConSeparacionC(columnSchema.Name).ToLower();
+					
+						//GetNombrePrefijoTableFromPropertiesC(columnSchema.Table)+
+						
+						//NULL
+						String strNotNullDefault="";
+	
+						if(!EsMSSql) {
+							strNotNullDefault="not null default";		
+						} else {
+							strNotNullDefault="NOT NULL ";
+						}
+						
+						if(GetEsNullColumnFromPropertiesC(columnSchema)) {//.AllowDBNull
+							if(!EsMSSql) {
+								strNotNullDefault="null default";
+							} else {
+								strNotNullDefault="NULL";
+							}
+						}
+						
+						if(EsDb2) {
+							strNotNullDefault=strNotNullDefault.ToUpper();
+						}
+						//NULL
+						
+						String strDefinicionExtra=" "+strNotNullDefault+" "+GetDefaultDataTypeCreateColumn(columnSchema);
+						
+						//SALE ERROR CUANDO SE QUIERE ACTUALIZAR FK COLUMN
+						if(false && !columnSchema.IsForeignKeyMember && !columnSchema.Name.Equals(strVersionRow)) {
+							Trace.WriteLine("ALTER TABLE "+GetNombrePrefijoTableFromPropertiesC(columnSchema.Table)+GetNombreTableFromProperties(columnSchema.Table)+" CHANGE "+columnSchema.Name.ToLower()+" "+GetNombreConSeparacionC(columnSchema.Name).ToLower()+" "+GetDataTypeCreateColumn(columnSchema)+strDefinicionExtra+";");
+						
+						} else if(false && columnSchema.Name.Equals(strVersionRow)) {
+							strNotNullDefault="not null";
+							strDefinicionExtra=" "+strNotNullDefault;//+" "+GetDefaultDataTypeCreateColumn(columnSchema);
+							
+							Trace.WriteLine("ALTER TABLE "+GetNombrePrefijoTableFromPropertiesC(columnSchema.Table)+GetNombreTableFromProperties(columnSchema.Table)+" CHANGE "+columnSchema.Name.ToLower()+" "+GetNombreConSeparacionC(columnSchema.Name).ToLower()+" "+GetDataTypeCreateColumn(columnSchema)+strDefinicionExtra+";");
+						
+						} else if(columnSchema.IsForeignKeyMember) {
+							Trace.WriteLine("ALTER TABLE "+GetNombrePrefijoTableFromPropertiesC(columnSchema.Table)+GetNombreTableFromProperties(columnSchema.Table)+" CHANGE "+columnSchema.Name.ToLower()+" "+GetNombreConSeparacionC(columnSchema.Name).ToLower()+" "+GetDataTypeCreateColumn(columnSchema)+strDefinicionExtra+";");
+						
+						}
+					}
+				}
+				3)-FIN
+				*/
+				/*COLUMNA-COLUMNA-COLUMNA*/
+								
+				//NORMAL-DESCOMENTAR
+				strDescriptionFinal=strDescriptionActual.Replace(strDescriptionReemplazo,strDescriptionNuevo);
+			}
+		}
+	}
+	
+	return strDescriptionFinal;
+}
+
+public String GetEventUpdatesFromColumnEvent(ColumnSchema columSchema) {
+	String strEventUpdates="";
+	String strEventDepend="";
+	String[] arrColumnas=null;
+	bool esPrimero=true;
+	bool blnExiste=false;
+	
+	
+	
+	if(GetConEventChangeColumnFromPropertiesC(columSchema)) {		
+		foreach(ColumnSchema columnLocal in columSchema.Table.Columns) {			
+			if(columnLocal.Name.Equals(strId) || columnLocal.Name.Equals(strVersionRow) 
+				|| columnLocal.Name.Equals(columSchema.Name)) {
+					
+				continue;	
+			}
+			
+			strEventDepend=GetConEventDependColumnFromPropertiesC(columnLocal);
+			
+			if(strEventDepend.Equals("")) {
+				continue;	
+			}
+			
+			
+			arrColumnas=strEventDepend.Split(',');
+						
+			blnExiste=false;
+					
+			foreach(String sColumna in arrColumnas){						
+				if(sColumna.Equals(GetNombreColumnFromProperties(columSchema))) {
+					blnExiste=true;
+					break;
+				}
+			}
+			
+			if(blnExiste) {
+				if(!esPrimero) {
+					strEventUpdates+=",";
+				}
+				
+				strEventUpdates+=GetNombreColumnFromProperties(columnLocal);
+				
+				if(esPrimero) {
+					esPrimero=false;	
+				}
+			}						
+		}
+	}
+	
+	return strEventUpdates;
+}
+
+public String GetCreateTable(TableSchema tableSchema,int i) {
+	String strDropTable=string.Empty;
+	
+	if(!false&&!false) {
+		strPrefijoNombre="\"";
+		strSufijoNombre="\"";
+	}
+	
+	if(!false) {
+		strDropTable+="\r\n\r\n/*CREATE TABLE "+GetNombreTablaC(tableSchema)+"*/";
+	} else {
+		strDropTable+="\r\n";
+	}
+	
+	String strCreateTablePart="create table";
+	String strConstraintPart="constraint";
+	String strPrimaryKeyPart="primary key";
+	String strNombrePrimaryKeyPart="";
+	String strNombreSchema="";
+	
+	if(false) {
+		strCreateTablePart=strCreateTablePart.ToUpper();
+		strConstraintPart=strConstraintPart.ToUpper();
+		strPrimaryKeyPart=strPrimaryKeyPart.ToUpper();
+		strNombrePrimaryKeyPart=i.ToString();
+	} else {
+		strNombrePrimaryKeyPart=GetNombreTablaC(tableSchema);
+	}
+	
+	strDropTable+="\r\n"+strCreateTablePart+" "+strSchema+"."+strPrefijoNombre+GetNombreTablaC(tableSchema)+strSufijoNombre+"\r\n(";
+	strDropTable+=GetCreateColumns(tableSchema);	
+	
+	strDropTable+="\r\n)";
+	
+	return strDropTable;
+}
+
+public String GetCreateColumns(TableSchema tableSchema) {
+	String strDescritionTabla=string.Empty;
+	String strAddOrUpdate=string.Empty;
+	
+	for (int j = 0; j < tableSchema.Columns.Count; j++) {
+		strDescritionTabla+=GetCreateColumn(tableSchema.Columns[j]);
+	}		
+    					
+	return strDescritionTabla; 
+}
+
+public bool ValidarTipoColumna(ColumnSchema columnSchema) {
+	return (!columnSchema.IsForeignKeyMember && !blnNoStandardTableFromProperties) || blnNoStandardTableFromProperties;
+}
+
+public String GetCreateColumn(ColumnSchema columnSchema) {
+	String strCreateColumn=string.Empty;
+	String strQueryPart1MysqlDropTable=string.Empty;
+	
+	String strNombreColumn="";
+	
+	String strCreateColumnInit="\r\n\t";
+	
+	strCreateColumn+=strCreateColumnInit;
+	
+	String strColumnsComments=string.Empty;
+		
+	
+	strNombreColumn=strPrefijoNombre+GetNombreColumnFromProperties(columnSchema)+strSufijoNombre;
+	
+	String strNotNullDefault="not null default";
+	
+	return strCreateColumn;
+}
+
+public String GetDataTypeCreateColumn(ColumnSchema columnSchema) {
+	String strCreateColumn=string.Empty;
+	
+	strCreateColumn=GetDataTypeCreateColumn(columnSchema,0);
+	
+	return strCreateColumn;
+}
+
+public String GetDataTypeCreateColumn(ColumnSchema columnSchema,int iTamanio) {
+	String strCreateColumn=string.Empty;
+	String strQueryPart1MysqlDropTable=string.Empty;
+	
+	String strNombreColumn="";
+	
+	String strCreateColumnInit="\r\n\t";
+	
+	strCreateColumn+=strCreateColumnInit;
+	
+	int iTamanioFinal=columnSchema.Size;
+	
+	if(iTamanio>0) {
+		iTamanioFinal=iTamanio;
+	}
+	
+	//FK PUEDE SER DE CUALQUIER TIPO	
+	if(ValidarTipoColumna(columnSchema) || true) {
+			if (EsBigIntColumn(columnSchema)){
+				if(EsMySql){
+					strCreateColumn="bigint";	
+				} else if(!EsDb2) {
+					strCreateColumn="bigint";
+				} else {
+					strCreateColumn="BIGINT";
+				}
+			} else if(EsCharColumn(columnSchema)) {				
+				if(EsMySql){
+					strCreateColumn="char("+iTamanioFinal.ToString()+")";
+				} else if(!EsDb2) {
+					strCreateColumn="char("+iTamanioFinal.ToString()+")";
+				} else {
+					strCreateColumn="CHAR("+iTamanioFinal.ToString()+")";
+				}		
+			} else if(EsVarCharColumn(columnSchema)) {			
+				if(EsMySql){
+					strCreateColumn="varchar("+iTamanioFinal.ToString()+")";
+				} else if(!EsDb2) {
+					strCreateColumn="varchar("+iTamanioFinal.ToString()+")";
+				} else {
+					strCreateColumn="VARCHAR("+iTamanioFinal.ToString()+")";
+				}		
+			} else if(EsIntColumn(columnSchema)) {
+				if(EsMySql){
+					strCreateColumn="int";
+				} else if(!EsDb2) {
+					strCreateColumn="int";
+				} else {
+					strCreateColumn="INT";
+				}			
+			} else if(EsSmallIntColumn(columnSchema)) {
+				if(EsMySql){
+					strCreateColumn="smallint";
+				} else if(!EsDb2) {
+					strCreateColumn="smallint";
+				} else {
+					strCreateColumn="SMALLINT";
+				}			
+			}  else if(EsDecimalColumn(columnSchema)) {				
+				if(EsMySql){
+					strCreateColumn="decimal("+columnSchema.Precision+","+columnSchema.Scale+")";
+				} else if(!EsDb2) {
+					strCreateColumn="decimal("+columnSchema.Precision+","+columnSchema.Scale+")";
+				} else {
+					strCreateColumn="DECIMAL("+columnSchema.Precision+","+columnSchema.Scale+")";
+				}				
+			}  else if(EsBitColumn(columnSchema)) {
+				if(EsMySql){
+					strCreateColumn="bool";
+				} else if(!EsDb2) {
+					if(!EsMSSql) {
+						strCreateColumn="bool";
+					} else {
+						strCreateColumn="bit";
+					}
+				} else {
+					strCreateColumn="SMALLINT";
+				}			
+			} else if(EsDateTimeColumn(columnSchema)) {			
+				if(EsMySql || EsMSSql){
+					strCreateColumn="datetime";//getdate()
+				} else if(!EsDb2) {
+					strCreateColumn="timestamp";// with time zone     getdate()
+				} else {
+					strCreateColumn="TIMESTAMP";
+				}
+			} else if(EsDateColumn(columnSchema)) {			
+				if(EsMySql || EsMSSql){
+					strCreateColumn="date";//"datetime";//getdate()
+				} else if(!EsDb2) {
+					strCreateColumn="date";// with time zone		getdate()
+				} else {
+					strCreateColumn="DATE";
+				}
+			} else if(EsTimeColumn(columnSchema)) {			
+				if(EsMySql || EsMSSql){
+					strCreateColumn="time";//"datetime";//getdate()
+				} else if(!EsDb2) {
+					strCreateColumn="time";// with time zone		getdate()
+				} else {
+					strCreateColumn="TIME";
+				}
+			} else if(EsBinaryColumn(columnSchema)) {			
+				if(!columnSchema.Name.Equals(strVersionRow)) {
+					if(EsMySql){
+						strCreateColumn="longblob";//getdate()
+					} else if(!EsDb2) {
+						strCreateColumn="bytea";//getdate()
+					} else {
+						strCreateColumn="bytes";
+					}
+				} else {
+					strCreateColumn="timestamp";
+				}
+			}
+		} else {
+			strCreateColumn="bigint";
+			if(EsMySql){
+				strCreateColumn="bigint";
+			} else if(!EsDb2) {
+				strCreateColumn="bigint";
+			} else {
+				strCreateColumn="BIGINT";
+			}
+		}	
+	
+	return strCreateColumn;
+}
+
+public String GetDefaultDataTypeCreateColumn(ColumnSchema columnSchema) {
+	String strCreateColumn=string.Empty;
+	String strQueryPart1MysqlDropTable=string.Empty;
+	
+	String strNombreColumn="";
+	
+	String strCreateColumnInit="\r\n\t";
+	
+	strCreateColumn+=strCreateColumnInit;
+		
+	if(!false) {	
+		if(ValidarTipoColumna(columnSchema)) {
+			if (EsBigIntColumn(columnSchema)){
+				if(false){
+					strCreateColumn="0";	
+				} else if(!false) {
+					strCreateColumn="(0)";
+				} else {
+					strCreateColumn="0";
+				}
+			}
+		}
+	} else {
+		strCreateColumn="";
+	}
+	
+	return strCreateColumn;
+}
+
+public String GetSelectColumns(TableSchema tableSchema) {
+	String strSelectColumns=string.Empty;
+	
+	for (int i = 0; i < tableSchema.Columns.Count; i++) {
+		strSelectColumns+=tableSchema.Columns[i].Name;
+		
+		if(i<tableSchema.Columns.Count-1) {
+			strSelectColumns+=",";
+		}
+	}
+		
+	return strSelectColumns;
+}
+
+public void InicializarVariablesGlobales() {
+	//strGlobalPrefijoDBNombreTablas=PrefijoDBNombreTablasGlobal;	
+}
+
+public void InicializarVariablesEmpresa() {
+	if(!EsParaProduccion) {
+		strSchema=Schema;//string.Empty;
+		
+		if(strSchema.Equals(string.Empty)) {
+			strSchema=SourceDataBase.Name;
+		}
+	} else {
+		strSchema=string.Empty;
+	}
+	
+	InicializarVariablesEmpresaC(NombreEmpresa,false);
+	
+	TableSchemaCollection tableSchemaCollectionTemporal= new TableSchemaCollection();
+	ColumnSchemaCollection columnSchemaCollectionTemporal= new ColumnSchemaCollection();
+	SourceDatabaseTables= new TableSchemaCollection();
+	
+	
+	if(GeneracionPorTablas) {
+		tableSchemaCollectionTemporal=SourceTablesForGenerate;
+		
+	} else {
+		tableSchemaCollectionTemporal=SourceDataBase.Tables;
+	}
+	
+	for (int x = 0; x < tableSchemaCollectionTemporal.Count; x++) {
+		if(SchemaSoloSusTablas) {
+			if(!GetSchemaTableFromProperties(tableSchemaCollectionTemporal[x],Schema).ToLower().Equals(Schema.ToLower())) {
+				continue;
+			}	
+		}
+		
+		if(GeneracionReportes) {
+			if(!GetEsReporteFromPropertiesC(tableSchemaCollectionTemporal[x])) {
+				continue;	
+			}
+		}
+		
+		SourceDatabaseTables.Add(tableSchemaCollectionTemporal[x]);
+	}
+	
+	if(GeneracionPorColumnas) {
+		columnSchemaCollectionTemporal=SourceColumnasForGenerate;
+		
+	} else if(GeneracionPorTablas) {
+		foreach(TableSchema tableSchema in SourceDatabaseTables) {
+			foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+				//if((!EsLoteNombreContains && columnSchema.Name.Equals(LoteNombreTablaColumna)) || (EsLoteNombreContains && columnSchema.Name.Contains(LoteNombreTablaColumna))  || LoteNombreTablaColumna.Equals("TODAS")|| LoteNombreTablaColumna.Equals("NONE")) {
+					columnSchemaCollectionTemporal.Add(columnSchema);
+				//}
+			}
+		}
+		
+	} else {
+			foreach(TableSchema tableSchema in SourceDataBase.Tables) {
+				if(SchemaSoloSusTablas) {
+					if(!GetSchemaTableFromProperties(tableSchema,Schema).ToLower().Equals(Schema.ToLower())) {
+						continue;
+					}	
+				}
+				
+				if(GeneracionReportes) {
+					if(!GetEsReporteFromPropertiesC(tableSchema)) {
+						continue;	
+					}
+				}
+				
+				//columnSchemaCollectionTemporal.AddRange(tableSchema.Columns);
+				
+				foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+					//if((!EsLoteNombreContains && columnSchema.Name.Equals(LoteNombreTablaColumna)) || (EsLoteNombreContains && columnSchema.Name.Contains(LoteNombreTablaColumna))|| LoteNombreTablaColumna.Equals("TODAS")|| LoteNombreTablaColumna.Equals("NONE")) {
+						columnSchemaCollectionTemporal.Add(columnSchema);
+					//}
+				}
+			}
+	}
+	
+	
+	SourceDatabaseColumnas.AddRange(columnSchemaCollectionTemporal);
+	
+}
+
+</script>
+<%InicializarVariablesGlobales();%>
+<%InicializarVariablesEmpresa();%>
+<%//=GetCreateLogicTodosForAllTables()%>
+
+<%//=ExtraCodeForAllTablesSimple()%>
+
+
+USE <%= SourceDataBase.Name%>;
+
+<%if(ValidarTipoGeneracion()){%>
+
+<%if(EsLoteTablas) {%>
+<%=GetLoteDescriptionTables()%>
+<%} %>
+
+<%if(EsLoteColumnas) {%>
+<%=GetLoteDescriptionColumnas()%>
+<%} %>
+
+
+<%if(EsTablaDescripcion) {%>
+<%=GetTablaActualDescription()%>
+<%} %>
+
+<%if(EsColumnaDescripcion) {%>
+<%=GetColumnaActualDescription()%>
+<%} %>
+
+<%//if(EsCreateTable) {%>
+<%//=GetCreateTables()%>
+<%//} %>
+
+
+<%if(EsParaAutoAuditoria) {%>
+
+<%}%>
+
+<%if(EsCorreccion) {%>
+
+<%}%>
+
+<%}%>
+
+<script runat="template">
+//PARAMETROS PARA REEMPLAZAR TODOS DESCRIPTION COLUMNAS
+/*************DETALLE GENERACION*********/
+/*
+* TIPO: LOTE POR COLUMNAS
+* SUB-TIPO: REEMPLAZO DESCRIPTION
+* REEMPLAZO BUSCAR: WEBTITULO=Id
+* REEMPLAZO FINAL: WEBTITULO=Id123
+*/
+/*************DETALLE GENERACION*********/
+</script>

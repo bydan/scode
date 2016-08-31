@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=192.168.1.4;Initial Catalog=Garantia;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Php\Me\Global\GenerateDataBase.cst">
+      <property name="GeneracionPorTablas">False</property>
+      <property name="TiposGeneracion">GX</property>
+      <property name="Ip">127.0.0.1</property>
+      <property name="Puerto">80</property>
+      <property name="Package">contrato</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">True</property>
+      <property name="GenerarFilesAdditionalCakeEjemplos">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConFuncionesSqlNativas">False</property>
+      <property name="ConValidaciones">True</property>
+      <property name="ConJSInclude">False</property>
+      <property name="CodigoEmpresa">CCFA-FAE</property>
+      <property name="NombreEmpresa">FAE</property>
+      <property name="Empresa">ec/mil/fae</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">True</property>
+      <property name="PackageSeguridad">seguridad</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConNamespaces">True</property>
+      <property name="Aplicacion">SISTEMA DE ADMINISTRACION DE CONTRATOS</property>
+      <property name="ConFaces">False</property>
+      <property name="ConRichFaces">True</property>
+      <property name="ConSwing">False</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">contrato</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">contrato</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">contrato</property>
+      <property name="PhpVersion">5.2.17</property>
+      <property name="PackageFrameworkGlobal">seguridad</property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Autoridad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxCiudad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxPaisContrato</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxPerfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxPerfilUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxProvincia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuxUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Cargo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Clausula</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Contacto</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Contratista</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Contrato</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ContratoClausula</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Documento</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Juicio</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>JuicioAccionDelito</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>JuicioActividad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>JuicioJudicatura</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>JuicioTipoActividad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>ObjetoGarantia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Ramo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>RenovacionGarantia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoClausula</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoContrato</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoDocumento</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>TipoGarantia</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="OutputDirectory">C:\o\MePhp\CCFA-FAE\contrato\</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="TablasIgnorar" />
+    </propertySet>
+  </propertySets>
+</codeSmith>

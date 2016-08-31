@@ -1,0 +1,1 @@
+xcopy "%cd%\Sige-Client" "%temp%\tame\Sige-Client" /e /w /i

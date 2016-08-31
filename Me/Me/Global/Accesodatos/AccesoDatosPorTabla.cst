@@ -1,0 +1,2484 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Import NameSpace="Me" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Collections.Generic" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoJunction" Type="SchemaExplorer.TableSchemaCollection" Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoDetalle" Type="SchemaExplorer.TableSchemaCollection" 	Category="Context"%>
+<%@ Property Name="TablasBaseForReporte" Type="SchemaExplorer.TableSchemaCollection" Category="Context" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="GenerarCompuestos" Type="System.Boolean" Default="false" Category="Context" Description="Nombre del Programdor" %>
+<%@ Property Name="TiposGeneracion" Type="System.String" Default=" " Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="GenerarMe" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<script runat="template">
+public String GetEntityCamposForeignKey() {
+	String strExtendClase=string.Empty;
+	
+	for (int i = 0; i < TablaBase.Columns.Count; i++){ 
+		if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){
+			continue; 
+		}
+		if(!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i])){
+			continue; 
+		}
+		
+		strExtendClase+=GetSetEntityColumnaC(TablaBase.Columns[i]);
+	} 
+	
+	if(!blnTieneWebCombo) {
+		ColumnSchema columnSchemaCombo=GetColumnDescripcionComboComboC(TablaBase);
+		
+		if(columnSchemaCombo!=null) {
+			strExtendClase+=GetSetEntityColumnaC(columnSchemaCombo);
+		}
+	}
+	
+	return strExtendClase;
+}
+
+public String GetQueryCamposForeignKey() {
+	String strExtendClase=string.Empty;
+	//bool tiene_combo=GetTieneComboColumnFromPropertiesC(TablaBase);
+	
+	int intNumeroColumnasWebCombo=GetNumeroDeColumnasWebComboNormalC(TablaBase);//GetNumeroDeColumnasWebComboC(TablaBase);
+	
+	for (int i = 0,j=0; i < TablaBase.Columns.Count; i++) { 
+		if(!GetTieneComboColumnFromPropertiesC(TablaBase.Columns[i]) && !(TablaBase.Columns[i].Name.Equals(strId) || TablaBase.Columns[i].Name.Equals(strVersionRow))){
+			continue; 
+		} else  {
+			j++;
+		}
+		
+		strExtendClase+=GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema);
+		
+		if ((j < (intNumeroColumnasWebCombo+2))) { 
+			strExtendClase+=","; 
+		} 
+	}
+	
+	if(!blnTieneWebCombo) {
+		ColumnSchema columnSchemaCombo=GetColumnDescripcionComboComboC(TablaBase);
+		
+		if(columnSchemaCombo!=null) {
+			strExtendClase+=","; 
+			strExtendClase+=GetSqlParameterSelectC(columnSchemaCombo,TablaBase,Schema);
+		}
+	}
+	
+	return strExtendClase;
+}
+
+public String GetExtendClase() {
+	String strExtendClase=string.Empty;
+	
+	//<%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional,DataAccessHelper<<%=GetNombreClase(TablaBase.ToString())%>>
+	
+	strExtendClase=GetNombreClase(TablaBase.ToString())+strPrefijoDataAccess+"Additional";
+	
+	if(!GetConAdditionalTableFromPropertiesC(TablaBase)) {
+		strExtendClase="DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+"<"+GetNombreClase(TablaBase.ToString())+">";
+	}
+	
+	return strExtendClase;
+}
+
+public String GetFuncionesTablasClasesReportes() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public ";
+				strInitFuncion+="";
+			String strInit2Funcion="";//" get"+GetPrefijoRelacionC();
+				strInit2Funcion+="";
+			String strEndFuncion="";//"\r\n\t} catch(Exception e) {\r\n\t;\r\n}\r\n\t}";
+				strEndFuncion+="";
+			for(int i=0;i<TablasBaseForReporte.Count;i++)
+			{
+					strFuncion+="\r\n\r\n\tpublic  "+strTypeCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+"> getEntities"+GetNombreClase(TablasBaseForReporte[i].ToString())+"(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {";
+					strFuncion+="\r\n\t\t"+strTypeCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+"> entities = new  "+strTypeNewCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">"+strTypeNewCollectionEnd+";";
+					strFuncion+="\r\n\t\t"+GetNombreClase(TablasBaseForReporte[i].ToString())+" entity = new "+GetNombreClase(TablasBaseForReporte[i].ToString())+"();";		  
+					strFuncion+="\r\n\t\tString sQuery=\"\";";
+				
+					strFuncion+="\r\n\r\n\t\ttry { ";    	   
+										
+					strFuncion+="\r\n\r\n\t\t\tsQuery=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntities(entity,queryWhereSelectParameters,sQuerySelect);";
+									
+					strFuncion+="\r\n\r\n\t\t\tQuery query =connexion.getEntityManager().createQuery (sQuery);";
+						
+					strFuncion+="\r\n\r\n\t\t\tDataAccessHelper.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);";
+						
+					strFuncion+="\r\n\r\n\t\t\tDataAccessHelper.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);";
+						
+					strFuncion+="\r\n\r\n\t\t\tif(!queryWhereSelectParameters.getIsGetGeneralObjects()) {";
+					strFuncion+="\r\n\t\t\t\tentities= new "+strTypeNewCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">((List<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">) query.getResultList());";
+										
+					strFuncion+="\r\n\r\n\t\t\t\t//super.SetGeneralEntitiesIsNewFalseIsChangedFalse(entities);";
+							
+					strFuncion+="\r\n\r\n\t\t\t\t//"+/*GetOriginalCommentTableFromProperties(TablasBaseForReporte[i])+*/"this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);";
+						
+					strFuncion+="\r\n\r\n\t\t\t}  else {";
+					strFuncion+="\r\n\t\t\t\tthis.entitiesObject=query.getResultList();";	
+					strFuncion+="\r\n\t\t\t}";
+						
+					strFuncion+="\r\n\r\n\t\t\t//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE";
+					strFuncion+="\r\n\t\t\t//"+GetNombreClase(TablasBaseForReporte[i].ToString())+strClaseConstantesFunciones+".quitarEspacios"+GetNombreClase(TablasBaseForReporte[i].ToString())+"s(entities);";
+							
+					strFuncion+="\r\n\r\n\t\t} catch(Exception e) {";
+					strFuncion+="\r\n\t\t\tthrow e;";
+					strFuncion+="\r\n\t\t}";
+					
+					strFuncion+="\r\n\r\n\t\treturn entities;";	
+					strFuncion+="\r\n\t}";
+			
+				strFuncion+="\r\n\r\n\tpublic  "+strTypeCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+"> getEntitiesNative"+GetNombreClase(TablasBaseForReporte[i].ToString())+"(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {";
+						strFuncion+="\r\n\t\t"+strTypeCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+"> entities = new  "+strTypeNewCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">"+strTypeNewCollectionEnd+";";
+						strFuncion+="\r\n\t\t"+GetNombreClase(TablasBaseForReporte[i].ToString())+" entity = new "+GetNombreClase(TablasBaseForReporte[i].ToString())+"();";		  
+						strFuncion+="\r\n\t\tString sQuery=\"\";";
+					
+						strFuncion+="\r\n\r\n\t\ttry {";     	   
+											
+							strFuncion+="\r\n\r\n\t\t\tsQuery=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntities(entity,queryWhereSelectParameters,sQuerySelect);";
+							
+							strFuncion+="\r\n\r\n\t\t\tQuery query =null;";
+							
+							strFuncion+="\r\n\r\n\t\t\tif(!queryWhereSelectParameters.getIsGetGeneralObjects()) {";
+								strFuncion+="\r\n\t\t\t\tquery =connexion.getEntityManager().createNativeQuery (sQuery,"+GetNombreClaseC(TablasBaseForReporte[i].ToString())+".class);";
+							strFuncion+="\r\n\t\t\t}  else {";
+								strFuncion+="\r\n\t\t\t\tquery =connexion.getEntityManager().createNativeQuery (sQuery);";
+							strFuncion+="\r\n\t\t\t}";
+							
+							strFuncion+="\r\n\r\n\t\t\tDataAccessHelper.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);";
+							
+							strFuncion+="\r\n\r\n\t\t\tDataAccessHelper.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);";
+							
+							strFuncion+="\r\n\r\n\t\t\tif(!queryWhereSelectParameters.getIsGetGeneralObjects()) {";
+								strFuncion+="\r\n\t\t\t\tentities= new "+strTypeNewCollection+"<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">((List<"+GetNombreClase(TablasBaseForReporte[i].ToString())+">) query.getResultList());";
+								
+								strFuncion+="\r\n\r\n\t\t\t\t//super.SetGeneralEntitiesIsNewFalseIsChangedFalse(entities);";
+								
+								strFuncion+="\r\n\r\n\t\t\t\t//"+/*GetOriginalCommentTableFromProperties(TablasBaseForReporte[i])+*/"this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);";
+							
+							strFuncion+="\r\n\r\n\t\t\t}  else {";
+								strFuncion+="\r\n\t\t\t\tthis.entitiesObject=query.getResultList();";	
+							strFuncion+="\r\n\t\t\t}";
+							
+							strFuncion+="\r\n\r\n\t\t\t//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE";
+							strFuncion+="\r\n\t\t\t//"+GetNombreClase(TablasBaseForReporte[i].ToString())+strClaseConstantesFunciones+".quitarEspacios"+GetNombreClase(TablasBaseForReporte[i].ToString())+"s(entities);";
+								
+						strFuncion+="\r\n\r\n\t\t} catch(Exception e) {";
+							strFuncion+="\r\n\t\t\tthrow e;";
+						strFuncion+="\r\n\t\t}";
+						
+						strFuncion+="\r\n\r\n\t\treturn entities;";	
+					strFuncion+="\r\n\t}";							 			
+			}
+								
+			return strFuncion; 
+		}
+		
+public bool TieneCompuesto() 
+{
+	bool blnTieneCompuesto=false;
+	
+		if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+		{
+			blnTieneCompuesto=true;
+		}
+	
+	return blnTieneCompuesto;
+}
+		
+public String GetFuncionesTablasClasesRelacionadasCompuestos() 
+		{
+			String strFuncion=string.Empty;
+			String strBodyFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t\t\tentities.add(entity);\r\n\r\n\t\t\t}\r\n\r\n\t\t\tstatement.close();\r\n\t\t} catch(SQLException e) {";
+			strEndFuncion+="\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n\r\n\t\treturn entities;\r\n\t}";
+			
+			String strMiddleFuncion="";
+			String strMiddle2Funcion="";
+			String strMiddle3Funcion="";
+			strMiddleFuncion+="\r\n\r\n\t\tString sQuery;\r\n\r\n\t\ttry {\r\n\t\t\tStatement statement = connexion.getConnection().createStatement();";
+			
+			
+			//strMiddleFuncion+="\r\n\t\t\tsQuery=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntities(entity,queryWhereSelectParameters);";
+			
+			strMiddle3Funcion+="\r\n\t\t\tif(Constantes2.ISDEVELOPING_SQL)  {";
+            strMiddle3Funcion+="\r\n\t\t\t\tFunciones2.mostrarMensajeDeveloping(sQuery);";
+           	strMiddle3Funcion+="\r\n\t\t\t }";
+			
+			strMiddle3Funcion+="\r\n\r\n\t\t\tResultSet resultSet = statement.executeQuery(sQuery);";
+			strMiddle3Funcion+="\r\n\r\n\t\t\twhile (resultSet.next()) {";
+			
+			if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+			{
+				
+				for(int i=0;i<TablasBaseCompuestoJunction.Count;i++)
+				{
+					strMiddleFuncion="\r\n\r\n\t\tString sQuery;\r\n\r\n\t\ttry\r\n\t\t{\r\n\t\t\tStatement statement = connexion.getConnection().createStatement();";
+					strMiddleFuncion+="\r\n\r\n\t\t\tString strSqlSoloWhereBusqueda=\"\";";
+					strMiddleFuncion+="\r\n\r\n\t\t\tif(queryWhereSelectParameters!=queryWhereSelectParameters2) {";
+					strMiddleFuncion+="\r\n\t\t\t\tstrSqlSoloWhereBusqueda=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntitiesCompuesto(queryWhereSelectParameters).replace(DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntitiesCompuesto(queryWhereSelectParameters2).trim(), \"\");";			
+					strMiddleFuncion+="\r\n\t\t\t}";
+					strMiddleFuncion+="\r\n\r\n\t\t\tsQuery=\"nselect * from (\";";		
+					strMiddleFuncion+="\r\n\t\t\tsQuery+="+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto.QuerySelect;";				
+					strMiddleFuncion+="\r\n\t\t\tsQuery+=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntitiesCompuesto(queryWhereSelectParameters);";				
+					strMiddleFuncion+="\r\n\t\t\tsQuery+=\" union \";";				
+					strMiddleFuncion+="\r\n\t\t\tsQuery+="+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto.QuerySelectNoSeleccionados+\"\"+"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"Compuesto.QuerySelecttIdSeleccionados;";	
+					strMiddleFuncion+="\r\n\t\t\tsQuery+=DataAccessHelper"+GetNewCodeTableFromPropertiesC(TablaBase)+".buildSqlGeneralGetEntitiesCompuesto(queryWhereSelectParameters2);";							
+					strMiddleFuncion+="\r\n\t\t\tsQuery+=\")";
+					strMiddleFuncion+="\"+strSqlSoloWhereBusqueda+\")as T  \"+queryWhereSelectParameters.getFinalQuery();";	
+					
+						
+					strInitFuncion="\r\n\tpublic "+strTypeCollection+"<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"> getEntities"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters,QueryWhereSelectParameters queryWhereSelectParameters2) throws SQLException,Exception";
+					strInitFuncion+=" {";
+					strInitFuncion+="\r\n\t\t"+strTypeCollection+"<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"> entities = new  "+strTypeNewCollection+"<"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+">"+strTypeNewCollectionEnd+";";		
+					strInitFuncion+="\r\n\t\t"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+" entity = new "+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();";
+					
+					strBodyFuncion="\r\n\t\t\t\tentity = new "+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();";
+								
+					strBodyFuncion+="\r\n\r\n\t\t\t\tDataAccessHelper.getGeneralEntity(\"\",entity.get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(),resultSet);";
+					strBodyFuncion+="\r\n\t\t\t\t"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"DataAccess.getEntity"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(\"\", entity.get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"(), resultSet);";
+								
+					strBodyFuncion+="\r\n\r\n\t\t\t\tDataAccessHelper.getGeneralEntity("+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess.TABLENAME,entity.get"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"(),resultSet);";
+					strBodyFuncion+="\r\n\t\t\t\t"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess.getEntity"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"("+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"DataAccess.TABLENAME, entity.get"+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+"(), resultSet);";
+					
+					strMiddle2Funcion="\r\n\t\t\tsQuery=sQuery.replace(\"isActive=\","+"Constantes.SCHEMA+\".\"+"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"DataAccess.TABLENAME+\".isActive=\");";
+					strFuncion+=strInitFuncion+strMiddleFuncion+strMiddle2Funcion+strMiddle3Funcion+strBodyFuncion+strEndFuncion;								
+				}						
+				
+			
+			}
+			
+			return strFuncion; 
+		}
+		
+public String GetFuncionesTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public ";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t} catch(Exception e) {\r\n\t;\r\n}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			TableSchema tableSchemaFk=null;
+			String strCommentColor=string.Empty;
+			
+			if(!blnNoStandardTableFromProperties) {												
+				foreach(ColumnSchema columnSchema in TablaBase.Columns)
+				{
+					strInitFuncion="\tpublic ";
+					strEndFuncion="\r\n} catch(Exception e) {\r\n\t;\r\n}\r\n\t}";
+					
+					if(columnSchema.IsForeignKeyMember)
+					{
+						strCommentColor=string.Empty;
+						
+						if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema),columnSchema))
+						{
+						continue;
+						}
+						
+						tableSchemaFk=GetTableSchemaFromColumnForeignKey(columnSchema);
+						
+						if(GetConColorTableFromPropertiesC(tableSchemaFk)) {
+							strCommentColor="//";
+						}
+						
+						strInitFuncion+=GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+strInit2Funcion;
+							
+						strTablaClaseRelacionada=GetNombreClaseC("dbo."+GetNombreCompletoClaseRelacionadaFromColumn(columnSchema))+ "(Connexion connexion,"+GetNombreClaseC("dbo."+TablaBase.Name)+ " rel"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")throws SQLException,Exception {\r\n\r\n\t\t"+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" "+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"= new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"();\r\n\r\n\t\ttry {";
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess "+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess=new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess();\r\n";
+						strTablaClaseRelacionada+="\r\n\t\t\t"+strCommentColor+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess.setIsForForeingKeyData(this.isForForeingsKeysDataRelationships);";
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess.setConnexionType(this.connexionType);";
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess.setParameterDbType(this.parameterDbType);";
+						
+						if(blnConFuncionalidadLogicVersion1) {
+							strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess.setEntityManagerFactory(this.entityManagerFactory);";
+						}
+						
+						strTablaClaseRelacionada+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"="+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"DataAccess.getEntity(connexion,rel"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+GetNombreCompletoColumnaClaseC(columnSchema)+ "());";
+						
+						//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+						strEndFuncion="\r\n\t\t} catch(SQLException e) {\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n"+"\r\n\treturn "+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";"+ "\r\n\r\n\t}";
+						strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+				
+					}
+					
+				}
+				
+			} else {
+				ArrayList arrayListForeignKeys =GetArrayListForeignKeys(TablaBase);
+				MemberColumnSchemaCollection memberColumnSchemaCollectionFK=new MemberColumnSchemaCollection();
+				String strCallVariablesFK="";
+				
+				foreach(TableSchema tableSchemaForeignKey in arrayListForeignKeys) {
+					strInitFuncion="\tpublic ";
+					strEndFuncion="\r\n} catch(Exception e) {\r\n\t;\r\n}\r\n\t}";
+					
+					strInitFuncion+=GetNombreClaseC(tableSchemaForeignKey.ToString())+strInit2Funcion;
+							
+					strTablaClaseRelacionada=GetNombreClaseC(tableSchemaForeignKey.ToString())+ "(Connexion connexion,"+GetNombreClaseC("dbo."+TablaBase.Name)+ " rel"+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")throws SQLException,Exception {\r\n\r\n\t\t"+GetNombreClaseC(tableSchemaForeignKey.ToString())+" "+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+"= new "+GetNombreClaseC(tableSchemaForeignKey.ToString())+"();\r\n\r\n\t\ttry {";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseC(tableSchemaForeignKey.ToString())+"DataAccess "+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+"DataAccess=new "+GetNombreClaseC(tableSchemaForeignKey.ToString())+"DataAccess();\r\n";
+					//strTablaClaseRelacionada+="\r\n\r\n\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n";
+					
+					memberColumnSchemaCollectionFK=GetMemberColumnSchemaForeignKeysC(TablaBase,tableSchemaForeignKey);		
+					//memberColumnSchemaCollectionFK=GetMemberColumnSchemaForeignKeysC(TablaBase,tableSchemaForeignKey);
+					strCallVariablesFK=GetColumnsForeignKeysCallDataAccessC(TablaBase,memberColumnSchemaCollectionFK);
+					
+					strTablaClaseRelacionada+="\t\t\t"+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+"="+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+"DataAccess.getEntity(connexion"+strCallVariablesFK+/*GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+GetNombreCompletoColumnaClaseC(columnSchema)+ */");";
+						
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+					strEndFuncion="\r\n\t\t} catch(SQLException e) {\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n"+"\r\n\treturn "+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+";"+ "\r\n\r\n\t}";
+					strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";							
+				}
+			}			
+			
+			return strFuncion; 
+		}
+
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public ";
+			String strInit2Funcion=" get"+GetPrefijoRelacionC();
+			String strAuxiliar="";
+			
+			String strEndFuncion="\r\n} catch(Exception e) {\r\n;\r\n}\r\n}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			ArrayList arrayListRelaciones=new ArrayList();
+			String strNombreAdicional="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				//NO FUNCIONA EN DESORDEN RELACIONES
+				/*
+				if(ExisteTablasClasesYaRelacionadas(arrayListRelaciones,collectionInfo.PrimaryTable)) {
+					strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+					//continue;
+				} else {
+					strNombreAdicional="";
+					arrayListRelaciones.Add(collectionInfo.PrimaryTable);
+				}
+				*/
+				
+				strInitFuncion="\tpublic ";
+				strEndFuncion="\r\n\t} catch(Exception e) {\r\n\t;\r\n}\r\n\t}";
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strInitFuncion+=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+strInit2Funcion;
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ "(Connexion connexion,"+GetNombreClaseC("dbo."+TablaBase.Name)+ " "+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")throws SQLException,Exception {\r\n\r\n\t\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"= new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"();\r\n\r\n\t\ttry {\r\n";
+					//ANTES ESTABA CAMBIO PARA PARAMETRIZAR NO STANDARD FINAL QUERY
+					//strTablaClaseRelacionada+="\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(\""+strHqlJoinRelacionnes+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(TablaBase.ToString())+ " WHERE "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(TablaBase.ToString())+"."+strId+"=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"()) );\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\tString sQuery=\"\";";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tif(this.connexionType.equals(ConnexionType.JDBC32)) {";
+					//strAuxiliar="\" INNER JOIN \"+"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+" ON \"+"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"."+strId+"_"+GetNombreTableFromProperties(TablaBase)+"=\"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id WHERE \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"());";
+					strAuxiliar="\" INNER JOIN \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+" ON \"+"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"."+strId+/*"_"+GetNombreTableFromProperties(TablaBase)+*/"=\"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id WHERE \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"());";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+strAuxiliar;
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t} else {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();";
+					strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(sQuery);";
+					//strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery"+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setConnexionType(this.connexionType);";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setParameterDbType(this.parameterDbType);";
+					
+					if(blnConFuncionalidadLogicVersion1) {
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setEntityManagerFactory(this.entityManagerFactory);";
+					}
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.getEntity(connexion,queryWhereSelectParameters);";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+					strEndFuncion="\r\n\r\n\t\t} catch(SQLException e) {\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n"+"\r\n\treturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";"+ "\r\n\r\n\t}";
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{	
+					strInitFuncion+=""+strTypeCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+strInit2Funcion;
+					/*
+					foreach(TableKeySchema tableKeySchema in TablaBase.ForeignKeys) {
+						if(!ExisteTablaEnListaC(tableKeySchema.ForeignKeyMemberColumns.PrimaryKeyTable,arrayListForeignKeys)) {
+							arrayListForeignKeys.Add(tableKeySchema.PrimaryKeyTable);
+						}
+					}
+					*/
+					
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s(Connexion connexion,"+GetNombreClaseC("dbo."+TablaBase.Name)+" "+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")throws SQLException,Exception {\r\n\r\n\t\t"+""+strTypeCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional.ToLower()+ "s= new "+ ""+strTypeNewCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+strTypeNewCollectionEnd+";\r\n\r\n\t\ttry {\r\n";
+					//ANTES ESTABA CAMBIO PARA PARAMETRIZAR NO STANDARD FINAL QUERY
+					//strTablaClaseRelacionada+="\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(\""+strHqlJoinRelacionnes+""+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(TablaBase.ToString())+strNombreAdicional+ " WHERE "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(TablaBase.ToString())+strNombreAdicional+"."+strId+"=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"()));\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\tString sQuery=\"\";";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tif(this.connexionType.equals(ConnexionType.JDBC32)) {";
+					//Trace.WriteLine(collectionInfo.SecondaryTable);
+					strAuxiliar="\" INNER JOIN \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+" ON \"+"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"."+strId+"_"+GetNombreTableFromProperties(TablaBase)+"=\"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id WHERE \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"());";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+strAuxiliar;
+					strTablaClaseRelacionada+="\r\n\t\t\t} else {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();";
+					strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(sQuery);";
+					//strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery"+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setConnexionType(this.connexionType);";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setParameterDbType(this.parameterDbType);";
+					
+					if(blnConFuncionalidadLogicVersion1) {
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setEntityManagerFactory(this.entityManagerFactory);";
+					}
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional.ToLower()+"s="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.getEntities(connexion,queryWhereSelectParameters);";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+					strEndFuncion="\r\n\r\n\t\t} catch(SQLException e) {\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n"+"\r\n\treturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional.ToLower()+"s;"+"\r\n\r\n\t}";
+			
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					/*System.Windows.Forms.MessageBox.Show(collectionInfo.PrimaryTable);
+					System.Windows.Forms.MessageBox.Show(collectionInfo.SecondaryTable);
+					System.Windows.Forms.MessageBox.Show(collectionInfo.JunctionTableSchema.Name);
+					*/
+					strInitFuncion+=""+strTypeCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+strInit2Funcion;
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s(Connexion connexion,"+GetNombreClaseC("dbo."+TablaBase.Name)+" "+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+")throws SQLException,Exception {\r\n\r\n\t\t"+""+strTypeCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s= new "+ ""+strTypeNewCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+strTypeNewCollectionEnd+";\r\n\r\n\t\ttry {\r\n";
+					//strTablaClaseRelacionada+="\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(\""+strHqlJoinRelacionnes+""+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+" ON "+Schema+"."+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+".id"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema))+"="+Schema+"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+".id INNER JOIN "+Schema+"."+GetNombreTableFromProperties(TablaBase)+" ON "+Schema+"."+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+".id"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase))+"="+Schema+"."+GetNombreTableFromProperties(TablaBase)+".id WHERE "+Schema+"."+GetNombreTableFromProperties(TablaBase)+"."+strId+"=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"()));\r\n";
+					//ANTES ESTABA CAMBIO PARA PARAMETRIZAR NO STANDARD FINAL QUERY
+					//strTablaClaseRelacionada+="\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(\""+strHqlJoinRelacionnes+""+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo"+collectionInfo.JunctionTableSchema)+ "s table2 "+strHqlJoinRelacionnes+" table2."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC(TablaBase.ToString())+ " table3 WHERE table3.id=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"()));\r\n";					
+					strTablaClaseRelacionada+="\r\n\t\t\tString sQuery=\"\";";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tif(this.connexionType.equals(ConnexionType.JDBC32)) {";
+					strAuxiliar="\" INNER JOIN \"+"+GetNombreClaseC("dbo."+collectionInfo.JunctionTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+" ON \"+"+GetNombreClaseC("dbo."+collectionInfo.JunctionTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+"."+strId+"_"+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+"=\"+"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.SecondaryTableSchema)+".id INNER JOIN \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+" ON \"+"+GetNombreClaseC("dbo."+collectionInfo.JunctionTable)+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(collectionInfo.JunctionTableSchema)+".id"+"_"+GetNombreClaseC("dbo."+GetNombreTableFromProperties(TablaBase))+"=\"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id WHERE \"+"+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SCHEMA+\"."+GetNombreTableFromProperties(TablaBase)+".id=\"+String.valueOf("+GetNombreClaseObjetoC("dbo."+TablaBase.Name)+".get"+strIdGetSet+"());";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+strAuxiliar;
+					strTablaClaseRelacionada+="\r\n\t\t\t} else {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsQuery="+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\tQueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters();";
+					strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery(sQuery);";
+					//strTablaClaseRelacionada+="\r\n\t\t\tqueryWhereSelectParameters.setFinalQuery"+GetFinalQueryRelacionesC(TablaBase,collectionInfo,strNombreAdicional);
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"DataAccess();\r\n";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setConnexionType(this.connexionType);";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setParameterDbType(this.parameterDbType);";
+					
+					if(blnConFuncionalidadLogicVersion1) {
+						strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.setEntityManagerFactory(this.entityManagerFactory);";
+					}
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"DataAccess.getEntities(connexion,queryWhereSelectParameters);";
+					
+					//strTablaClaseRelacionada+="\r\nreturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+					strEndFuncion="\r\n\r\n\t\t} catch(SQLException e) {\r\n\t\t\tthrow e;\r\n\t\t} catch(Exception e) {\r\n\t\t\tthrow e;\r\n\t\t}\r\n"+"\r\n\treturn "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;"+"\r\n\r\n\t}";
+			
+				}
+				
+			strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public string GetSetEntityColumnaAnterior(ColumnSchema column)
+{				
+	String strSetEntity=string.Empty;
+	
+	if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)||column.Name.Equals(strIsExpired)||column.Name.Equals(strVersionRow))
+	{
+		return strSetEntity;
+	}
+	String strEntityInit="entity.set";
+	String strEntityMiddle="(resultSet.get";
+	String strEntityFinal="\"));";
+	//entity.setNombre(resultSet.getString("nombre"));	
+    strSetEntity=strEntityInit+GetNombreCompletoColumnaClaseC(column)+strEntityMiddle+GetTipoColumnaClaseGetResulsetC(column)+"(strPrefijo+\""+GetNombreColumnFromProperties(column)/*column.Name*/+strEntityFinal;
+	
+	if(GetEsNullColumnFromPropertiesC(column)) {
+		strSetEntity+="if(resultSet.wasNull()) {"+strEntityInit+GetNombreCompletoColumnaClaseC(column)+"(null); }";
+	}
+	
+	return strSetEntity;
+}
+
+public static string GetNombreClase(string strTablaBase)
+{				
+		return GetNombreClaseC(strTablaBase);
+}
+
+Stopwatch stopWatch = new Stopwatch();
+	
+public void IniciarTiempo() {
+	IniciarTiempoC(stopWatch);
+	/*
+	if(IS_DEBUG) {
+		stopWatch = new Stopwatch();
+		stopWatch.Start();
+	}
+	*/
+}	
+
+public void DetenerTiempo(PaquetesGenerar paqueteGenerar,String strSubPaquete) {
+	DetenerTiempoC(stopWatch,paqueteGenerar,strSubPaquete);
+	
+	/*
+	if(IS_DEBUG) {
+		stopWatch.Stop();	
+		ImprimirTiempo(paqueteGenerar,strSubPaquete);
+	}
+	*/
+}
+
+</script>
+<%//InicializarVariablesPorTabla(TablaBase);%>
+<%=GetByDanLicence()%>
+package <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageDataAccess%>;
+
+import java.util.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.sql.ResultSetMetaData;
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+
+import java.io.File;
+import java.lang.reflect.Field;
+
+<%if(blnConFuncionalidadLogicVersion1) {%>
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+//import org.apache.log4j.Logger;
+<%} else {%>
+//COMODIN
+import javax.persistence.EntityManagerFactory;
+<%}%>
+
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.GeneralEntity;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.DatoGeneral;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.DatoGeneralMinimo;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.DatoGeneralMaximo;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.Classe;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.DatosCliente;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.QueryWhereSelectParameters;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.ParameterSelectionGeneral;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageDataAccess%>.ConstantesSql;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageDataAccess%>.DataAccessHelper;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageDataAccess%>.DataAccessHelperBase;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageDataAccess%>.DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>;
+<%if(TieneCompuesto()){%>//import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageDataAccess%>.DataAccessHelper.DataAccessHelper;<%}%>
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageUtils%>.*;
+
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>.*;<%//=GetNombreClase(TablaBase.ToString())%><%=GetEsImportPaqueteReporteC(TablaBase,"import "+Empresa+"."+ Package+"."+strPackageBusiness+"."+strPackageEntities)%>
+import <%=Empresa%>.<%=Package%>.<%= Module%><%=strPackageUtils%>.*;//<%=GetNombreClaseC(TablaBase.ToString())%><%=strClaseConstantesFunciones%>;
+
+<%=GetEsquemasImportClasesRelacionadas("import "+Empresa+"."+Package,strPackageBusiness+"."+strPackageEntities+GetEsPaqueteReporteC(TablaBase)+".*;")%>
+
+<%=GetEsquemasImportClasesRelacionadas("import "+Empresa+"."+Package,strPackageBusiness+"."+strPackageDataAccess+".*;")%>
+
+<%=GetEsquemasImportClasesRelacionadas("import "+Empresa+"."+Package,strPackageUtils+".*;")%>
+
+<%=strPackageEntitiesExtra%>
+<%=strPackageDataAccessExtra%>
+
+@SuppressWarnings("unused")
+final public class <%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%> extends  <%=GetExtendClase()%>{ //<%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional,DataAccessHelper<<%=GetNombreClase(TablaBase.ToString())%>>
+	//static Logger logger = Logger.getLogger(<%=GetNombreClase(TablaBase.ToString())%>DataAccess.class);
+	
+	public static String SCHEMA="<%=GetSchemaTableFromProperties(TablaBase,Schema)%>";	
+	public static String TABLENAME="<%=GetNombreTablaC(TablaBase)%>";
+	
+	//POSTGRES
+	public static String QUERYINSERT="insert into "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME+"(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterInsertPostgresC(TablaBase.Columns[i],false) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>)values(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterInsertPostgresC(TablaBase.Columns[i],true) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>)";
+	public static String QUERYUPDATE="update "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME+" set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterUpdateC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> where id=? AND version_row=?";
+	public static String QUERYDELETE="delete from "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME+" where id=?";
+	public static String QUERYSELECT="select <%=GetNombreClaseObjetoC(TablaBase.ToString())%> from "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SPERSISTENCENAME+" <%=GetNombreClaseObjetoC(TablaBase.ToString())%>";
+	public static String QUERYSELECTNATIVE="select <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterSelectC(TablaBase.Columns[i],TablaBase,Schema) %><% if (i < TablaBase.Columns.Count - 1) { %>,<% } %><% } %> from "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME;//+" as "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME;
+	public static String QUERYSELECTNATIVEFORFOREINGKEY="select <%=GetQueryCamposForeignKey()%> from "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME;//+" as "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME;
+	
+	//MYSQL
+	public static String QUERYINSERT_MYSQL="insert into "+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.SCHEMA+"."+<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.TABLENAME+" set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>";
+	
+	public static String STOREPROCEDUREINSERT="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_INSERT(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterInsertC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %>,?)";
+	public static String STOREPROCEDUREUPDATE="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_UPDATE(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterUpdateC(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %> ,? ,?,?)";
+	public static String STOREPROCEDUREDELETE="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_DELETE(?,?)";
+	public static String STOREPROCEDURESELECT="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_SELECT(?,?)";
+	
+	public static Boolean ISDELETECASCADE=<%=GetCascadeTableFromPropertiesC(TablaBase)%>;
+	public static boolean ISWITHSCHEMA=true;
+	public static boolean ISWITHSTOREPROCEDURES=false;
+	
+	protected Boolean isForForeingKeyData=false;
+	protected Boolean isForForeingsKeysDataRelationships=false;
+	
+	protected ConnexionType connexionType;
+	protected ParameterDbType parameterDbType;
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	protected EntityManagerFactory entityManagerFactory;
+	<%}%>
+	
+	private Object entityObject;
+	
+	private List<Object> entitiesObject;
+	
+	protected DatosCliente datosCliente;
+	
+	<%if(blnConAdditional) {%>
+	
+	protected <%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional <%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional=null;
+	
+	public <%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional get<%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional() {
+		return this.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional;
+	}
+	
+	public void set<%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional(<%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional <%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional) {
+		try {
+			this.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional=<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoDataAccess%>Additional;
+		} catch(Exception e) {
+			;
+		}
+	}
+	
+	<%}%>
+	
+	public <%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>() {
+		this.entityObject=new Object();
+		this.entitiesObject=new ArrayList<Object>();
+		this.isForForeingKeyData=false;
+		this.isForForeingsKeysDataRelationships=false;
+		this.datosCliente=new DatosCliente();
+	}
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public static String getTableName() {
+        return "<%=GetSchemaTableFromProperties(TablaBase,Schema)%>.<%=TablaBase.Name%>";
+    }
+	
+	public static String getColumnName<%=strIdGetSet%>() {
+		return "<%=strId%>";
+	}
+	
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetNombreCampoTablaC(TablaBase.Columns[i]) %>
+	
+	<% } %>	
+			
+	public static String getColumnNameNative<%=strIdGetSet%>() {
+		return <%=GetIdNameC(TablaBase)%>;
+	}
+		
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetNombreCampoTablaNativeC(TablaBase.Columns[i]) %>
+	<% } %>	
+	
+	<% } %>
+	
+	public Boolean getIsForForeingKeyData() {
+		return this.isForForeingKeyData;
+	}
+
+	public void setIsForForeingKeyData(Boolean isForForeingKeyData) {
+		this.isForForeingKeyData = isForForeingKeyData;
+	}
+	
+	public Boolean getIsForForeingsKeysDataRelationships() {
+		return this.isForForeingsKeysDataRelationships;
+	}
+
+	public void setIsForForeingsKeysDataRelationships(Boolean isForForeingsKeysDataRelationships) {
+		this.isForForeingsKeysDataRelationships = isForForeingsKeysDataRelationships;
+	}
+	
+	public static boolean getISWITHSCHEMA() {
+		return ISWITHSCHEMA;
+	}
+
+	public static void setISWITHSCHEMA(boolean ANISWITHSCHEMA) {
+		ISWITHSCHEMA = ANISWITHSCHEMA;
+	}		
+	
+	public static boolean getISWITHSTOREPROCEDURES() {
+		return ISWITHSTOREPROCEDURES;
+	}
+
+	public static void setISWITHSTOREPROCEDURES(boolean ANISWITHSTOREPROCEDURES) {
+		ISWITHSTOREPROCEDURES =ANISWITHSTOREPROCEDURES;
+	}
+	
+	public static String getTABLENAME() {
+		return TABLENAME;
+	}
+	
+	public static void setTABLENAME(String sTABLENAME) {
+		<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME = sTABLENAME;
+	}
+	
+	public static String getSCHEMA() {
+		return SCHEMA;
+	}
+
+	public static void setSCHEMA(String aSCHEMA) {
+		<%=GetNombreClase(TablaBase.ToString())%>DataAccess.SCHEMA = aSCHEMA;
+	}				
+	
+	
+	public static Boolean getISDELETECASCADE() {
+		return ISDELETECASCADE;
+	}
+
+	public static void setISDELETECASCADE(Boolean ANISDELETECASCADE) {
+		<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISDELETECASCADE = ANISDELETECASCADE;
+	}
+	
+	public List<Object> getEntitiesObject() {
+		return this.entitiesObject;
+	}
+
+	public void setEntitiesObject(List<Object> entitiesObject) {
+		this.entitiesObject= entitiesObject;
+	}
+	
+	public Object getEntityObject() {
+		return this.entityObject;
+	}
+
+	public void setEntityObject(Object entityObject) {
+		this.entityObject= entityObject;
+	}
+	
+	public static ParametersMaintenance getParametersMaintenance(GeneralEntity generalEntity) {
+		ParametersMaintenance parametersMaintenance=new ParametersMaintenance();
+		int orderParameter;
+
+		return parametersMaintenance;
+	}
+	
+	public ConnexionType getConnexionType() {
+		return connexionType;
+	}
+
+	public void setConnexionType(ConnexionType connexionType) {
+		this.connexionType = connexionType;
+	}
+
+	public ParameterDbType getParameterDbType() {
+		return parameterDbType;
+	}
+
+	public void setParameterDbType(ParameterDbType parameterDbType) {
+		this.parameterDbType = parameterDbType;
+	}
+
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public EntityManagerFactory getEntityManagerFactory() {
+		return entityManagerFactory;
+	}
+
+	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+		this.entityManagerFactory = entityManagerFactory;
+	}
+	<%} else {%>
+	//COMODIN
+	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+		
+	}
+	<%}%>
+	
+	public DatosCliente getDatosCliente() {
+		return datosCliente;
+	}
+
+	public void setDatosCliente(DatosCliente datosCliente) {
+		this.datosCliente = datosCliente;
+	}
+	
+	public void set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>)throws Exception  {
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.set<%=GetNombreClase(TablaBase.ToString())%>Original((<%=GetNombreClase(TablaBase.ToString())%>)<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.clone());		
+	}
+	
+	public void set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(List<<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s)throws Exception  {
+		
+		for(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>:<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s){
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.set<%=GetNombreClase(TablaBase.ToString())%>Original((<%=GetNombreClase(TablaBase.ToString())%>)<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.clone());
+		}
+	}
+	
+	public static void set<%=GetNombreClase(TablaBase.ToString())%>OriginalStatic(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>)throws Exception  {
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.set<%=GetNombreClase(TablaBase.ToString())%>Original((<%=GetNombreClase(TablaBase.ToString())%>)<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.clone());		
+	}
+	
+	public static void set<%=GetNombreClase(TablaBase.ToString())%>sOriginalStatic(List<<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s)throws Exception  {
+		
+		for(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>:<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s){
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.set<%=GetNombreClase(TablaBase.ToString())%>Original((<%=GetNombreClase(TablaBase.ToString())%>)<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.clone());
+		}
+	}
+	
+	public  void executeQuery(Connexion connexion, String sQueryExecute) throws Exception {	
+        try {
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				this.executeQueryJdbc(connexion, sQueryExecute);
+			} else {
+				//this.executeQueryHibernate(connexion, sQueryExecute);
+			}
+      	} catch(Exception e) {
+			throw e;
+      	}		    	
+    }
+	
+	public void executeQueryJdbc(Connexion connexion, String sQueryExecute) throws Exception {		
+        try {     				
+        	PreparedStatement preparedStatement = connexion.getConnection().prepareStatement(sQueryExecute);
+      					
+        	preparedStatement.executeUpdate();
+        	preparedStatement.close();
+      		   	
+      	} catch(Exception e) {
+			throw e;
+      	}		
+    }
+	
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntity(Connexion connexion, Long <%=strId%>) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		
+		
+        try {
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entity =this.getEntityJdbc(connexion, <%=strId%>);
+			} else {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				entity =this.getEntityHibernate(connexion, <%=strId%>);
+				<%}%>
+			}
+			<%}else {%>
+			<%if(blnConFuncionalidadLogicVersion1) {%>
+			entity =this.getEntityHibernate(connexion, <%=strId%>);
+			<%}%>
+			<%}%>
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;
+    }
+	
+	<%if(GenerarMe) {%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityJdbc(Connexion connexion, Long <%=strId%>) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		
+		
+        try {     		
+			String sQuerySelect="";
+			
+			Statement statement = connexion.getConnection().createStatement();
+			
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuerySelect + " WHERE id="+id);
+            }
+			
+      		ResultSet resultSet = statement.executeQuery(sQuerySelect + " WHERE id="+id);//<%=TablaBase.ToString().Replace("dbo.","")%>.isActive=1 AND
+      	    			
+      	    if(resultSet.next()) {				
+				entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(new <%=GetNombreClase(TablaBase.ToString())%>());
+      	    	entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         	    
+      	    	entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet); 
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+      	    } else {
+				entity =null;
+			}
+			
+			if(entity!=null) {
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+			}
+			
+      		statement.close();     
+	
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		}
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;
+    }
+	<%}%>
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityHibernate(Connexion connexion, Long <%=strId%>) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		
+		
+        try {     				
+			//PARA CUANDO FK ES NULL
+        	if(<%=strId%>!=null) {
+				entity = connexion.getEntityManager().find(<%=GetNombreClase(TablaBase.ToString())%>.class, <%=strId%>);
+				
+				//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+				//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>(entity);
+				
+				if(entity!=null) {
+					this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+				}				
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>Original(entity);
+			
+			} else {
+        		entity =null;
+        	}
+	
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;
+    }
+	<%}%>
+	
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntity(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entity =this.getEntityJdbc(connexion,queryWhereSelectParameters);
+			} else {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				entity =this.getEntityHibernate(connexion,queryWhereSelectParameters);
+				<%}%>
+			}
+			<%}else {%>
+			<%if(blnConFuncionalidadLogicVersion1) {%>
+			entity =this.getEntityHibernate(connexion,queryWhereSelectParameters);
+			<%}%>
+			<%}%>
+		} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	
+	<%if(GenerarMe) {%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityJdbc(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {			
+			String sQuery="";
+      	    String sQuerySelect="";
+			
+			Statement statement = connexion.getConnection().createStatement();			
+			
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME+".",queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+      	  	ResultSet resultSet = statement.executeQuery(sQuery);//<%=TablaBase.ToString().Replace("dbo.","")%>.isActive=1
+        	 
+			if(resultSet.next()) {				
+				entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(new <%=GetNombreClase(TablaBase.ToString())%>());
+      	    	entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         	    
+      	    	entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet);    
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+      	    } else {
+				entity =null;
+			}
+
+			if(entity!=null) {
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+			}
+			
+      	    statement.close(); 
+		
+		} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	<%}%>
+
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityHibernate(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {
+      	    String sQuery="";
+      	    String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName().toLowerCase();
+			sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECT;
+			
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+						
+			Query query =connexion.getEntityManager().createQuery (sQuery);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entity = (<%=GetNombreClase(TablaBase.ToString())%>) query.getSingleResult();
+				
+				if(entity!=null) {
+					this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+				}
+			
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>Original(entity);
+			} else {
+				this.entityObject=query.getSingleResult();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>(entity);
+			
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	<%}%>
+	
+	<%if(blnNoStandardTableFromProperties && !blnTieneTipoPKStandard){// SI EXISTE Y GENERARA SE DUPLICARA FUNCION%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntity(Connexion connexion<%=strPorTablaColumnsPKParametros%>) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {
+      	    String sQuery="";
+      	    String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName().toLowerCase();
+			sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECT;
+			
+			QueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters(ParameterDbType.MYSQL,"");
+			//queryWhereSelectParameters.setPagination(pagination);
+			queryWhereSelectParameters.setFinalQuery("");
+			
+			<%=GetColumnsPKParameterSelectionC(TablaBase,false)%>
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+						
+			Query query =connexion.getEntityManager().createQuery (sQuery);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entity = (<%=GetNombreClase(TablaBase.ToString())%>) query.getSingleResult();
+				
+				if(entity!=null) {
+					this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+				}
+			
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>Original(entity);
+			} else {
+				this.entityObject=query.getSingleResult();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>(entity);
+			
+      	}
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		}
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	
+	<% }%>
+	
+	<%if(GetEsReporteFromPropertiesC(TablaBase)||GetEsNativeFromPropertiesC(TablaBase)){%>
+	
+	//PARA SQL ESCALAR O QUE TRAIGA 1 FILA Y POCOS CAMPOS
+	public DatoGeneralMinimo getEntityDatoGeneralMinimoGenerico(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters,ArrayList<Classe> classes) throws SQLException,Exception { //<%=GetNombreClase(TablaBase.ToString())%>
+		DatoGeneralMinimo datoGeneralMinimo= new DatoGeneralMinimo();
+		
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {			
+			String sQuery="";
+      	    String sQuerySelect="";
+			
+			Statement statement = connexion.getConnection().createStatement();			
+			
+			if(!queryWhereSelectParameters.getSelectQuery().equals("")) {
+				sQuerySelect=queryWhereSelectParameters.getSelectQuery();
+				
+			} else {
+				if(!this.isForForeingKeyData) {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+				} else {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+				}
+			}
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME+".",queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+      	  	ResultSet resultSet = statement.executeQuery(sQuery);//<%=TablaBase.ToString().Replace("dbo.","")%>.isActive=1
+        	 
+			//ResultSetMetaData metadata = resultSet.getMetaData();
+      	  	
+      	  	//int iTotalCountColumn = metadata.getColumnCount();
+				
+			//if(queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				if(resultSet.next()) {				
+					for(Classe classe:classes) {
+						DataAccessHelperBase.setFieldDynamic(datoGeneralMinimo,classe,resultSet);
+					}
+					
+					/*
+					int iIndexColumn = 1;
+				    
+					while(iIndexColumn <= iTotalCountColumn) {
+						//arrayListObject.add(resultSet.getObject(iIndexColumn++));
+				    }										
+					*/
+				} else {
+					entity =null;
+				}
+			//}
+			
+			if(entity!=null) {
+				//this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+			}
+			
+      	    statement.close(); 
+		
+		} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	//return entity;	
+		
+		return datoGeneralMinimo;
+    }
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public <%=GetNombreClase(TablaBase.ToString())%> getEntityNativeHibernate(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {
+      	    String sQuery="";
+      	    String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME;
+			
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =null;
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				query= connexion.getEntityManager().createNativeQuery (sQuery,<%=GetNombreClaseC(TablaBase.ToString())%>.class);
+			}  else {
+				query= connexion.getEntityManager().createNativeQuery (sQuery);
+			}
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entity = (<%=GetNombreClase(TablaBase.ToString())%>) query.getSingleResult();
+		
+				if(entity!=null) {
+					this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+				}
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>Original(entity);
+			
+			}  else {
+				this.entityObject=query.getSingleResult();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>(entity);
+			
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	<%}%>
+	
+	<%if(blnNoStandardTableFromProperties){%>
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityNativeHibernate(Connexion connexion<%=strPorTablaColumnsPKParametros%>) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+        try  {
+      	    String sQuery="";
+      	    String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME;
+			
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+			QueryWhereSelectParameters queryWhereSelectParameters=new QueryWhereSelectParameters(ParameterDbType.MYSQL,"");
+			//queryWhereSelectParameters.setPagination(pagination);
+			queryWhereSelectParameters.setFinalQuery("");
+			
+			<%=GetColumnsPKParameterSelectionC(TablaBase,true)%>
+			
+      	    sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =null;
+		
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				query= connexion.getEntityManager().createNativeQuery (sQuery,<%=GetNombreClaseC(TablaBase.ToString())%>.class);
+			}  else {
+				query= connexion.getEntityManager().createNativeQuery (sQuery);
+			}
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entity = (<%=GetNombreClase(TablaBase.ToString())%>) query.getSingleResult();
+				
+				if(entity!=null) {
+					this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+				}
+			
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>Original(entity);
+			} else {
+				this.entityObject=query.getSingleResult();	
+			}						
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>(entity);
+			
+      	} 
+		<%if(blnConFuncionalidadLogicVersion1) {%>
+		catch(NoResultException e) {
+			entity =null;
+			
+		} 
+		<%}%>
+		catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	<%}%>
+	<%}%>
+	<%}%>
+	
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntities(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		
+        try { 
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entities =this.getEntitiesJdbc(connexion,queryWhereSelectParameters);	
+			} else {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				entities =this.getEntitiesHibernate(connexion,queryWhereSelectParameters);
+				<%}%>
+			}	
+			<%}else {%>
+			<%if(blnConFuncionalidadLogicVersion1) {%>
+			entities =this.getEntitiesHibernate(connexion,queryWhereSelectParameters);
+			<%}%>
+			<%}%>
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	
+	<%if(GenerarMe) {%>
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesJdbc(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+		String sQuerySelect="";
+		
+        try { 
+			
+			Statement statement = connexion.getConnection().createStatement();	
+
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME+".",queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet= statement.executeQuery(sQuery);
+        	 
+      	    while (resultSet.next()) {
+      	    	entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+      	    	entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+      	    	entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+				
+      	    	entities.add(entity);
+      	    }
+
+			this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);			
+			
+			statement.close(); 
+			
+			if(this.datosCliente.getIsConExportar()) {
+				this.generarExportar<%=GetNombreClase(TablaBase.ToString())%>(connexion,sQuery,queryWhereSelectParameters);
+			}			
+      	        
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesHibernate(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		
+        try {     	   
+        	
+			String sQuery="";
+			String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName().toLowerCase();
+			sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECT;
+			
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =connexion.getEntityManager().createQuery (sQuery);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+								
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			} else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);
+		     		
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	
+	
+	<%if(GenerarMe) {%>
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntities(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters,List<String> listColumns,DeepLoadType deepLoadType,Boolean conMapGenerico) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entities =this.getEntitiesJdbc(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,deepLoadType,conMapGenerico);
+			} else {
+				//entities =this.getEntitiesHibernate(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,conMapGenerico);
+			}	
+			<%}else {%>
+			//entities =this.getEntitiesHibernate(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,conMapGenerico);
+			<%}%>
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesJdbc(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters,List<String> listColumns,DeepLoadType deepLoadType,Boolean conMapGenerico) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			Statement statement = connexion.getConnection().createStatement();
+							
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet = statement.executeQuery(sQuery);
+        	 
+      	    while (resultSet.next()) {
+      	    	entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				if(conMapGenerico) {
+					entity.inicializarMap<%=GetNombreClase(TablaBase.ToString())%>();
+					//entity.setMap<%=GetNombreClase(TablaBase.ToString())%>(new HashMap<String,Object>());
+					
+					for(String sColumn:listColumns) {						
+						entity.setMap<%=GetNombreClase(TablaBase.ToString())%>Value(sColumn, resultSet.getObject(sColumn));
+						//entity.getMap<%=GetNombreClase(TablaBase.ToString())%>().put(sColumn, resultSet.getObject(sColumn));
+					}
+				} else {				
+					//entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+					entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet,listColumns,deepLoadType);
+					
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+				}
+				
+      	    	entities.add(entity);
+      	    }
+
+			this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+			
+      	    statement.close();  
+			
+			if(this.datosCliente.getIsConExportar()) {
+				this.generarExportar<%=GetNombreClase(TablaBase.ToString())%>(connexion,sQuery,queryWhereSelectParameters);
+			}
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	
+	public <%=GetNombreClase(TablaBase.ToString())%> getEntity(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters,List<String> listColumns,DeepLoadType deepLoadType,Boolean conMapGenerico) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entity =this.getEntityJdbc(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,deepLoadType,conMapGenerico);
+			} else {
+				//entity =this.getEntityHibernate(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,conMapGenerico);
+			}	
+			<%}else {%>
+			//entities =this.getEntitiesHibernate(connexion,sQuerySelect,queryWhereSelectParameters,listColumns,conMapGenerico);
+			<%}%>
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	
+	public  <%=GetNombreClase(TablaBase.ToString())%> getEntityJdbc(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters,List<String> listColumns,DeepLoadType deepLoadType,Boolean conMapGenerico) throws SQLException,Exception {
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			Statement statement = connexion.getConnection().createStatement();
+							
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet = statement.executeQuery(sQuery);
+        	 
+      	    while (resultSet.next()) {
+      	    	entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+				
+				if(conMapGenerico) {
+					entity.inicializarMap<%=GetNombreClase(TablaBase.ToString())%>();
+					//entity.setMap<%=GetNombreClase(TablaBase.ToString())%>(new HashMap<String,Object>());
+					
+					for(String sColumn:listColumns) {
+						entity.setMap<%=GetNombreClase(TablaBase.ToString())%>Value(sColumn, resultSet.getObject(sColumn));
+						//entity.getMap<%=GetNombreClase(TablaBase.ToString())%>().put(sColumn, resultSet.getObject(sColumn));
+					}
+				} else {				
+					//entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+					entity=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet,listColumns,deepLoadType);
+					
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+					//<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+				}
+				
+      	    	//entities.add(entity);								
+      	    }
+
+			this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(entity);
+			
+      	    statement.close();  
+			
+			if(this.datosCliente.getIsConExportar()) {
+				this.generarExportar<%=GetNombreClase(TablaBase.ToString())%>(connexion,sQuery,queryWhereSelectParameters);
+			}
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	<%}%>
+	
+	public  static <%=GetNombreClase(TablaBase.ToString())%> getEntity<%=GetNombreClase(TablaBase.ToString())%>(String strPrefijo,<%=GetNombreClase(TablaBase.ToString())%> entity,ResultSet resultSet,List<String> listColumns,DeepLoadType deepLoadType) throws Exception {		
+        try {     	  
+			if(deepLoadType.equals(DeepLoadType.NONE) || deepLoadType.equals(DeepLoadType.INCLUDE)) {
+				for(String sColumn:listColumns) {	        	
+					Field field =null;
+					try {
+						field = <%=GetNombreClase(TablaBase.ToString())%>.class.getDeclaredField(sColumn);//getField
+						field.setAccessible(true);
+						
+					} catch(Exception e) {
+						field = <%=GetNombreClase(TablaBase.ToString())%>.class.getSuperclass().getDeclaredField(sColumn);//getField
+						field.setAccessible(true);
+					}
+					
+					<%=GetNombreClase(TablaBase.ToString())%>DataAccess.setFieldReflection<%=GetNombreClase(TablaBase.ToString())%>(field,strPrefijo,sColumn,entity,resultSet);
+					//field.set(entity, resultSet.getLong(strPrefijo+"id_opcion"));
+				}  
+			
+			} else if(deepLoadType.equals(DeepLoadType.EXCLUDE)) {
+				List<String> listTiposColumnas<%=GetNombreClase(TablaBase.ToString())%>=<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.getTodosTiposColumnas<%=GetNombreClase(TablaBase.ToString())%>();
+				Boolean existe=false;
+				
+				for(String sColumn:listTiposColumnas<%=GetNombreClase(TablaBase.ToString())%>) {
+					existe=false;
+					
+					for(String sColumnExlude:listColumns) {	        	
+						if(sColumn.equals(sColumnExlude)) {
+							existe=true;
+							break;
+						}
+					} 
+					
+					if(!existe) {
+						//ESTE PROCESO ES REPETIDO DE INCLUDE
+						Field field =null;
+						try {
+							field = <%=GetNombreClase(TablaBase.ToString())%>.class.getDeclaredField(sColumn);//getField
+							field.setAccessible(true);
+							
+						} catch(Exception e) {
+							field = <%=GetNombreClase(TablaBase.ToString())%>.class.getSuperclass().getDeclaredField(sColumn);//getField
+							field.setAccessible(true);
+						}
+						
+						<%=GetNombreClase(TablaBase.ToString())%>DataAccess.setFieldReflection<%=GetNombreClase(TablaBase.ToString())%>(field,strPrefijo,sColumn,entity,resultSet);
+						//field.set(entity, resultSet.getLong(strPrefijo+"id_opcion"));
+					}
+				}
+			}
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	
+	public  static void setFieldReflection<%=GetNombreClase(TablaBase.ToString())%>(Field field,String strPrefijo,String sColumn,<%=GetNombreClase(TablaBase.ToString())%> entity,ResultSet resultSet) throws Exception {		
+        try {    
+        	String sCampo=strPrefijo+sColumn;
+        	
+        	switch(sColumn) {
+				<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+				<%//if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+				<%=  GetSetEntityColumnaReflectionC(TablaBase.Columns[i]) %>
+				<% } %>  
+				
+				default: 
+					//CUANDO SE UTILIZA CAMPOS DIFERENCTES A LOS ORIGINALMENTE DEFINIDOS(ADDITIONAL)
+					DataAccessHelperBase.setFieldDynamic(entity,sCampo,field,resultSet);
+					break;
+				/*
+        		case "id":
+        			field.set(entity, resultSet.getLong(sCampo));
+        			break;        		        			
+				*/
+        	}    
+      	} catch(Exception e) {
+			throw e;
+      	}		
+    }
+	
+	<%if(GetEsReporteFromPropertiesC(TablaBase)||GetEsNativeFromPropertiesC(TablaBase)){%>	
+	
+	public ArrayList<DatoGeneralMaximo> getEntitiesDatoGeneralMaximoGenerico(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters,ArrayList<Classe> classes) throws Exception { //<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>>
+		ArrayList<DatoGeneralMaximo> datoGeneralMaximos = new ArrayList<DatoGeneralMaximo>();
+		DatoGeneralMaximo datoGeneralMaximo=new DatoGeneralMaximo();
+		
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+		String sQuerySelect="";
+		
+        try { 
+			
+			Statement statement = connexion.getConnection().createStatement();	
+
+			if(!queryWhereSelectParameters.getSelectQuery().equals("")) {			
+				sQuerySelect=queryWhereSelectParameters.getSelectQuery();				
+			
+			} else {
+				if(!this.isForForeingKeyData) {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+				} else {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+				}
+			}
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME+".",queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet= statement.executeQuery(sQuery);
+        	
+			//ResultSetMetaData metadata = resultSet.getMetaData();
+      	  	
+      	  	//int iTotalCountColumn = metadata.getColumnCount();
+				
+			//if(queryWhereSelectParameters.getIsGetGeneralObjects()) {				
+				//this.entitiesObject=query.getResultList();	
+				
+				while (resultSet.next()) {
+					datoGeneralMaximo=new DatoGeneralMaximo();
+					
+					for(Classe classe:classes) {
+						DataAccessHelperBase.setFieldDynamic(datoGeneralMaximo,classe,resultSet);
+					}
+					
+					//int iIndexColumn = 1;
+				    
+					/*
+					while(iIndexColumn <= iTotalCountColumn) {
+				    	arrayListObject.add(resultSet.getObject(iIndexColumn++));
+				    }
+					*/
+					
+					datoGeneralMaximos.add(datoGeneralMaximo);
+					
+					
+					
+					//arrayListObjects.add(arrayListObject);
+					
+					/*
+					entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+					entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+					entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet);
+					
+					<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+					<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+					<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+					
+					entities.add(entity);
+					*/
+				}
+			//}
+			
+			//this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);			
+			
+			statement.close(); 
+			
+			/*
+			if(this.datosCliente.getIsConExportar()) {
+				this.generarExportar<%=GetNombreClase(TablaBase.ToString())%>(connexion,sQuery,queryWhereSelectParameters);
+			}			
+      	     */
+				
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	//return entities;	
+		
+		return datoGeneralMaximos;
+    }
+	
+	public ArrayList<DatoGeneral> getEntitiesDatoGeneralGenerico(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters,ArrayList<Classe> classes) throws Exception { //<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>>
+		ArrayList<DatoGeneral> datoGenerals = new ArrayList<DatoGeneral>();
+		DatoGeneral datoGeneral=new DatoGeneral();
+		
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+		String sQuerySelect="";
+		
+        try { 
+			
+			Statement statement = connexion.getConnection().createStatement();	
+
+			if(!queryWhereSelectParameters.getSelectQuery().equals("")) {			
+				sQuerySelect=queryWhereSelectParameters.getSelectQuery();				
+			
+			} else {
+				if(!this.isForForeingKeyData) {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+				} else {
+					sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+				}
+			}
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME+".",queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet= statement.executeQuery(sQuery);
+        	
+			//ResultSetMetaData metadata = resultSet.getMetaData();
+      	  	
+      	  	//int iTotalCountColumn = metadata.getColumnCount();
+				
+			//if(queryWhereSelectParameters.getIsGetGeneralObjects()) {				
+				//this.entitiesObject=query.getResultList();	
+				
+				while (resultSet.next()) {
+					datoGeneral=new DatoGeneral();
+					
+					for(Classe classe:classes) {
+						DataAccessHelperBase.setFieldDynamic(datoGeneral,classe,resultSet);
+					}
+					
+					datoGenerals.add(datoGeneral);
+				}
+			//}
+			
+			statement.close(); 
+			
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	//return entities;	
+		
+		return datoGenerals;
+    }
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesNativeHibernate(Connexion connexion,QueryWhereSelectParameters queryWhereSelectParameters) throws Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		
+        try {     	   
+        	
+			String sQuery="";
+			String sTableName="";
+			String sQuerySelect="";
+			
+			sTableName=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME;
+			
+			if(!this.isForForeingKeyData) {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVE;
+			} else {
+				sQuerySelect=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYSELECTNATIVEFORFOREINGKEY;
+			}
+			
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,sTableName+".",queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =null;
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				query =connexion.getEntityManager().createNativeQuery (sQuery,<%=GetNombreClaseC(TablaBase.ToString())%>.class);
+			}  else {
+				query =connexion.getEntityManager().createNativeQuery (sQuery);
+			}
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+				
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			}  else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);
+			   		
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	<%}%>
+	
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntities(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entities =this.getEntitiesJdbc(connexion,sQuerySelect,queryWhereSelectParameters);
+			} else {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				entities =this.getEntitiesHibernate(connexion,sQuerySelect,queryWhereSelectParameters);
+				<%}%>
+			}	
+			<%}else {%>
+			<%if(blnConFuncionalidadLogicVersion1) {%>
+			entities =this.getEntitiesHibernate(connexion,sQuerySelect,queryWhereSelectParameters);
+			<%}%>
+			<%}%>
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	
+	<%if(GenerarMe) {%>
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesJdbc(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			Statement statement = connexion.getConnection().createStatement();
+							
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesJDBC(entity,queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet = statement.executeQuery(sQuery);
+        	 
+      	    while (resultSet.next()) {
+      	    	entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+      	    	entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+      	    	entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+				
+      	    	entities.add(entity);
+      	    }
+			
+			this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+			
+      	    statement.close(); 
+			
+			if(this.datosCliente.getIsConExportar()) {
+				this.generarExportar<%=GetNombreClase(TablaBase.ToString())%>(connexion,sQuery,queryWhereSelectParameters);
+			}
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesHibernate(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {     	   
+        					
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,queryWhereSelectParameters,sQuerySelect);
+						 
+      	    Query query =connexion.getEntityManager().createQuery (sQuery);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+							
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			}  else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);
+				
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	
+	<%if(GetEsReporteFromPropertiesC(TablaBase)||GetEsNativeFromPropertiesC(TablaBase)){%>
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesNativeHibernate(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {     	   
+        		
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntities(entity,queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =null;
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+      	    	query =connexion.getEntityManager().createNativeQuery (sQuery,<%=GetNombreClaseC(TablaBase.ToString())%>.class);
+			}  else {
+				query =connexion.getEntityManager().createNativeQuery (sQuery);
+			}
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+				
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			}  else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);
+				
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	<%}%>
+	
+	<%if(blnConMaxCodigo){%>	
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesSimpleQueryBuild(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			<%if(GenerarMe) {%>
+			if(this.connexionType.equals(ConnexionType.JDBC32)) {
+				entities =this.getEntitiesSimpleQueryBuildJdbc(connexion,sQuerySelect,queryWhereSelectParameters);
+			} else {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				entities =this.getEntitiesSimpleQueryBuildHibernate(connexion,sQuerySelect,queryWhereSelectParameters);
+				<%}%>
+			}
+			<%}else {%>
+			<%if(blnConFuncionalidadLogicVersion1) {%>
+			entities =this.getEntitiesSimpleQueryBuildHibernate(connexion,sQuerySelect,queryWhereSelectParameters);
+			<%}%>
+			<%}%>
+
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	
+	<%if(GenerarMe) {%>
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesSimpleQueryBuildJdbc(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {
+			Statement statement = connexion.getConnection().createStatement();
+							
+			sQuery=DataAccessHelper.buildSqlGeneralGetEntitiesSimpleQueryBuildJDBC(queryWhereSelectParameters,sQuerySelect);
+			
+			if(Constantes2.ISDEVELOPING_SQL)  {
+            	Funciones2.mostrarMensajeDeveloping(sQuery);
+            }
+			
+			ResultSet resultSet = statement.executeQuery(sQuery);
+        	 
+      	    while (resultSet.next()) {
+      	    	entity = new <%=GetNombreClase(TablaBase.ToString())%>();
+      	    	entity=super.getEntity("",entity,resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA);         		
+      	    	entity=this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity,resultSet);
+      	    	
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original( new <%=GetNombreClase(TablaBase.ToString())%>());
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(super.getEntity("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSCHEMA));         		
+      	    	<%=GetOriginalCommentTableFromProperties(TablaBase)%>entity.set<%=GetNombreClase(TablaBase.ToString())%>Original(this.getEntity<%=GetNombreClase(TablaBase.ToString())%>("",entity.get<%=GetNombreClase(TablaBase.ToString())%>Original(),resultSet));
+				
+      	    	entities.add(entity);
+      	    }
+
+			this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+			
+      	    statement.close();      
+		} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesSimpleQueryBuildHibernate(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {     	   
+        					
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesSimpleQueryBuild(queryWhereSelectParameters,sQuerySelect);
+					 
+      	   	Query query =connexion.getEntityManager().createQuery (sQuery);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+				
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			}  else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+			//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);			
+      		
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }	
+	<%}%>
+	<%}%>
+	
+	<%if(GetEsReporteFromPropertiesC(TablaBase)||GetEsNativeFromPropertiesC(TablaBase)){%>
+	<%if(blnConFuncionalidadLogicVersion1) {%>
+	@SuppressWarnings("unchecked")
+	public  <%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> getEntitiesSimpleQueryBuildNativeHibernate(Connexion connexion,String sQuerySelect,QueryWhereSelectParameters queryWhereSelectParameters) throws SQLException,Exception {
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> entities = new  <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> entity = new <%=GetNombreClase(TablaBase.ToString())%>();		  
+		String sQuery="";
+	
+        try {     	   
+        			
+			queryWhereSelectParameters.setConnexionType(this.connexionType);
+        	queryWhereSelectParameters.setDbType(this.parameterDbType);
+			
+			sQuery=DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralGetEntitiesSimpleQueryBuild(queryWhereSelectParameters,sQuerySelect);
+			
+			Query query =null;
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+      	   		query =connexion.getEntityManager().createNativeQuery (sQuery,<%=GetNombreClaseC(TablaBase.ToString())%>.class);		
+			}  else {
+				query =connexion.getEntityManager().createNativeQuery (sQuery);		
+			}
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryParameters(query,queryWhereSelectParameters);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.buildSqlGeneralSetQueryPagination(query,queryWhereSelectParameters);
+			
+			if(!queryWhereSelectParameters.getIsGetGeneralObjects()) {
+				entities= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>>((List<<%=GetNombreClase(TablaBase.ToString())%>>) query.getResultList());
+				
+				this.setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(entities);
+				
+				<%=GetOriginalCommentTableFromProperties(TablaBase)%>this.set<%=GetNombreClase(TablaBase.ToString())%>sOriginal(entities);
+			
+			}  else {
+				this.entitiesObject=query.getResultList();	
+			}
+			
+      		//MEJOR QUITAR SE USA EN GET Y AL COMPARAR EN SET SINO EJB HACE UPDATE AUTOMATICAMENTE
+			//<%=GetNombreClase(TablaBase.ToString())%><%=strClaseConstantesFunciones%>.quitarEspacios<%=GetNombreClase(TablaBase.ToString())%>s(entities);
+			
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entities;	
+    }
+	<%}%>
+	<%}%>
+	
+	public <%=GetNombreClase(TablaBase.ToString())%> getEntity<%=GetNombreClase(TablaBase.ToString())%>(String strPrefijo,<%=GetNombreClase(TablaBase.ToString())%> entity,ResultSet resultSet) throws Exception {		
+        try { 
+			
+			if(!this.isForForeingKeyData) {
+				<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+				<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+				<%=  GetSetEntityColumnaC(TablaBase.Columns[i]) %>
+				<% } %>   
+			} else {
+				<%=GetEntityCamposForeignKey()%>  
+			}
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return entity;	
+    }
+	
+	public Timestamp getSetVersionRow<%=GetNombreClase(TablaBase.ToString())%>(Connexion connexion, Long <%=strId%>) throws SQLException,Exception {
+		Timestamp timestampVersionRow=null;
+						
+        try {     		
+			if(connexion.getConnexionType().equals(ConnexionType.HIBERNATE)) {
+				<%if(blnConFuncionalidadLogicVersion1) {%>
+				Query query =connexion.getEntityManager().createQuery ("SELECT <%=strVersionRowDB%> FROM "+<%=GetNombreClase(TablaBase.ToString())%>.class.getSimpleName()+" WHERE <%=strId%>="+<%=strId%>);
+					
+				timestampVersionRow=(Timestamp)query.getSingleResult();
+				<% } %> 
+			}
+							
+      	} catch(Exception e) {
+			throw e;
+      	}
+		
+    	return timestampVersionRow;
+    }
+	
+	public static void save(<%=GetNombreClase(TablaBase.ToString())%> entity,Connexion connexion)throws SQLException,Exception {	
+		try {
+			ParametersType parametersType=null;
+			String sQuerySave="";
+			
+			if (entity.getIsDeleted()) {
+				parametersType=ParametersType.DELETE;
+				sQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYDELETE;
+				
+			} else if (entity.getIsChanged()) {
+				if(entity.getIsNew()) {
+					parametersType=ParametersType.INSERT;
+					sQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYINSERT;
+				} else {
+					parametersType=ParametersType.UPDATE;
+					sQuerySave=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.QUERYUPDATE;
+				}
+				
+			} 
+			
+			ParametersMaintenance parametersMaintenance=new ParametersMaintenance();
+			
+			if(connexion.getConnexionType().equals(ConnexionType.JDBC32)) {
+				parametersMaintenance=<%=GetNombreClase(TablaBase.ToString())%>DataAccess.buildParametersMaintenance(connexion.getDbType(), parametersType, entity);
+			}
+			connexion.setFuncionAuxiliar(<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.SQL_SECUENCIAL);
+			
+			DataAccessHelper<%=GetNewCodeTableFromPropertiesC(TablaBase)%>.save(entity, connexion,parametersMaintenance,sQuerySave,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.TABLENAME,<%=GetNombreClase(TablaBase.ToString())%>DataAccess.ISWITHSTOREPROCEDURES);
+			
+			<%=GetNombreClase(TablaBase.ToString())%><%=strPrefijoDataAccess%>.set<%=GetNombreClase(TablaBase.ToString())%>OriginalStatic(entity);
+			
+		} catch(Exception e) {
+            throw e;
+        }
+	}
+	
+	<%
+	if(IS_DEBUG2) {
+		IniciarTiempo();	
+		DetenerTiempo(PaquetesGenerar.AUXILIAR,"HERE ");
+	}
+	%>
+	
+	<%= GetFuncionesTablasClasesRelacionadasForeigKeys() %>
+		
+	<%= GetFuncionesTablasClasesRelacionadas() %>
+	
+
+<%if(GenerarTipoGeneracionC(strTipoGeneracionCompuestos,TiposGeneracion)) {%>
+
+	<%if(!GetEsReporteFromPropertiesC(TablaBase)){%>
+	
+	<%= GetFuncionesTablasClasesRelacionadasCompuestos() %>
+	
+	<%}%>	
+	
+<%}%>
+
+<%if(TablasBaseForReporte!=null&&TablasBaseForReporte.Count>0){%>
+	<%= GetFuncionesTablasClasesReportes() %>	
+<%}%>	
+	
+	public  static ParametersMaintenance buildParametersMaintenance(ParameterDbType newDbType,ParametersType parametersType,<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>) throws Exception {
+		ParametersMaintenance parametersMaintenance=new ParametersMaintenance();		
+		
+		try {
+			//ParametersMaintenance parametersMaintenance=super.getParametersMaintenance();		
+			ArrayList<ParameterMaintenance> parametersTemp=new ArrayList<ParameterMaintenance>();
+			ParameterMaintenance parameterMaintenance;
+			ParameterValue<Long> parameterMaintenanceValueId;
+			Integer iOrder=1;
+			
+			<% int iCount=0; %>
+				if(!<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.getIsDeleted()) {		
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if((TablaBase.Columns[i].Name.Equals(strId) && blnTieneIdentityColumn)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%>
+					<% iCount++; %>				
+					parameterMaintenance=new ParameterMaintenance();
+					parameterMaintenance.setOrder(iOrder++<%//=iCount.ToString()%>);		
+					parameterMaintenance.setParameterMaintenanceType(ParameterType.<%= GetTipoColumnaClaseEnumC(TablaBase.Columns[i]) %>);
+					ParameterValue<<%= GetTipoColumnaClaseC(TablaBase.Columns[i]) %>> parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>=new ParameterValue<<%= GetTipoColumnaClaseC(TablaBase.Columns[i]) %>>();
+					parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>.setValue(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.get<%= GetNombreCompletoColumnaClaseC(TablaBase.Columns[i]) %>());
+					parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValue<%= GetNombreColumnaClaseC(TablaBase.Columns[i]) %>);
+					parametersTemp.add(parameterMaintenance);
+					
+					<% if(TablaBase.Columns[i].Name.Equals(strVersionRow)){iCount--;} %>
+					<% } %>				
+						if(!<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.getIsNew()) {					
+							parameterMaintenance=new ParameterMaintenance();
+							parameterMaintenance.setOrder(iOrder++<%//= GetParameterNoLastIndexC(TablaBase)%>);
+							parameterMaintenance.setParameterMaintenanceType(ParameterType.LONG);
+							parameterMaintenanceValueId=new ParameterValue<Long>();
+							parameterMaintenanceValueId.setValue(<%=GetIdParameterColumnC(TablaBase)%>);
+							parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueId);		
+							parametersTemp.add(parameterMaintenance);
+							
+							parameterMaintenance=new ParameterMaintenance();
+							parameterMaintenance.setOrder(iOrder++<%//= GetParameterLastIndexC(TablaBase)%>);
+							parameterMaintenance.setParameterMaintenanceType(ParameterType.TIMESTAMP);
+							ParameterValue<Date> parameterMaintenanceValueVersionRow=new ParameterValue<Date>();
+							parameterMaintenanceValueVersionRow.setValue(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.get<%=strVersionRowGetSet%>());
+							parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueVersionRow);		
+							parametersTemp.add(parameterMaintenance);					
+						}
+				} else {
+					parameterMaintenance=new ParameterMaintenance();
+					parameterMaintenance.setOrder(iOrder);
+					parameterMaintenance.setParameterMaintenanceType(ParameterType.LONG);
+					parameterMaintenanceValueId=new ParameterValue<Long>();
+					parameterMaintenanceValueId.setValue(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.get<%=strIdGetSet%>());
+					parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueId);		
+					parametersTemp.add(parameterMaintenance);
+				}
+			
+			parametersMaintenance= new ParametersMaintenance();
+			parametersMaintenance.setDbType(newDbType);
+			parametersMaintenance.setParametersMaintenance(parametersTemp);
+			//super.setParametersMaintenance(parametersMaintenance);		
+		} catch(Exception e) {
+			throw e;
+		}
+		
+		return parametersMaintenance;
+	}
+	
+	public void setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>(<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>)throws Exception  {		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setIsNew(false);
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setIsChanged(false);		
+	}
+	
+	public void setIsNewIsChangedFalse<%=GetNombreClaseC(TablaBase.ToString())%>s(<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s)throws Exception  {				
+		for(<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>:<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) {
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setIsNew(false);
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setIsChanged(false);
+		}
+	}
+	
+	public void generarExportar<%=GetNombreClaseC(TablaBase.ToString())%>(Connexion connexion,String sQuery,QueryWhereSelectParameters queryWhereSelectParameters)throws Exception  {		
+		try {
+			if(this.datosCliente.getIsConExportar()) {
+				String sQueryExportar=Funciones2.getQueryExportar(this.datosCliente, sQuery, queryWhereSelectParameters);
+				
+				this.executeQueryJdbc(connexion,sQueryExportar);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			//System.out.print(e.getStackTrace());
+		}
+	}
+}
+   
+<script runat="template">
+
+</script>

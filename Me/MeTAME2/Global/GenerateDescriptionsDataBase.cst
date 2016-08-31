@@ -1,0 +1,1144 @@
+﻿<%@ Template Language="C#" Debug="true" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" %>    	
+<%@ CodeTemplate Src="CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Assembly Name="System.Design" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="1. General" Description="Database to get the extended properties from." %>
+<%@ Property Name="ConStoreProcedures" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+<%@ Property Name="ConNombresMayusculas" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+<%@ Property Name="EsConUpdateSqlSentence" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<%@ Property Name="NoTablasWebConAtras" Type="SchemaExplorer.TableSchemaCollection" Category="2. Tabla Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="NoTablasEsInterno" Type="SchemaExplorer.TableSchemaCollection" Category="2. Tabla Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasEsMenu" Type="SchemaExplorer.TableSchemaCollection" Category="2. Tabla Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesNo" Type="SchemaExplorer.TableSchemaCollection" Category="2. Tabla Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="SiTablasClasesEsRompimiento" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesConFinalQuery" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesConIndicesNo" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesConWebRelacionesNo" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="NoTablasClasesConAuditoria" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Requerimiento 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="NoTablasClasesConObjetoOriginal" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Requerimiento 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesConInsertNo" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Requerimiento 1" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="SiTablasClasesConDelCascade" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Requerimiento 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiTablasClasesConPrefijoId" Type="SchemaExplorer.TableSchemaCollection" Category="3. Tabla Requerimiento 2" Description="Select a set of tables." Optional="true"%>
+
+
+<%@ Property Name="SiColumnasTablasWebCombo" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasFKTablasConBusqueda" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 1" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="SiColumnasTablasConTipo" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConTipoSql" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConJsValidacion" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConEsParaRompimiento" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConTabla" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConWebOrden" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConEsReporte" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Obligatorio 2" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="SiColumnasTablasConEditNo" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Requerimiento 1" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SiColumnasTablasConNoUpper" Type="SchemaExplorer.ColumnSchemaCollection" Category="4. Columna Requerimiento 1" Description="Select a set of tables." Optional="true"%>
+
+<script runat="template">
+
+public String GetConNoUpperDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasTablasConNoUpper!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConNoUpper)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="true";
+					strDescritionTabla+="|NOUPPER="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|NOUPPER="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConEditNoDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasTablasConEditNo!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConEditNo)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="true";
+					strDescritionTabla+="|EDITNO="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|EDITNO="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConEsReporteDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasTablasConEsReporte!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConEsReporte)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="true";
+					strDescritionTabla+="|ESREPORTE="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|ESREPORTE="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConWebOrdenDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="";
+	
+	if(SiColumnasTablasConWebOrden!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConWebOrden)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="X";
+					strDescritionTabla+="|WEBORDEN="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|WEBORDEN="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConTablaDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="";
+	
+	if(SiColumnasTablasConTabla!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConTabla)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="X";
+					strDescritionTabla+="|TABLA="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|TABLA="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConEsParaRompimientoDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasTablasConEsParaRompimiento!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConEsParaRompimiento)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="true";
+					strDescritionTabla+="|ESPARAROMPIMIENTO="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|ESPARAROMPIMIENTO="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConJsValidacionDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="";
+	
+	if(SiColumnasTablasConJsValidacion!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConJsValidacion)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="X";
+					strDescritionTabla+="|JSVALIDACION="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|JSVALIDACION="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConTipoSqlDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="";
+	
+	if(SiColumnasTablasConTipoSql!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConTipoSql)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="X";
+					strDescritionTabla+="|TIPOSQL="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|TIPOSQL="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConTipoDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="";
+	
+	if(SiColumnasTablasConTipo!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasConTipo)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="X";
+					strDescritionTabla+="|TIPO="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|TIPO="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetConBusquedaDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasFKTablasConBusqueda!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasFKTablasConBusqueda)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					if(column.IsForeignKeyMember)
+					{
+						strEsParaCombo="true";
+						strDescritionTabla+="|CONBUSQUEDA="+strEsParaCombo;
+					}
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|CONBUSQUEDA="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetWebComboDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsParaCombo="false";
+	
+	if(SiColumnasTablasWebCombo!=null)
+	{
+		foreach(ColumnSchema column in SiColumnasTablasWebCombo)
+		{
+			if(columnSchema.Table.Name==column.Table.Name)
+			{
+				if(columnSchema.Name==column.Name)
+				{
+					strEsParaCombo="true";
+					strDescritionTabla+="|WEBCOMBO="+strEsParaCombo;
+				}
+			}
+		}
+	}
+	
+	//strDescritionTabla+="|WEBCOMBO="+strEsParaCombo;
+	
+	return strDescritionTabla;
+}
+
+public String GetNumeroFilasDescriptionColumn(ColumnSchema column) 
+{
+	String strDescritionTabla=string.Empty;
+	int intNumFilas=1;
+	
+	if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+	{
+		if(column.Size>50)
+		{
+			intNumFilas=(column.Size/50);
+			
+			if(intNumFilas<2)
+			{
+				intNumFilas=2;
+			}
+			
+			if(intNumFilas>5)
+			{
+				intNumFilas=5;
+			}
+			
+			strDescritionTabla+="|WEBFILAS="+intNumFilas.ToString();
+			
+		}	
+		
+		
+	}
+	
+	//strDescritionTabla+="|WEBFILAS="+intNumFilas.ToString();
+	
+	return strDescritionTabla;
+}
+
+public String GetWebNameDescriptionTable(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	
+	String strNameTable=string.Empty;
+	String strCharNameTable=string.Empty;
+	bool esPrimeraVez=true;
+	
+	if(!columnSchema.IsForeignKeyMember)
+	{
+		foreach(Char charName in columnSchema.Name.ToCharArray())
+		{
+			strCharNameTable=charName.ToString();
+			
+			if(Char.IsUpper(charName))
+			{
+				if(!esPrimeraVez)
+				{
+					strCharNameTable=" "+charName.ToString().ToLower();;
+				}
+				else
+				{
+					esPrimeraVez=false;
+				}
+			}
+			
+			strNameTable+=strCharNameTable;
+		}
+	}
+	else
+	{
+		
+		foreach(Char charName in columnSchema.Name.Replace("id","").ToCharArray())
+		{
+			strCharNameTable=charName.ToString();
+			
+			if(Char.IsUpper(charName))
+			{
+				if(!esPrimeraVez)
+				{
+					strCharNameTable=" "+charName.ToString().ToLower();;
+				}
+				else
+				{
+					esPrimeraVez=false;
+				}
+			}
+			
+			strNameTable+=strCharNameTable;
+		}
+	}
+	
+	if(ConNombresMayusculas)
+	{
+		strNameTable=strNameTable.ToUpper();
+	}
+	
+	strDescritionTabla+="|WEBTITULO="+strNameTable;
+	
+	
+	return strDescritionTabla;
+}
+
+public String GetNameDescriptionColumn(ColumnSchema columnSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	strDescritionTabla+="NOMBRE="+columnSchema.Name.ToUpper();
+	
+	return strDescritionTabla;
+}
+
+public String GetDescriptionsColumn(ColumnSchema columnSchema) 
+{
+	String strDescriptionsColumn=string.Empty;
+		
+	strDescriptionsColumn=GetNameDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetWebNameDescriptionTable(columnSchema);
+	strDescriptionsColumn+=GetNumeroFilasDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetWebComboDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConBusquedaDescriptionColumn(columnSchema);
+	
+	strDescriptionsColumn+=GetConTipoDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConTipoSqlDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConJsValidacionDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConEsParaRompimientoDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConTablaDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConWebOrdenDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConEsReporteDescriptionColumn(columnSchema);
+	
+	strDescriptionsColumn+=GetConEditNoDescriptionColumn(columnSchema);
+	strDescriptionsColumn+=GetConNoUpperDescriptionColumn(columnSchema);
+
+	return strDescriptionsColumn;
+}
+
+public String GetDescriptionsColumns() 
+{
+	String strDescritionTabla=string.Empty;
+	String strAddOrUpdate=string.Empty;
+	
+	strAddOrUpdate="add";
+	
+	if(EsConUpdateSqlSentence)
+	{
+		strAddOrUpdate="update";
+	}
+	
+	for (int i = 0; i < SourceDataBase.Tables.Count; i++)
+	{
+		
+		for (int j = 0; j < SourceDataBase.Tables[i].Columns.Count; j++)
+		{
+			strDescritionTabla+="\r\nEXEC sys.sp_"+strAddOrUpdate+"extendedproperty @name=N'MS_Description', @value=N'"+GetDescriptionsColumn(SourceDataBase.Tables[i].Columns[j])+"' ,@level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'"+SourceDataBase.Tables[i].Name+"', @level2type=N'COLUMN', @level2name=N'"+SourceDataBase.Tables[i].Columns[j].Name+"'\r\n";								   
+			strDescritionTabla+="GO\r\n";	
+		}
+		
+	}
+    							
+
+	return strDescritionTabla; 
+}
+
+
+public String GetConPrefijoIdDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="";
+	
+		
+	
+	
+		if(NoTablasClasesConObjetoOriginal!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasClasesConObjetoOriginal)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="X.";
+					strDescritionTabla+="|PREFIJOID="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|PREFIJOID="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetConDelCascadeDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="false";
+	
+		
+	
+	
+		if(NoTablasClasesConObjetoOriginal!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasClasesConObjetoOriginal)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="true";
+					strDescritionTabla+="|DELCASCADE="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|DELCASCADE="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetConInsertNoDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="false";
+	
+		
+	
+	
+		if(NoTablasClasesConObjetoOriginal!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasClasesConObjetoOriginal)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="true";
+					strDescritionTabla+="|INSERTNO="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|INSERTNO="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetConObjetoOriginalDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="true";
+	
+		
+	
+	
+		if(NoTablasClasesConObjetoOriginal!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasClasesConObjetoOriginal)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="false";
+					strDescritionTabla+="|CONORIG="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|CONORIG="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetConAuditoriaDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="true";
+	
+		
+	
+	
+		if(NoTablasClasesConAuditoria!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasClasesConAuditoria)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="false";
+					strDescritionTabla+="|CONAUD="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|CONAUD="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+
+public String GetConStoreProcedures(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="false";
+	
+		
+	
+	
+		if(ConStoreProcedures)
+		{
+			strEsRompimientoTabla="true";
+			strDescritionTabla+="|CONSTORE="+strEsRompimientoTabla;
+		}
+	
+	
+	//strDescritionTabla+="|CONSTORE="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetWebRelacionesNoDescriptionTable(TableSchema tableSchema) 
+{
+	Boolean blnConClasesNo=false;
+	
+	String strDescritionTabla=string.Empty;
+	
+	String strFuncion=string.Empty;
+			
+	if(SiTablasClasesConWebRelacionesNo!=null)
+	{		
+		foreach(TableSchema tableSchemaNo in SiTablasClasesConWebRelacionesNo)
+		{
+			if(tableSchema.Name==tableSchemaNo.Name)
+			{
+				blnConClasesNo=true;
+			}
+		}
+	}
+	
+			
+	if(blnConClasesNo)	
+	{
+
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(tableSchema);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne|| collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					if(strFuncion!=string.Empty)
+					{
+						strFuncion+=",";
+					}
+					
+					strFuncion+=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable);
+					
+				}
+				
+				
+			
+			}
+								
+		
+		strDescritionTabla="|WEBRELACIONESNO="+strFuncion;
+	
+	}
+	
+	return strDescritionTabla;
+}
+
+public String GetIndicesNoDescriptionTable(TableSchema tableSchema) 
+{
+	Boolean blnConClasesNo=false;
+	
+	String strDescritionTabla=string.Empty;
+	
+	String strFuncion=string.Empty;
+			
+	if(SiTablasClasesConIndicesNo!=null)
+	{		
+		foreach(TableSchema tableSchemaNo in SiTablasClasesConIndicesNo)
+		{
+			if(tableSchema.Name==tableSchemaNo.Name)
+			{
+				blnConClasesNo=true;
+			}
+		}
+	}
+	
+			
+	if(blnConClasesNo)	
+	{
+
+			
+										 			
+			foreach(IndexSchema indexSchema in tableSchema.Indexes)
+			{
+				
+				
+					if(strFuncion!=string.Empty)
+					{
+						strFuncion+=",";
+					}
+					
+					strFuncion+=indexSchema.Name;
+					
+				
+				
+				
+			
+			}
+								
+		strDescritionTabla+=" |INDICESNO="+strFuncion;
+		
+	
+	}
+	
+	return strDescritionTabla;
+}
+
+
+public String GetConFinalQueryDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="";
+	
+		
+	
+	
+		if(SiTablasClasesConFinalQuery!=null)
+		{
+			foreach(TableSchema tableSchemaNo in SiTablasClasesConFinalQuery)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="X";
+					strDescritionTabla+="|FINALQUERY="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|FINALQUERY="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+
+public String GetEsReporteDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsReporteTabla=string.Empty;
+	
+	strEsReporteTabla="false";
+	
+		
+	
+	if(tableSchema.Name.Contains("Reporte"))
+	{
+		strEsReporteTabla="true";
+		strDescritionTabla+="|ESREPORTE="+strEsReporteTabla;
+	}
+	
+	
+	
+	
+	//strDescritionTabla+="|ESREPORTE="+strEsReporteTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetEsRompimientoDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="false";
+	
+		
+	
+	
+		if(SiTablasClasesEsRompimiento!=null)
+		{
+			foreach(TableSchema tableSchemaNo in SiTablasClasesEsRompimiento)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="true";
+					strDescritionTabla+="|ESROMPIMIENTO="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|ESROMPIMIENTO="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+
+public String GetClasesNoDescriptionTable(TableSchema tableSchema) 
+{
+	Boolean blnConClasesNo=false;
+	
+	String strDescritionTabla=string.Empty;
+	
+	String strFuncion=string.Empty;
+			
+	if(SiTablasClasesNo!=null)
+	{		
+		foreach(TableSchema tableSchemaNo in SiTablasClasesNo)
+		{
+			if(tableSchema.Name==tableSchemaNo.Name)
+			{
+				blnConClasesNo=true;
+			}
+		}
+	}
+	
+			
+	if(blnConClasesNo)	
+	{
+
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(tableSchema);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					if(strFuncion!=string.Empty)
+					{
+						strFuncion+=",";
+					}
+					
+					strFuncion+=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable);
+					
+				}
+				
+				
+			
+			}
+								
+		
+		strDescritionTabla+="|CLASESNO="+strFuncion;
+	
+	}
+	
+	return strDescritionTabla;
+}
+
+public String GetEsMenuDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strEsRompimientoTabla=string.Empty;
+	
+	strEsRompimientoTabla="false";
+	
+		
+	
+	
+		if(SiTablasEsMenu!=null)
+		{
+			foreach(TableSchema tableSchemaNo in SiTablasEsMenu)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsRompimientoTabla="true";
+					strDescritionTabla+="|ESMENU="+strEsRompimientoTabla;
+				}
+			}
+		}
+	
+	
+	//strDescritionTabla+="|ESROMPIMIENTO="+strEsRompimientoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetEsInternoDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	
+	String strEsInternoTabla=string.Empty;
+	
+	strEsInternoTabla="true";
+	
+	Boolean blnEsInterno=false;
+	
+	foreach(ColumnSchema columnSchema in tableSchema.Columns)
+	{
+		if(columnSchema.IsForeignKeyMember)
+		{
+			blnEsInterno=true;
+		}
+	}
+	
+	
+	if(!blnEsInterno)
+	{
+		strEsInternoTabla="false";
+	}
+	
+	
+	if(blnEsInterno)
+	{
+		if(NoTablasEsInterno!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasEsInterno)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strEsInternoTabla="false";
+					strDescritionTabla+="|ESINTERNO="+strEsInternoTabla;
+					
+					return strDescritionTabla;
+				}
+			}
+		}
+	}
+	
+	if(blnEsInterno)
+	{
+		strDescritionTabla+="|ESINTERNO="+strEsInternoTabla;
+	}
+	
+	//strDescritionTabla+="|ESINTERNO="+strEsInternoTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetWebConAtrasDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strConAtrasTabla=string.Empty;
+	
+	strConAtrasTabla="true";
+	
+	Boolean blnConAtras=false;
+	
+	foreach(ColumnSchema columnSchema in tableSchema.Columns)
+	{
+		if(columnSchema.IsForeignKeyMember)
+		{
+			blnConAtras=true;
+		}
+	}
+	
+	
+	if(!blnConAtras)
+	{
+		strConAtrasTabla="false";
+	}
+	
+	if(blnConAtras)
+	{
+		if(NoTablasWebConAtras!=null)
+		{
+			foreach(TableSchema tableSchemaNo in NoTablasWebConAtras)
+			{
+				if(tableSchema.Name==tableSchemaNo.Name)
+				{
+					strConAtrasTabla="false";
+					strDescritionTabla+="|WEBCONATRAS="+strConAtrasTabla;
+					return strDescritionTabla;
+				}
+			}
+		}
+	}
+	
+	if(blnConAtras)
+	{
+		strDescritionTabla+="|WEBCONATRAS="+strConAtrasTabla;
+	}
+	//strDescritionTabla+="|WEBCONATRAS="+strConAtrasTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetWebPluralDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strPluralTabla=string.Empty;
+	Char chrUltimaLetra=Char.MinValue;
+	
+	strPluralTabla="s";
+	
+	if(ConNombresMayusculas)
+	{
+		strPluralTabla="S";
+	}
+	
+	chrUltimaLetra=tableSchema.Name.ToString()[tableSchema.Name.ToCharArray().Length-1];
+	
+	if(chrUltimaLetra!='a'&&chrUltimaLetra!='e'&&chrUltimaLetra!='i'&&chrUltimaLetra!='o'&&chrUltimaLetra!='u')
+	{
+		strPluralTabla="es";
+	
+		if(ConNombresMayusculas)
+		{
+			strPluralTabla="ES";
+		}
+	}
+	
+	strDescritionTabla+="|WEBPLURAL="+strPluralTabla;
+	
+	return strDescritionTabla;
+}
+
+public String GetWebNameDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	
+	String strNameTable=string.Empty;
+	String strCharNameTable=string.Empty;
+	bool esPrimeraVez=true;
+	
+	foreach(Char charName in tableSchema.Name.ToCharArray())
+	{
+		strCharNameTable=charName.ToString();
+		
+		if(Char.IsUpper(charName))
+		{
+			if(!esPrimeraVez)
+			{
+				strCharNameTable=" "+charName.ToString().ToLower();;
+			}
+			else
+			{
+				esPrimeraVez=false;
+			}
+		}
+		
+		strNameTable+=strCharNameTable;
+	}
+	
+	if(ConNombresMayusculas)
+	{
+		strNameTable=strNameTable.ToUpper();
+	}
+	
+	strDescritionTabla+="|WEBTITULO="+strNameTable;
+	
+	
+	return strDescritionTabla;
+}
+
+public String GetNameDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	strDescritionTabla+="NOMBRE="+tableSchema.Name.ToUpper();
+	
+	return strDescritionTabla;
+}
+
+public String GetTableDescriptions(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	strDescritionTabla+=GetNameDescriptionTable(tableSchema);
+	strDescritionTabla+=GetWebNameDescriptionTable(tableSchema);
+	strDescritionTabla+=GetWebPluralDescriptionTable(tableSchema);
+	strDescritionTabla+=GetWebConAtrasDescriptionTable(tableSchema);
+	strDescritionTabla+=GetEsInternoDescriptionTable(tableSchema);
+	strDescritionTabla+=GetEsMenuDescriptionTable(tableSchema);
+	strDescritionTabla+=GetClasesNoDescriptionTable(tableSchema);
+	strDescritionTabla+=GetEsRompimientoDescriptionTable(tableSchema);
+	strDescritionTabla+=GetEsReporteDescriptionTable(tableSchema);
+	strDescritionTabla+=GetConStoreProcedures(tableSchema);
+	strDescritionTabla+=GetConFinalQueryDescriptionTable(tableSchema);
+	strDescritionTabla+=GetIndicesNoDescriptionTable(tableSchema);
+	strDescritionTabla+=GetWebRelacionesNoDescriptionTable(tableSchema);
+	
+	strDescritionTabla+=GetConAuditoriaDescriptionTable(tableSchema);
+	strDescritionTabla+=GetConObjetoOriginalDescriptionTable(tableSchema);
+	strDescritionTabla+=GetConInsertNoDescriptionTable(tableSchema);
+	strDescritionTabla+=GetConDelCascadeDescriptionTable(tableSchema);
+	strDescritionTabla+=GetConPrefijoIdDescriptionTable(tableSchema);
+	
+	
+	return strDescritionTabla;
+}
+
+public String GetDescriptionTable(TableSchema tableSchema) 
+{
+	String strDescritionTabla=string.Empty;
+	String strAddOrUpdate=string.Empty;
+	
+	strAddOrUpdate="add";
+	
+	if(EsConUpdateSqlSentence)
+	{
+		strAddOrUpdate="update";
+	}
+	
+	strDescritionTabla+="\r\nEXEC sys.sp_"+strAddOrUpdate+"extendedproperty @name=N'MS_Description', @value=N'"+GetTableDescriptions(tableSchema)+"' ,@level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'"+tableSchema.Name+"'\r\n";
+    strDescritionTabla+="GO";								
+
+	return strDescritionTabla; 
+}
+
+</script>
+
+USE <%= SourceDataBase.Name%>
+
+<%for (int i = 0; i < SourceDataBase.Tables.Count; i++){ %>
+	<%= GetDescriptionTable(SourceDataBase.Tables[i]) %>
+<% } %>
+
+
+
+
+
+
+
+
+<%= GetDescriptionsColumns() %>
+

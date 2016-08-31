@@ -1,0 +1,972 @@
+﻿<%@ Template Language="C#" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Collections" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="GenerarParaImagen" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ColumnaImagen" Type="ColumnSchema" Category="Options" Optional="true"%>
+<%@ Property Name="ConFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ConRichFaces" Type="System.Boolean" Default="false" Category="5. Presentation" Description="Nombre del Programdor" %>
+<%@ Property Name="Aplicacion" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ConJavaScriptInclude" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="RichFaces_Version" Type="System.String" Default="4.3" Category="4.3 Versiones" Description="Nombre de la Entidad" %>
+<%@ Property Name="ConCamposGlobalesOcultos" Type="System.Boolean" Default="true" Category="5. Presentation" Description="Nombre del Programdor" %>
+
+<script runat="template">
+//<h:commandButton value="MAPA 2" onclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW')"/>
+/*
+<rich:column>
+						<f:facet name="header">
+						<h:outputText value="MAPA2"/>
+						</f:facet>
+
+						<h:inputText value="#{funcionesBeanFace.intZoom}" size="4" ondblclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW')"/>
+					</rich:column>
+*/
+
+/*
+<rich:column>
+						<f:facet name="header">
+						<h:outputText value="MAPA2"/>
+						</f:facet>						
+						<h:selectBooleanCheckbox   id="cbTipo" value="true" />
+						<h:commandButton value="MAPA 2" onclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW',document.getElementById('frmTablaDatosRadar:richDataTableRadar:#{rowkey}:cbTipo'))"/>
+					</rich:column>
+*/
+
+String strIncludeInitJavaScript=String.Empty;
+String strIncludeEndJavaScript=String.Empty;
+
+//String strIncludeInit=String.Empty;
+//String strIncludeEnd=String.Empty;
+
+public  void GetJavaScriptIncludeInitEnd()
+{
+	
+	//strIncludeInit=/*strStartPageInclude+*/"<%=strIncludeInitFile%>";
+	//strIncludeEnd="/>";//strFinishPageInclude;
+	
+	//strIncludeInitJavaScript="<script type=\"text/javascript\" language=\"javascript\">";
+	//strIncludeEndJavaScript=strEndScript;
+	
+	if(ConJavaScriptInclude)
+	{
+		//strIncludeInitJavaScript=String.Empty;
+		//strIncludeEndJavaScript=String.Empty;
+	
+		strIncludeInit="<script type=\"text/javascript\" src=";
+		strIncludeEnd=">"+strEndScript;
+	}
+	
+	//return strIncludeInit;
+}
+
+public  string GetLibreriasImportFromColumn(ColumnSchema column)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	strNameLibrary+="\r\n"+strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"GeneralFunctions.jsp\"" +strIncludeEnd+"\r\n";	
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccion.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionEventsAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"LogicAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constants.jsp\"" +strIncludeEnd+"\r\n";
+				
+	strNameLibraries+=strNameLibrary+"\r\n";
+	
+	
+	return strNameLibraries;
+}
+
+public  string GetLibreriasImportFromColumnConBusqueda(ColumnSchema column,String strRelativePathNavegacion)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	strNameLibrary+="\r\n\t\t"+strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+strRelativePathNavegacion+GetNombreClaseRelacionadaFromColumn(column)+"GeneralFunctions."+strExtensionJavaScript+"\"" +strIncludeEnd+"\r\n";	
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.jsp\"" +strIncludeEnd+"\r\n";
+	strNameLibrary+="\t\t"+strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+strRelativePathNavegacion+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccion."+strExtensionJavaScript+"\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionEventsAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"LogicAdditional.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.jsp\"" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constants.jsp\"" +strIncludeEnd+"\r\n";
+				
+	strNameLibraries+=strNameLibrary+"\r\n";
+	
+	
+	return strNameLibraries;
+}
+
+public  string GetLibreriasImportFromColumn(ColumnSchema column,bool esImportJavaScript)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	if(!esImportJavaScript)
+	{
+		strNameLibrary="\r\n"+strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccion.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"GeneralFunctions.jsp\"" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constants.jsp\"" +strFinishPageInclude+"\r\n";
+				
+		strNameLibraries+=strNameLibrary+"\r\n";
+	}
+	else
+	{
+		strNameLibrary="\r\nfuncionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccion.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"GeneralFunctions.jsp\");\r\n";
+		strNameLibrary+="funcionGeneral.Import(\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constants.jsp\");\r\n";
+				
+		strNameLibraries+=strNameLibrary+"\r\n";
+	}
+	
+	return strNameLibraries;
+}
+
+
+public  string GetLibreriasForeignKeysColumnsForCombos()
+	{
+		
+	String strNameLibrary="";
+		 strNameLibrary+="";
+	String strNameLibraries="";
+	
+	TableSchema tableSchemaForeignKey;
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember)
+		{
+			
+			strNameLibraries+=GetLibreriasImportFromColumn(column);
+			
+			
+			if(GetBusquedaForeignKeyColumnFromPropertiesC(column))
+			{
+				
+				tableSchemaForeignKey=GetNombreTablaRelacionadaFromColumn(column);
+				
+				if(TablaBase.Name!=tableSchemaForeignKey.Name)
+				{
+					foreach(ColumnSchema columnForeignKey in tableSchemaForeignKey.Columns)
+					{
+					
+						if(columnForeignKey.Name.Equals(strIsActive)|| columnForeignKey.Name.Equals(strIsExpired)|| columnForeignKey.Name.Equals(strId)|| columnForeignKey.Name.Equals(strVersionRow))
+						{
+								continue;
+						}
+						
+						if(columnForeignKey.IsForeignKeyMember)
+						{
+							strNameLibraries+="\r\n\r\n"+GetLibreriasImportFromColumn(columnForeignKey);
+						}
+					}
+				}
+			}
+		}
+		
+		
+	}
+		
+	return strNameLibraries;
+}
+		
+public  string GetLibreriasForeignKeysColumnsForCombosConBusqueda() {
+		
+	String strNameLibrary="";
+		strNameLibrary+="";
+	String strNameLibraries="";
+	String strRelativePathNavegacion="";
+	
+	TableSchema tableSchemaForeignKey;
+	
+	foreach(ColumnSchema column in TablaBase.Columns) {
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow)) {
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember) {
+			
+			//strNameLibraries+=GetLibreriasImportFromColumn(column);
+					
+			if(GetBusquedaForeignKeyColumnFromPropertiesC(column)) {			
+				tableSchemaForeignKey=GetNombreTablaRelacionadaFromColumn(column);
+				strRelativePathNavegacion=GetRelativePathNavegacionFromModuleActualC(tableSchemaForeignKey);//GetRelativePathNavegacionFromTableFromPropertiesC(tableSchemaForeignKey);
+				
+				if(TablaBase.Name!=tableSchemaForeignKey.Name) {
+					strNameLibraries+=GetLibreriasImportFromColumnConBusqueda(column,strRelativePathNavegacion);
+					/*
+					foreach(ColumnSchema columnForeignKey in tableSchemaForeignKey.Columns) {
+					
+						if(columnForeignKey.Name.Equals(strIsActive)|| columnForeignKey.Name.Equals(strIsExpired)|| columnForeignKey.Name.Equals(strId)|| columnForeignKey.Name.Equals(strVersionRow)) {
+								continue;
+						}
+						
+						if(columnForeignKey.IsForeignKeyMember) {
+							strNameLibraries+="\r\n\r\n"+GetLibreriasImportFromColumn(columnForeignKey);
+						}
+					}
+					*/
+				}
+			}
+		}		
+	}
+		
+	return strNameLibraries;
+}
+
+public  string GetKeepAliveForeignKeysColumnsFromCombosConBusqueda() {
+		
+	String strNameLibrary="";
+		strNameLibrary+="";
+	String strNameLibraries="";
+	String strRelativePathNavegacion="";strRelativePathNavegacion="";
+	
+	TableSchema tableSchemaForeignKey;
+	
+	foreach(ColumnSchema column in TablaBase.Columns) {
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow)) {
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember) {
+			
+			//strNameLibraries+=GetLibreriasImportFromColumn(column);
+					
+			if(GetBusquedaForeignKeyColumnFromPropertiesC(column)) {			
+				tableSchemaForeignKey=GetNombreTablaRelacionadaFromColumn(column);
+				
+				if(TablaBase.Name!=tableSchemaForeignKey.Name) {
+					//strNameLibraries+=GetLibreriasImportFromColumnConBusqueda(column,strRelativePathNavegacion);
+					strNameLibraries+="<a4j:keepAlive beanName=\""+GetNombreClaseObjetoC(tableSchemaForeignKey.ToString())+strPrefijoJSFFaces+"\"/>";
+					/*
+					foreach(ColumnSchema columnForeignKey in tableSchemaForeignKey.Columns) {
+					
+						if(columnForeignKey.Name.Equals(strIsActive)|| columnForeignKey.Name.Equals(strIsExpired)|| columnForeignKey.Name.Equals(strId)|| columnForeignKey.Name.Equals(strVersionRow)) {
+								continue;
+						}
+						
+						if(columnForeignKey.IsForeignKeyMember) {
+							strNameLibraries+="\r\n\r\n"+GetLibreriasImportFromColumn(columnForeignKey);
+						}
+					}
+					*/
+				}
+			}
+		}		
+	}
+		
+	return strNameLibraries;
+}
+
+public String GetOrderFuncionesColumns() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsPrimaryKeyMember||columnSchema.IsForeignKeyMember||columnSchema.Name.Equals(strId)||columnSchema.Name.Equals(strIsActive)||columnSchema.Name.Equals(strIsExpired)||columnSchema.Name.Equals(strVersionRow))
+				{
+					continue;
+				}
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\tif(args.value==\""+GetNombreColumnaClaseMinusculaC(columnSchema)+"\")"+"\r\n\t\t\t\t\t\t\t{";					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t\tarrData"+GetNombreClase(TablaBase.ToString())+"s.sort(orderBy"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+");\r\n\t";
+					strTablaClaseRelacionada+="\t\t\t\t\t\t}\r\n";
+			}
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="\t<script type=\"text/javascript\" language=\"javascript\" src=\"JavaScript/";
+	String strNameFin="\"><//script>";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;yaValidacionOtros=false;
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="ValidacionText.jsp";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.jsp";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.jsp";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.jsp";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="ValidacionDate.jsp";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strHtmlInicial="<table width=\"250\" align=\"center\">\r\n<tr>\r\n<td width=\"10%\">";
+			String strHtmlFinal="</tr>\r\n</table>";
+			String strTitulo=string.Empty;
+			String strCombo=string.Empty;
+			String strBoton=string.Empty;
+			
+			String strFuncion=string.Empty;
+			
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"\" name=\"dojo.combobox\"/></td>";					
+				}
+				else
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s\" name=\"dojo.combobox\"/></td>";								
+				}
+				
+			strFuncion+=strHtmlInicial+	strTitulo+strCombo+strBoton+strHtmlFinal+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+
+
+
+
+
+
+public string GetNombreColumnaClaseTituloTablaC(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		String strParamtroInit="<td>";
+		String strParamtroEnd="</td>";
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		
+		strParamtro=strParamtroInit+GetNombreColumnaClaseTituloC(column)+strParamtroEnd;
+		return strParamtro;
+}
+
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+"("+GetTipoColumnaClaseC(column)+")"+"request.getAttribute(\""+GetNombreColumnaClaseC(column)+"\""+");";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="request.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+
+public string GetSetVariablesObjetoTabla(ColumnSchema column,String table)
+{
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	String strColumnaInit="<td><!%=";	
+	String strColumnaEnd="%></td>";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+	 strColumna=strId;
+	}
+	
+	return strColumnaInit+GetNombreClaseObjetoC(table)+".get"+GetNombreCompletoColumnaClaseC(column)+"()"+strColumnaEnd;
+}
+
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+".get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strTipo+strPrefijo+strColumna+";";
+}
+public string GetNombreVariablesStringDefault(ColumnSchema column)
+{
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"=\"\""+";";
+}
+
+public string GetFormVariablesEdit(ColumnSchema column)
+{
+	String strPrefijoInit="<td><input type=\"hidden\" name=\"";
+	String strPrefijoType="txt";
+	String strPrefijoMiddle="\" value=\"<!%="; 
+	String strPrefijoEnd="%>\"></td>";
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijoInit+strPrefijoType+strColumna+strPrefijoMiddle+strPrefijo+strColumna+strPrefijoEnd;
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+</script>
+<%//InicializarVariablesPorTabla(TablaBase);%>
+<%//InicializarVariablesEmpresa();%>
+<%if(!ConFaces&&!ConRichFaces){%>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.ConstantesJsp" %>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.ConstantesServlet" %>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.Constantes" %>
+<%=strStartPageInclude%> page contentType="text/html; charset=UTF-8" %>
+<%=strStartPageInclude%> taglib prefix="a" uri="http://jmaki/v1.0/jsp" %>
+<%}%>
+
+<%if(ConFaces){%>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/html" prefix="h" %>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/core" prefix="f" %>
+<%}%>
+
+<%if(ConRichFaces){%>
+
+<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/html" prefix="h" %>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/core" prefix="f" %>
+
+<%=strStartPageInclude%> taglib uri="http://richfaces.org/rich" prefix="rich"%>
+<%=strStartPageInclude%> taglib uri="http://richfaces.org/a4j" prefix="a4j"%>
+
+<%} else if(EsVersionRichFaces4C(RichFaces_Version)){%>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:a4j="http://richfaces.org/a4j"
+      xmlns:rich="http://richfaces.org/rich">
+<%}%>
+<%}%>
+
+<%if(!ConRichFaces){%>
+<html>
+<%}%>	
+
+	
+	<%if(!ConRichFaces&&!ConRichFaces){%>
+	
+	<%=strStartPageIncludeOnly%>	
+		response.setHeader(ConstantesServlet.SCACHECONTROL,ConstantesServlet.SNOSTORE); //HTTP 1.1
+		response.setHeader(ConstantesServlet.SPRAGMA,ConstantesServlet.SNOCACHE); //HTTP 1.0
+		response.setDateHeader(ConstantesServlet.SEXPIRES, -1); 		
+	<%=strFinishPageInclude%>
+	
+	<%=strStartPageIncludeOnly%>
+	 String strPerfilArbol=ConstantesJsp.SJMAKITREEDEFAULT;
+	 String strPerfilJavaScriptArbol="";
+	 
+	 if(request.getSession().getAttribute(Constantes.SSESSIONVALUETREEAJAX)!=null)
+	 {
+		 strPerfilArbol=(String) request.getSession().getAttribute(Constantes.SSESSIONVALUETREEAJAX);
+	 }
+	 
+	 if(request.getSession().getAttribute(Constantes.SSESSIONVALUEJAVASCRIPTTREEAJAX)!=null)
+	 {
+		 strPerfilJavaScriptArbol=(String) request.getSession().getAttribute(Constantes.SSESSIONVALUEJAVASCRIPTTREEAJAX);
+	 }
+	 
+	<%=strFinishPageInclude%>
+	
+	<%}%>
+  
+	<%if(!ConRichFaces){%>
+	<head>
+	 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+	
+ 	 <title><%=GetTituloNombreTableFromPropertiesC(TablaBase)%> Mantenimiento</title>
+	<%} else {%>	
+<f:view>
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	<rich:page id="outerBorder" pageTitle="<%=GetTituloNombreTableFromPropertiesC(TablaBase)%> Mantenimiento" markupType="html">
+	<%}%>
+		<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+		<f:facet name="pageHeader">
+		<%} else if(EsVersionRichFaces4C(RichFaces_Version)) {%>
+	<h:head>
+		<%}%>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+		
+	<%}%>
+		
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/General/Constantes.<%=strExtensionJavaScript%>" <%=strIncludeEnd%>			
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/General/FuncionGeneral.<%=strExtensionJavaScript%>" <%=strIncludeEnd%>			
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Ajax/waiter.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Validacion/Validacion.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Validacion/Validador.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Ajax/Ajax.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Ajax/AjaxFuncionGeneral.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%}%>
+		
+		<%if(!ConFaces&&!ConRichFaces){%>			
+		<%=GetLibreriasForeignKeysColumnsForCombos()%>
+		<%} else {%>
+		<%=GetLibreriasForeignKeysColumnsForCombosConBusqueda()%>
+		<%}%>
+				
+		<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Entities/<%=GetNombreClase(TablaBase.ToString())%>Entity.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccess.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>		
+		<%}%>
+		
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/GeneralFunctionsAndConstants/<%= Package%>/<%=GetRelativePathNavegacionFromModuleActualC(TablaBase)%><%//=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetEsPaqueteRelativePathReporteParaReporteC(TablaBase,false)%><%=GetNombreClase(TablaBase.ToString())%>GeneralFunctions.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>		
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%= Package%>/<%=GetRelativePathNavegacionFromModuleActualC(TablaBase)%><%//=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetEsPaqueteRelativePathReporteParaReporteC(TablaBase,false)%><%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccion.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>		
+		
+		<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccionAdditional.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>						
+		
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Services/<%=GetNombreClase(TablaBase.ToString())%>Services.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>Logic.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>LogicAdditional.<%=strExtensionJavaScript%>"<%=strIncludeEnd%>
+		
+		<%}%>
+		
+		<script type="text/javascript" src="<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Ajax/scriptaculous/prototype.js"></script>	
+		<script type="text/javascript" src="<%=GetRelativePathC(TablaBase)%>JavaScript/Library/Ajax/scriptaculous/scriptaculous.js"></script>	
+		
+		
+		<link rel="stylesheet" type="text/css" href="<%=GetRelativePathC(TablaBase)%>Css/style.css" media="screen" />
+		<link rel="stylesheet" href="<%=GetRelativePathC(TablaBase)%>Css/jmaki-standard.css" type="text/css"/>
+		
+		<link rel="stylesheet" media="screen,projection" href="<%=GetRelativePathC(TablaBase)%>Css/Background/main.css" type="text/css"/>		
+		<link rel="stylesheet" media="print" href="<%=GetRelativePathC(TablaBase)%>Css/Background/print.css" type="text/css"/>		
+		<link rel="stylesheet" media="aural" href="<%=GetRelativePathC(TablaBase)%>Css/Background/aural.css" type="text/css"/>
+
+<%if(!ConRichFaces){%>
+	</head>
+
+
+ <body  onload="<%=GetNombreClaseObjeto(TablaBase.ToString())%>PaginaWebInteraccion.cargarPagina('Todos')">
+<%} else {%>
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	</f:facet>
+	<%} else if(EsVersionRichFaces4C(RichFaces_Version)) {%>
+	</h:head>
+	<%}%>
+<%}%>
+
+	<div id="outerBorder">
+		
+		<div id="header">
+		
+			<div id="banner">
+				<%=Aplicacion%> - <font class="titulobanner"><%=strMantenimientoDe%><%=GetTituloNombreTableFromPropertiesC(TablaBase)%><%=GetPluralTituloNombreTableFromPropertiesC(TablaBase)%></font>
+			</div>
+					
+			<div id="subheader" class="links">    
+			
+						<div style="${<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.sStyleDivOpcionesBanner}">
+							<%if(!ConRichFaces&&!ConFaces){%>
+							<a onclick="funcionGeneral.cerrarSesion('<%=GetRelativePathC(TablaBase)%>')">Cerrar Sesion</a> |
+							<a onclick="funcionGeneral.irLogin('<%=GetRelativePathC(TablaBase)%>')">Login</a> |
+							<a onclick="funcionGeneral.irHome('<%=GetRelativePathC(TablaBase)%>')">Home</a>
+							<%} else {%>
+								<%=strIncludeInitFile%>"/Component/header.<%=strExtensionWeb%>" <%=strIncludeEndFile%>
+							<%}%>
+						</div>     
+						
+			</div> <!-- sub-header -->
+			
+			<div id="subheaderImagesLinks"> 
+				<div id="subheaderImageTree" style="${<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.sStyleDivExpandirColapsar}">    
+					<img id="imgExpandirColapsar" align="left" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/collapse.gif" width="20" height="20"  onclick="funcionGeneral.colapsar('<%=GetRelativePathC(TablaBase)%>')"/>
+				</div>	
+				
+			</div> 
+					
+		</div> <!-- header -->		
+		
+		<div id="main">
+		
+			<div id="leftSidebar" class="left" style="${<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.sStyleDivArbol}">
+				<%if(!ConRichFaces&&!ConFaces){%>
+				<a:widget id="djdjtTreeOpciones" name="dojo.dijit.tree" service="/SistemaServlet?accionAdicional=TraerArbolTemasDesdeSession"/>
+				<% } else {%>
+					<%=strIncludeInitFile%>"/Component/tree_modulo.<%=strExtensionWeb%>" <%=strIncludeEndFile%>
+				<%}%>
+			</div> <!-- leftSidebar -->
+	
+			<div id="content" style="${<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.sStyleDivContent}">
+				<div id="divMensaje">
+				
+				</div>
+				
+				<table>
+					<tr>
+						<td class="elementos">
+							<h2>${<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>.<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.sPathNavegacionActual}</h2>
+						</td>
+					</tr>
+				</table>
+				
+ <%if(ConRichFaces){%>
+
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	<a4j:keepAlive beanName="<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>"/>
+	<%}%>
+	
+	<%//=GetKeepAliveForeignKeysColumnsFromCombosConBusqueda()%>
+ <%}%>	
+
+ <%if(ConFaces){//SI ESTA BIEN SOLO CON FACES%>
+ <f:view>
+	
+ <%}%>
+	
+	<a name="ControlesSecciones"></a>
+	<table width="100%"  align="center" class="super">
+	
+		<%=GetWebRowTituloTablaClaseC(TablaBase,true,false)%> 
+	
+		<%=GetWebRowControlesBusquedasIndicesTablasClasesC(TablaBase,true,false,false,ConFaces,ConRichFaces,RichFaces_Version)%> 
+
+		<%=GetWebRowParametrosBusquedaTablaClaseC(TablaBase,true,false,false,false,ConFaces,ConRichFaces,RichFaces_Version) %>
+		
+		<%=GetWebRowTablaDatosTablaClaseC(TablaBase,null,null,true,false,null,false,GenerarParaImagen,ConFaces,ConRichFaces,RichFaces_Version)%>
+		
+		<%=GetWebRowPaginacionYNuevoTablaClaseC(TablaBase,true,false,false,ConFaces,ConRichFaces,RichFaces_Version)%>
+		
+		<%=GetWebRowElementosTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces,RichFaces_Version,false,ConCamposGlobalesOcultos) %>
+		
+		<%if(!GenerarParaImagen) { if(!ConRichFaces) {//CON RICHFACES LAS ACCIONES VAN DENTRO DEL FORM DE CAMPOS%>
+		<%=GetWebRowAccionesTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces) %>
+		<%}}%>
+		<%else{%>
+		<%=GetWebRowImagenAccionesTablaClaseC(TablaBase,ColumnaImagen,ConFaces,ConRichFaces) %>
+		<%}%>
+		
+	</table>
+	
+	<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccionEvents.jsp"<%=strIncludeEnd%>
+		<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClaseC(TablaBase.ToString())%>PaginaWebInteraccionEventsAdditional.jsp"<%=strIncludeEnd%>
+		<%=GetWebRowControlesBusquedasIndicesTablasClasesC(TablaBase,strIncludeInit,strIncludeEnd)%>
+
+	<script type='text/javascript' src='<%=GetRelativePathC(TablaBase)%>resources/wfactory.js'></script>
+	<script type='text/javascript' src='<%=GetRelativePathC(TablaBase)%>resources/jmaki/widgetFactory/extension-min.js'></script>
+	
+	<script type="text/javascript" language="javascript">
+		
+		jmaki.subscribe(constantes.STRJMAKITREESUBSCRIBESELECT, manejarSeleccionTree);
+							 
+		function manejarSeleccionTree(args) {
+			ajaxFuncionGeneral.manejarSeleccionTree(args,<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strRelativePath);				
+		}	
+	</script>
+	
+			
+
+	<%}%>
+	<%else{%>
+ 	
+ 	<%}%>
+	
+			</div> <!-- content -->    		
+    	</div> <!-- main -->	
+ 	</div> <!-- outerborder -->	
+	
+	<%if(ConFaces){%>
+	</f:view>
+ 	<%}%>
+	
+<%if(!ConRichFaces){%>
+</body>
+<%} else {%>
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	<f:facet name="footer">
+	<%}%>
+	
+    <%=strIncludeInitFile%>"/Component/footer.<%=strExtensionWeb%>" <%=strIncludeEndFile%>
+   
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	</f:facet>
+	<%}%>
+	
+	<%if(EsVersionRichFaces3C(RichFaces_Version)){%>
+	</rich:page>
+	<%}%>
+</f:view>
+</html>
+<%}%>
+<script runat="template">
+/*
+<img id="imgAreaBusquedas" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/busqueda.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Busquedas')"/>
+<img id="imgAreaControles" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/controles.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Campos')"/>
+<img id="imgAreaAcciones" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/acciones.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Acciones')"/>
+<img id="imgAtras" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/atras.gif" width="20" height="20"  onclick="history.back()"/>	
+			
+*/
+
+/*
+<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/LayerCommunication/<%=GetNombreClase(TablaBase.ToString())%>LayerCommunication.jsp"<%=strIncludeEnd%>
+<%=strIncludeInit%>"<%=GetRelativePathC(TablaBase)%>JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>Constants.jsp"<%=strIncludeEnd%>
+*/		
+
+/*
+<f:facet name="header">
+		<!-- header content -->
+		<%=strIncludeInitFile%>"/Component/header.jsp" <%=strIncludeEndFile%>
+	</f:facet>
+	
+	<f:facet name="subheader">
+		<!-- subheader content -->
+		<b>SUB-HEADER</b>
+	</f:facet>
+	
+	<f:facet name="sidebar">
+		<!-- sidebar content -->
+		<%=strIncludeInitFile%>"/Component/tree.jsp" <%=strIncludeEndFile%>
+	</f:facet>
+*/
+</script>

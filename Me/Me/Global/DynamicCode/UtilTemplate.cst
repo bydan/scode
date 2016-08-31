@@ -1,0 +1,606 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+<%@ Property Name="GeneracionNuevaOpcion" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionNuevaOpcionSql" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionNuevaOpcionSqlDefinicionStandard" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionNuevoGrupoOpcion" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionNuevaAccionSql" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionTest" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionSobreEscribirAdditional" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionXmlCodeSmithTables" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionVerificarNuevaOpcionRelacionada" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="GeneracionPorTablas" Type="System.Boolean" Default="false" Category="0.0 Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionTodos" Type="System.Boolean" Default="true" Category="0.0 Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionPorModulo" Type="System.Boolean" Default="false" Category="0.0 Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionPorEsquema" Type="System.Boolean" Default="false" Category="0.0 Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionReportes" Type="System.Boolean" Default="false" Category="0.0 Tipo Generacion" Description="Nombre del Programdor" %>
+
+
+<%@ Property Name="SourceTablesForGenerate" Type="SchemaExplorer.TableSchemaCollection" Category="0.Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0.Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="SourceColumns" Type="SchemaExplorer.ColumnSchemaCollection" Category="0.Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceModuloForGenerate" Type="System.String" Default="" Category="0.Tipo Generacion Source" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="SourceEsquemaForGenerate" Type="System.String" Default="" Category="0.Tipo Generacion Source" Description="Nombre de la Entidad" Optional="true"%>
+
+<%@ Property Name="IdSistema" Type="System.String" Default="14" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="IdOpcion" Type="System.String" Default="50" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="IdOpcionPadre" Type="System.String" Default="null" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="IdGrupoOpcion" Type="System.String" Default="5" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="IdModulo" Type="System.String" Default="1" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="ModuloMenu" Type="System.String" Default="" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="EsOpcionPadre" Type="System.Boolean" Default="false" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="EsOpcionInterna" Type="System.Boolean" Default="false" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="OpcionPadreCodigo" Type="System.String" Default="" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="OpcionPadreNombre" Type="System.String" Default="" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="ConReemplazarNombre" Type="System.Boolean" Default="false" Category="1.Nueva Opcion Sql" Description="Nombre del Programdor" %>
+
+<%@ Property Name="PathSobreEscribir" Type="System.String" Default="" Category="2.Sobreescribir Additional" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="ClaveEscribir" Type="System.String" Default="" Category="2.Sobreescribir Additional" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="NombreEmpresa" Type="System.String" Default="ME" Category="0.0 Tipo Generacion" Description="Nombre de la Empresa" %>
+
+<%@ Property Name="IdAccion" Type="System.String" Default="50" Category="0.1.Nueva Accion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="IdPerfilAccion" Type="System.String" Default="50" Category="0.1.Nueva Accion Sql" Description="Nombre del Programdor" %>
+<%@ Property Name="AccionCodigo" Type="System.String" Default="" Category="0.1.Nueva Accion Sql" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="AccionNombre" Type="System.String" Default="" Category="0.1.Nueva Accion Sql" Description="Nombre del Programdor" Optional="True"%>
+
+<script runat="template">
+TableSchemaCollection SourceDatabaseTables;
+
+public String GetXmlCodeSmithTables() {
+	String sUtil="";
+	ArrayList arrayListTablas=new ArrayList();
+	
+	if(SourceColumns!=null) {
+		foreach (ColumnSchema columnSchema in SourceColumns) {		
+			if(!ExisteTablaEnListaC(columnSchema.Table,arrayListTablas)) {
+				arrayListTablas.Add(columnSchema.Table);
+			}
+		}
+		
+		foreach (TableSchema tableSchema in arrayListTablas) {		
+			sUtil+="\r\n<table>";
+			sUtil+="\r\n\t<owner>"+tableSchema.Owner+"</owner>";
+			sUtil+="\r\n\t<name>"+tableSchema.Name+"</name>";
+			sUtil+="\r\n</table>";
+		}
+	}		
+	
+	return sUtil;
+}
+
+public void InicializarVariablesEmpresa() {
+	//System.Windows.Forms.MessageBox.Show("inicializar");
+	InicializarVariablesEmpresaC(NombreEmpresa,false);
+	
+	if(GeneracionPorTablas) {
+		SourceDatabaseTables=GetTablasNormalesReportesC(SourceTablesForGenerate,GeneracionReportes);
+	} else if(GeneracionPorModulo){
+		SourceDatabaseTables=GetTablasForModuloC(SourceDataBase,SourceModuloForGenerate,GeneracionReportes);
+	} else if(GeneracionPorEsquema){
+		SourceDatabaseTables=GetTablasForEsquemaC(SourceDataBase,SourceEsquemaForGenerate,GeneracionReportes);
+	} else {
+		SourceDatabaseTables=GetTablasNormalesReportesC(SourceDataBase.Tables,GeneracionReportes);
+	}
+}
+
+public bool ValidarVariablesInicialesTipo()
+{
+	bool blnValidado=false;
+	int intNumeroTipoEjecusion=0;
+	
+	if(GeneracionPorTablas){
+		intNumeroTipoEjecusion++;
+	}
+	
+	if(GeneracionPorModulo){
+		intNumeroTipoEjecusion++;
+	}
+	
+	if(GeneracionPorEsquema) {
+		intNumeroTipoEjecusion++;
+	}
+	
+	if(GeneracionTodos) {
+		intNumeroTipoEjecusion++;
+	}
+		
+	if(intNumeroTipoEjecusion.Equals(1)) {
+		blnValidado=true;
+		
+	} else {
+		System.Windows.Forms.MessageBox.Show("SOLO DEBE ESTAR SELECCIONADO 1 TIPO DE EJECUSION(TODO,TABLAS,MODULO)");
+	}	
+	
+	return blnValidado;
+}
+
+public String GetFuncionEscribir() {
+	String sUtil="";
+	
+	sUtil+="\r\n\r\npublic void nuevaFuncion() {";
+	sUtil+="\r\n\tint a=0;";
+	sUtil+="\r\n\tint b=0;";
+	sUtil+="\r\n\tint c=0;";
+	sUtil+="\r\n}\r\n\r\n";
+	
+	return sUtil;
+}
+
+public ArrayList GetModulos() {
+	ArrayList arrayListModulos=new ArrayList();
+	
+	arrayListModulos.Add("seguridad");//1	
+	arrayListModulos.Add("contabilidad");//2
+	arrayListModulos.Add("puntoventa");//3
+	arrayListModulos.Add("nomina");//4
+	arrayListModulos.Add("facturacion");//5
+	arrayListModulos.Add("cartera");//6
+	arrayListModulos.Add("activosfijos");//7
+	arrayListModulos.Add("inventario");//8
+	arrayListModulos.Add("comisiones");//9
+	arrayListModulos.Add("tesoreria");//10
+	arrayListModulos.Add("produccion");//11
+	
+	
+	return arrayListModulos;
+}
+
+public void AgregarNuevoCodigo(StringBuilder stringBuilder) {
+	stringBuilder.Append("\r\n\tpublic static void RecargarVentanaSegunOpcion(JInternalFrameBase jInternalFrameBase,Opcion opcionActual) throws Exception {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_2");
+	stringBuilder.Append("\r\n\t}");
+}
+
+public bool ExisteCampoTabla(TableSchema tableSchema,String strCampo) {
+	bool existe=false;
+	
+	foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+		if(columnSchema.Name.Equals(strCampo)) {
+			existe=true;
+			
+			break;
+		}		
+	}
+	
+	return existe;
+}
+
+public String GetTest() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {//SourceDatabaseTables) {
+		existe=false;
+			
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			/*
+			if(!EsDecimalColumn(columnSchema) && !EsBigIntColumn(columnSchema) && !EsIntColumn(columnSchema)
+				&& !EsSmallIntColumn(columnSchema)&& !EsCharColumn(columnSchema) && !EsVarCharColumn(columnSchema)
+				&& !EsDateTimeColumn(columnSchema)&& !EsDateColumn(columnSchema) && !EsBitColumn(columnSchema)) {
+				sUtil+="\r\n"+columnSchema.DataType;
+			}
+			*/
+			/*
+			if(EsBinaryColumn(columnSchema) && !columnSchema.Name.Equals(strVersionRow)) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+":"+columnSchema.DataType;
+			}
+			*/
+			
+			/*
+			if(columnSchema.Description==null || columnSchema.Description.Equals("")) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name;
+			}
+			*/
+			
+			if(columnSchema.Name.Contains("idEjercicio")) {
+				existe=true;
+				break;
+			}
+			
+			
+		}
+		
+		if(existe) {
+			iCount++;
+			
+			if(!ExisteCampoTabla(tableSchema,"idEmpresa")) {
+			//if(!(ExisteCampoTabla(tableSchema,"idEmpresa") && ExisteCampoTabla(tableSchema,"idEjercicio"))) {
+				//Trace.WriteLine("Falta campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);	
+			} else {
+				//Trace.WriteLine("Si existe campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);
+			}
+		}
+		
+		
+		/*
+		if(tableSchema.Description==null || tableSchema.Description.Equals("")) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+		
+		/*
+		if(existe) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+	}
+	
+	sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetNuevoGrupoOpcion() {
+	String sUtil="";
+	
+	ArrayList arrayListGrupoOpciones=new ArrayList();
+	
+	if(blnEsMixedCaseLabelNames) {
+		strArchivo="Archivo";
+		strDefiniciones="Definiciones";
+		strProcesos="Procesos";
+		strUtilitarios="Utilitarios";
+		strReportes="Reportes";
+	}		
+	
+	arrayListGrupoOpciones.Add(strArchivo);
+	arrayListGrupoOpciones.Add(strDefiniciones);
+	arrayListGrupoOpciones.Add(strProcesos);
+	arrayListGrupoOpciones.Add(strUtilitarios);
+	arrayListGrupoOpciones.Add(strReportes);
+	
+	//CREACION DE GRUPO OPCION
+	int iIdGrupoOpcion=int.Parse(IdGrupoOpcion);
+	
+	foreach(String sGrupoOpcion in arrayListGrupoOpciones) {
+		sUtil+="\r\n\r\n\tINSERT INTO seguridad.grupo_opcion(";
+    	sUtil+="\r\n\t\tid, version_row, id_modulo, codigo, nombre_principal, estado)";
+    	sUtil+="\r\n\t\tVALUES ("+iIdGrupoOpcion+", '2013-02-18 18:34:11.968-05',"+IdModulo+", '"+sGrupoOpcion.ToUpper()+"', '"+sGrupoOpcion+"', true);";
+		
+		iIdGrupoOpcion++;
+	}
+
+	
+	return sUtil;
+}
+
+public String GetVerificarNuevaOpcionRelacionada() {
+	String sUtil="";
+	
+	int iCount=0;
+	int iIdOpcion=int.Parse(IdOpcion);
+	int iIdOpcion1=iIdOpcion;
+	int iIdOpcion2=iIdOpcion;
+	
+	String sModuloMenu=ModuloMenu;
+	
+	sUtil+="\r\n\r\n";
+	
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		iCount++;
+		if(sModuloMenu.Equals("")) {
+			sModuloMenu=tableSchema.Owner;
+		}
+		
+		sUtil+="\r\n\t"+"OpcionesUsuario.ProcesarOpcionUsuario(opcionLogic,\""+GetNombreClaseC(tableSchema.ToString())+"\",\""+GetNombreClaseC(tableSchema.ToString()).ToUpper()+"\",\""+GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ")+"\",\""+sModuloMenu+"\");";
+		
+		/*
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_opcion, codigo, nombre, posicion, icon_name, ";
+        sUtil+="\r\n\t\t"+"nombre_clase, paquete, es_para_menu, estado, id_grupo_opcion,id_modulo)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion1+", '2013-03-30 14:53:42.38-05', "+IdOpcionPadre+", '"+GetNombreClaseC(tableSchema.ToString()).ToUpper()+"', '"+GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ")+"', 0, 'x',";
+        sUtil+="\r\n\t\t"+"'"+GetNombreClaseC(tableSchema.ToString())+"', '"+sModuloMenu+"', true, true, "+IdGrupoOpcion+","+IdModulo+");";
+		*/
+		
+		iIdOpcion1++;
+	}
+	
+	Trace.WriteLine("TOTAL "+SourceDatabaseTables.Count);
+	/*
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.perfil_opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_perfil, id_opcion, todo, ingreso, modificacion,"; 
+        sUtil+="\r\n\t\t"+"eliminacion, consulta, busqueda, reporte, estado)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion2+", '2011-07-27 08:08:40-05', 1, "+iIdOpcion2+", true, true, true,"; 
+        sUtil+="\r\n\t\t"+"true, true, true, true, true);";	
+		
+		iIdOpcion2++;
+	}
+	*/
+	
+	return sUtil;
+}
+
+public String GetNuevaOpcion() {
+	String sUtil="";
+	String sEsGuardarRelaciones="false";
+	
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		sUtil+="\r\n\t"+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame "+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=null;";
+		
+		
+	}
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		sEsGuardarRelaciones="false";
+		
+		if(GetEsGuardarRelacionesFromPropertiesC(tableSchema)) {
+			sEsGuardarRelaciones="true";	
+		}
+		
+		sUtil+="\r\n\r\n\telse if(strPantalla.equals("+GetNombreClaseC(tableSchema.ToString())+"ConstantesFunciones.CLASSNAME)) {";  
+	    sUtil+="\r\n\t\t"+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=new "+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame(true,true,desktop,usuarioActual,resumenUsuarioActual,moduloActual,opcionActual,parametroGeneralSg,parametroGeneralUsuario,PaginaTipo.PRINCIPAL,"+sEsGuardarRelaciones+",false,true,true);";
+    	sUtil+="\r\n\t\tjinternalFrame ="+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame;";   			
+	    sUtil+="\r\n\t}";
+	}
+	
+	 sUtil+="\r\n\tBASE DE DATOS CON "+SourceDataBase.Tables.Count+" TABLAS";
+	return sUtil;
+}
+
+public String GetNuevaOpcionSql() {
+	String sUtil="";
+	
+	int iIdOpcion=int.Parse(IdOpcion);
+	int iIdOpcion1=iIdOpcion;
+	int iIdOpcion2=iIdOpcion;
+	
+	String sModuloMenu=ModuloMenu;
+	String sModuloMenuOriginal="";//ModuloMenu;
+	String strNombreClase="";
+	String strCodigoOpcion="";
+	String strNombreOpcion="";
+	String strEsParaMenu="true";
+	//EsOpcionPadre
+	
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		//sUtil+="\r\n\t"+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame "+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=null;";		
+		if(sModuloMenu.Equals("")) {
+			sModuloMenu=tableSchema.Owner;
+		}
+		sModuloMenuOriginal=tableSchema.Owner;
+		
+		strNombreClase=GetNombreClaseC(tableSchema.ToString());
+		strCodigoOpcion=GetNombreClaseC(tableSchema.ToString()).ToUpper();
+		strNombreOpcion=GetTituloNombreTableFromPropertiesC(tableSchema).Replace("_"," ");//GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ");
+		
+		if(EsOpcionPadre) {
+			Trace.WriteLine("ADVERTENCIA: SE VA GENERAR OPCION PADRE");
+			
+			if(OpcionPadreCodigo==null || OpcionPadreNombre==null || OpcionPadreCodigo.Equals("") || OpcionPadreNombre.Equals("")) {
+				System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL CODIGO Y NOMBRE DE LA OPCION PADRE");				
+				break;
+			}
+			
+			strNombreClase="";
+			strCodigoOpcion=OpcionPadreCodigo;
+			strNombreOpcion=OpcionPadreNombre;											
+		}
+		
+		if(EsOpcionInterna) {
+			strEsParaMenu="false";
+		}
+		
+		if(ConReemplazarNombre) {
+			Trace.WriteLine("ADVERTENCIA: SE VA REEMPLAZAR NOMBRE ORIGINAL:"+GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ")+", NOMBRE FINAL="+OpcionPadreNombre);
+			
+			if(OpcionPadreNombre==null || OpcionPadreNombre.Equals("")) {
+				System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE A REEMPLAZAR DE LA OPCION");				
+				break;
+			}
+			
+			strNombreOpcion=OpcionPadreNombre;	
+		}
+		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_opcion, codigo, nombre, posicion, icon_name, ";
+        sUtil+="\r\n\t\t"+"nombre_clase, paquete, paquete_original, es_para_menu, estado, id_grupo_opcion,id_modulo,id_sistema)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion1+", '2013-03-30 14:53:42.38-05', "+IdOpcionPadre+", '"+strCodigoOpcion+"', '"+strNombreOpcion+"', 0, 'x',";
+        sUtil+="\r\n\t\t"+"'"+strNombreClase+"', '"+sModuloMenu+"', '"+sModuloMenuOriginal+"', "+strEsParaMenu+", true, "+IdGrupoOpcion+","+IdModulo+","+IdSistema+");";
+		
+		iIdOpcion1++;
+	}
+		
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.perfil_opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_perfil, id_opcion, todo, ingreso, modificacion,"; 
+        sUtil+="\r\n\t\t"+"eliminacion, consulta, busqueda, reporte, estado)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion2+", '2011-07-27 08:08:40-05', 1, "+iIdOpcion2+", true, true, true,"; 
+        sUtil+="\r\n\t\t"+"true, true, true, true, true);";	
+		
+		iIdOpcion2++;
+	}
+	
+	return sUtil;
+}
+
+public String GetNuevaAccionSql() {
+	String sUtil="";
+	
+	int iIdOpcion=int.Parse(IdOpcion);
+	int iIdOpcion1=iIdOpcion;
+	int iIdOpcion2=iIdOpcion;
+	
+	String sModuloMenu=ModuloMenu;
+	String sModuloMenuOriginal="";//ModuloMenu;
+	String strNombreClase="";
+	String strCodigoOpcion="";
+	String strNombreOpcion="";
+	String strEsParaMenu="true";
+	//EsOpcionPadre
+	
+	
+	sUtil+="\r\n\r\n\tINSERT INTO seguridad.accion(id, version_row, id_opcion, codigo, nombre, descripcion, estado,orden)";
+    sUtil+="\r\n\tVALUES ("+IdAccion+", '2013-03-30 14:53:42.38-05', "+IdOpcion+", '"+AccionCodigo+"', '"+AccionNombre+"', '"+AccionNombre+"', true,0);";
+	
+	sUtil+="\r\n\r\n\tINSERT INTO seguridad.perfil_accion(id, version_row, id_perfil, id_accion, ejecusion, estado)";
+    sUtil+="\r\n\tVALUES ("+IdAccion+", '2013-03-30 14:53:42.38-05', 1, "+IdAccion+", true, true);";//IdPerfilAccion
+	
+	/*
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		//sUtil+="\r\n\t"+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame "+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=null;";		
+		if(sModuloMenu.Equals("")) {
+			sModuloMenu=tableSchema.Owner;
+		}
+		sModuloMenuOriginal=tableSchema.Owner;
+		
+		strNombreClase=GetNombreClaseC(tableSchema.ToString());
+		strCodigoOpcion=GetNombreClaseC(tableSchema.ToString()).ToUpper();
+		strNombreOpcion=GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ");
+		
+		if(EsOpcionPadre) {
+			Trace.WriteLine("ADVERTENCIA: SE VA GENERAR OPCION PADRE");
+			
+			if(OpcionPadreCodigo==null || OpcionPadreNombre==null || OpcionPadreCodigo.Equals("") || OpcionPadreNombre.Equals("")) {
+				System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL CODIGO Y NOMBRE DE LA OPCION PADRE");				
+				break;
+			}
+			
+			strNombreClase="";
+			strCodigoOpcion=OpcionPadreCodigo;
+			strNombreOpcion=OpcionPadreNombre;											
+		}
+		
+		if(EsOpcionInterna) {
+			strEsParaMenu="false";
+		}
+		
+		if(ConReemplazarNombre) {
+			Trace.WriteLine("ADVERTENCIA: SE VA REEMPLAZAR NOMBRE ORIGINAL:"+GetNombreTableFromProperties(tableSchema).ToUpper().Replace("_"," ")+", NOMBRE FINAL="+OpcionPadreNombre);
+			
+			if(OpcionPadreNombre==null || OpcionPadreNombre.Equals("")) {
+				System.Windows.Forms.MessageBox.Show("DEBE INGRESAR EL NOMBRE A REEMPLAZAR DE LA OPCION");				
+				break;
+			}
+			
+			strNombreOpcion=OpcionPadreNombre;	
+		}
+		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_opcion, codigo, nombre, posicion, icon_name, ";
+        sUtil+="\r\n\t\t"+"nombre_clase, paquete, paquete_original, es_para_menu, estado, id_grupo_opcion,id_modulo,id_sistema)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion1+", '2013-03-30 14:53:42.38-05', "+IdOpcionPadre+", '"+strCodigoOpcion+"', '"+strNombreOpcion+"', 0, 'x',";
+        sUtil+="\r\n\t\t"+"'"+strNombreClase+"', '"+sModuloMenu+"', '"+sModuloMenuOriginal+"', "+strEsParaMenu+", true, "+IdGrupoOpcion+","+IdModulo+","+IdSistema+");";
+		
+		iIdOpcion1++;
+	}
+		
+	foreach (TableSchema tableSchema in SourceDatabaseTables) {		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.perfil_opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_perfil, id_opcion, todo, ingreso, modificacion,"; 
+        sUtil+="\r\n\t\t"+"eliminacion, consulta, busqueda, reporte, estado)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion2+", '2011-07-27 08:08:40-05', 1, "+iIdOpcion2+", true, true, true,"; 
+        sUtil+="\r\n\t\t"+"true, true, true, true, true);";	
+		
+		iIdOpcion2++;
+	}
+	*/
+	
+	return sUtil;
+}
+
+public String GetNuevasOpcionesStandarDefinicionSql() {
+	String sUtil="";
+	
+	int iIdOpcion=int.Parse(IdOpcion);
+	int iIdOpcion1=iIdOpcion;
+	int iIdOpcion2=iIdOpcion;
+	
+	String sModuloMenu=ModuloMenu;
+	
+	ArrayList arrayList=new ArrayList();
+	
+	if(blnEsMixedCaseLabelNames) {
+		strPrincipal="Principal";
+		strConfiguracion="Configuracion";
+		strGeneral="General";
+		strTipos="Tipos";
+		strInterno="Interno";
+	}		
+	
+	
+	arrayList.Add(strPrincipal);
+	arrayList.Add(strConfiguracion);
+	arrayList.Add(strGeneral);
+	arrayList.Add(strTipos);
+	arrayList.Add(strInterno);
+	
+	foreach (String sOpcionStandarDef in arrayList) {		
+		//sUtil+="\r\n\t"+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame "+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=null;";		
+		if(sModuloMenu.Equals("")) {
+			//sModuloMenu=tableSchema.Owner;
+		}
+		
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_opcion, codigo, nombre, posicion, icon_name, ";
+        sUtil+="\r\n\t\t"+"nombre_clase, paquete, es_para_menu, estado, id_grupo_opcion,id_modulo,id_sistema)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion1+", '2013-03-30 14:53:42.38-05', "+IdOpcionPadre+", '"+sOpcionStandarDef.ToUpper()+"', '"+sOpcionStandarDef+"', 0, 'x',";
+        sUtil+="\r\n\t\t"+"'"+sOpcionStandarDef+"', '"+sModuloMenu+"', true, true, "+IdGrupoOpcion+","+IdModulo+","+IdSistema+");";
+		
+		iIdOpcion1++;
+	}
+	
+	
+	foreach (String sOpcionStandarDef in arrayList) {	
+		sUtil+="\r\n\r\n\t"+"INSERT INTO seguridad.perfil_opcion(";
+        sUtil+="\r\n\t\t"+"id, version_row, id_perfil, id_opcion, todo, ingreso, modificacion,"; 
+        sUtil+="\r\n\t\t"+"eliminacion, consulta, busqueda, reporte, estado)";
+   		sUtil+="\r\n\t"+"VALUES ("+iIdOpcion2+", '2011-07-27 08:08:40-05', 1, "+iIdOpcion2+", true, true, true,"; 
+        sUtil+="\r\n\t\t"+"true, true, true, true, true);";	
+		
+		iIdOpcion2++;
+	}
+	
+	return sUtil;
+}
+</script>
+<%if(ValidarVariablesInicialesTipo()) {%>
+<%InicializarVariablesEmpresa();%>
+
+<%if(GeneracionNuevaOpcion && !EsOpcionPadre) {%>
+<%=GetNuevaOpcion()%>
+<%}%>
+
+<%if(GeneracionNuevaOpcionSql) {%>
+/*NUEVA OPCION SQL*/
+<%=GetNuevaOpcionSql()%>
+<%}%>
+
+<%if(GeneracionXmlCodeSmithTables) {%>
+<%=GetXmlCodeSmithTables()%>
+<%}%>
+
+<%if(GeneracionNuevaOpcionSqlDefinicionStandard) {%>
+/*NUEVA OPCION SQL DEF STANDARD*/
+<%=GetNuevasOpcionesStandarDefinicionSql()%>
+<%}%>
+
+
+<%if(GeneracionNuevoGrupoOpcion) {%>
+/*NUEVA OPCION SQL*/
+<%=GetNuevoGrupoOpcion()%>
+<%}%>
+
+<%if(GeneracionVerificarNuevaOpcionRelacionada) {%>
+<%=GetVerificarNuevaOpcionRelacionada()%>
+<%}%>
+
+<%if(GeneracionNuevaAccionSql) {%>
+<%=GetNuevaAccionSql()%>
+<%}%>
+
+<%if(GeneracionTest) {%>
+<%=GetTest()%>
+<%}%>
+
+<%}%>

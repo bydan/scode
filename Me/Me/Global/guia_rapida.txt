@@ -1,0 +1,82 @@
+CAMPO CLASE
+string strPrefijo=String.Empty;
+		string strPrefijoTabla=GetPrefijoTablaC().ToLower();
+		string strPrefijoTipo =GetPrefijoTipoC(column);
+	
+		strPrefijo=strPrefijoTabla+strPrefijoTipo;
+		
+		string strNombre = GetNombreColumnaClaseC(column);
+		strPrefijo+=strNombre;
+			
+		string param =  GetTipoColumnaClaseC(column);
+		return strValidacion+"\r\n\tprivate "+param+" "+strPrefijo+strSufijo+";";
+
+CAMPO CLASE 2
+GetNombreCompletoColumnaClaseC
+
+CAMPO TO STRING
+TO_STRING
+if(!EsStringColumnC(column)) {
+	strToString=".toString()";
+}
+
+
+FK_ NOMBRE COMPLETO CLASE
+GetNombreCompletoClaseRelacionadaFromColumn
+
+FK_NOMBRE COMPLETO DESCRIPCION
+GetNombreClaseObjetoC("dbo."+GetNombreCompletoClaseRelacionadaFromColumn(columnSchema))+strDescripcion
+GetNombreColumnaClaseFkDescripcionC
+
+NOMBRE COLUMNA CONSTANTES FUNICONS
+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones."+column.Name.ToUpper();
+
+CAMPO
+LABEL: GetNombreTituloControlVariablesSwingC
+PANEL: GetNombrePanelControlVariablesSwingC
+
+
+
+strControl="\r\n\t\tthis."+GetNombrePanelControlVariablesSwingC(column,"","",false)+" = new JPanel();\r\n";
+			strControl="\r\n\t\tthis.gridaBagLayout"+GetNombreClaseC(column.Table.ToString())+" new GridBagLayout();\r\n";
+			strControl="\r\n\t\tthis."+GetNombrePanelControlVariablesSwingC(column,"","",false)+".setLayout(this.gridaBagLayout"+GetNombreClaseC(column.Table.ToString())+"this.gridaBagLayout"+GetNombreClaseC(column.Table.ToString())+");\r\n";
+			
+TABLAS RELACIONADAS
+ArrayList tablasRelacionadasEncontradas=GetTablasRelacionadasFinal(table);
+
+
+
+SQL
+ALTER TABLE dbo.saerubrosaemano  WITH CHECK ADD  CONSTRAINT [FK_saerubrosaemano_saetiacti] FOREIGN KEY([rubromano_cod_tiacti])
+REFERENCES [dbo].[saetiacti] ([tiacti_cod_tiacti])
+
+
+NOMBRE COMPLETO CLASE FK
+GetNombreCompletoClaseRelacionadaFromColumn(columnSchema)
+
+ES INDICE OCULTO
+GetExisteIndiceOcultoC
+
+NUMERO RELACIONES
+GetNumeroClasesRelacionadasFinalC
+
+TABLA FK
+GetTableSchemaFromColumnForeignKey
+
+TABLA NOMBRE
+GetTablaFromNombreC
+
+ES AUTOREFERENCIADA
+blnEsAutoReferenciada
+GetEsAutoReferenciadaTablaC
+
+DESCRIPTION GLOCAL
+ExisteEnListaComasC
+
+//DESCRIPTIONS BUSQUEDA EN TODAS LAS DESCRIPCIONES
+GetColumnsDescriptionsC
+
+
+
+REPORTE
+<%=GetEsPaqueteReporteC(TablaBase)%>.

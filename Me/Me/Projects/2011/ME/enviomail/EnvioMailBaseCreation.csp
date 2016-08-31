@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=.\SQLEXPRESS;Initial Catalog=EnvioMails;Integrated Security=True;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBaseCreation.cs" output="GenerateDataBaseCreation.cs" template="C:\Documents and Settings\bydan\Mis documentos\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDataBaseCreation.cst">
+      <property name="EsMySql">True</property>
+      <property name="EsDb2">False</property>
+      <property name="EsDb2Windows">False</property>
+      <property name="WithDrop">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="NombreEmpresa">ME</property>
+      <property name="EsGeneracionDescripcion">False</property>
+      <property name="EsInsertDeleteOrden">False</property>
+      <property name="EsInsertDeleteDelete">False</property>
+      <property name="EsAlterTable">False</property>
+      <property name="PrefijoSchemaDb2" />
+      <property name="Schema">enviomails</property>
+      <property name="GeneracionPorTablas">False</property>
+      <property name="EsParaMigracion">False</property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

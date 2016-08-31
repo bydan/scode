@@ -1,0 +1,378 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Register Name="DynamicCodeTemplate" Template="Base/DynamicCodeTemplate.cst" %>
+
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+
+<%@ Property Name="GeneracionOutputArchivo" Type="System.Boolean" Default="false" Category="0.Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="AAA_GeneracionGeneral" Type="System.Boolean" Default="false" Category="2.0Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAB_GeneracionTotalesGuardar" Type="System.Boolean" Default="false" Category="2.0Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0. Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" Category="0. Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="TablaBase2" Type="SchemaExplorer.TableSchema" Category="0. Tipo Generacion Source" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceColumnsForGenerate" Type="SchemaExplorer.ColumnSchemaCollection" Category="0. Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+
+
+<%@ Property Name="ArchivoOutputSobreEscribir" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+<%@ Property Name="ArchivoNombre" Type="System.String" Default="template1" Category="1. General" Description="Nombre del Programdor" Optional="True"%>
+
+
+<%@ Property Name="AAF_B_Nombre" Type="System.String" Default="" Category="2.1Parametro Generacion Puente" Description="Nombre del Programdor" Optional="True"%>
+
+
+<script runat="template">
+public override void Render(TextWriter writer){
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Base\\Files\\"+ArchivoNombre+".txt";
+	StreamWriter streamWriter = null;//new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+	
+	
+	//CREA ARCHIVO
+	if(GeneracionOutputArchivo) {		
+		streamWriter = new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+		
+		//ASIGNA GENERACION ARCHIVO
+		
+		this.Response.AddTextWriter(streamWriter);
+	}
+	
+	
+	//GENERA CODIGO
+	base.Render(writer);
+	
+	//CIERRA ARCHIVO
+	if(GeneracionOutputArchivo) {
+		streamWriter.Close();
+		
+		Trace.WriteLine("ARCHIVO GENERADO "+filePath);
+	}	
+}
+
+/*
+public String GenerarOutput() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	
+	stringBuilder=new StringBuilder();
+	
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Files\\"+ArchivoNombre;
+	
+	Trace.WriteLine(filePath);
+	
+	String sNuevaOpcion="";
+	
+	
+
+	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+		streamWriterDestino.Write(stringBuilder.ToString());
+	}
+		
+	
+	sUtil="ok";
+	
+	return sUtil;
+	
+}
+*/
+
+public bool ExisteCampoTabla(TableSchema tableSchema,String strCampo) {
+	bool existe=false;
+	
+	foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+		if(columnSchema.Name.Equals(strCampo)) {
+			existe=true;
+			
+			break;
+		}		
+	}
+	
+	return existe;
+}
+
+DynamicCodeTemplate dynamicCodeTemplate = new DynamicCodeTemplate();
+String sReplace="//TO_REPLACE";
+String sReplace2="//TO2_REPLACE";
+
+//TablaBase=ProcesoMayorizarDiario
+//TablaBase2=AsientoContable
+public String GetAAA_GeneracionGeneral() {
+	String sUtil="";
+	String sAux="";
+	String sAuxCompletar="";
+	String sAuxFinal="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	//Trace.WriteLine("Here");
+	
+	//1)
+	InicializarTipoGeneracion();	
+	dynamicCodeTemplate.AAF_DefFuncion=true;
+	dynamicCodeTemplate.AAF_C_ConParametro=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.AAF_B_Nombre=AAF_B_Nombre;
+	
+	
+	sAux=dynamicCodeTemplate.RenderToString();	
+	sAuxFinal=sAux;	
+	//Trace.WriteLine(sAux);
+	
+	//2)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAA_ClaseTransaccion=true;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+		
+		
+	//3)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAB_ForBasico=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+		
+	//4)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAJ_IfBasico=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	
+	//4)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAC_GetEntityBasico=true;
+	//dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.NumTabs="3";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	//5)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAD_SetCampoEntityBasico=true;
+	//dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.NumTabs="3";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	//6)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAE_SaveEntityBasico=true;
+	//dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.NumTabs="3";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	return sAuxFinal;	
+}
+
+//TablaBase=SaldoContable
+//TablaBase2=TotalSaldos
+public String GetAAB_GeneracionTotalesGuardar() {
+	String sUtil="";
+	String sAux="";
+	String sAuxCompletar="";
+	String sAuxFinal="";
+	StringBuilder sBuilder=new StringBuilder();
+	
+	//Trace.WriteLine("Here");
+	
+	//1)
+	InicializarTipoGeneracion();	
+	dynamicCodeTemplate.AAF_DefFuncion=true;
+	dynamicCodeTemplate.AAF_C_ConParametro=false;
+	dynamicCodeTemplate.AAF_C_ConParametroProceso=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.AAF_B_Nombre=AAF_B_Nombre;
+	
+	
+	sAux=dynamicCodeTemplate.RenderToString();	
+	sAuxFinal=sAux;	
+	//Trace.WriteLine(sAux);
+	
+	//2)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAA_ClaseTransaccion=true;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+		
+		
+	//3)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAC_GetEntitiesBasico=true;
+	dynamicCodeTemplate.AAC_D_Con_SufijoAux=true;
+	dynamicCodeTemplate.AAB_G002_Con_SetConnexion=true;
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	dynamicCodeTemplate.NumTabs="1";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+		
+	//4)
+	InicializarTipoGeneracion();
+	
+	dynamicCodeTemplate.AAB_ForBasico=true;
+	dynamicCodeTemplate.AAB_A_Con_LogicObjetos=true;
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	
+	//4)
+	InicializarTipoGeneracion();
+	
+	dynamicCodeTemplate.AAD_SetCamposEntityBasico=true;
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	dynamicCodeTemplate.NumTabs="2";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	
+	//5)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAC_GetEntitiesBasico=true;
+	dynamicCodeTemplate.AAC_D_Con_SufijoAux=true;
+	dynamicCodeTemplate.AAB_G002_Con_SetConnexion=true;
+	dynamicCodeTemplate.AAC_A_Con_CrearLogic=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.NumTabs="1";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,string.Empty);
+	sAuxFinal=sAuxFinal.Replace(sReplace2,sAuxCompletar);
+	
+	//6)
+	InicializarTipoGeneracion();
+	
+	dynamicCodeTemplate.AAB_ForBasico=true;
+	dynamicCodeTemplate.AAB_A_Con_LogicObjetos=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	//7.1)
+	InicializarTipoGeneracion();
+	
+	dynamicCodeTemplate.AAH_IfExisteLista=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.TablaBase2=TablaBase;
+	dynamicCodeTemplate.NumTabs="2";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	//7)
+	InicializarTipoGeneracion();
+	
+	dynamicCodeTemplate.AAD_SetCamposEntityBasico=true;
+	dynamicCodeTemplate.AAD_B_Con_AddObjetoLista=true;
+	dynamicCodeTemplate.AAD_A_Con_NuevoObjeto=true;
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	dynamicCodeTemplate.NumTabs="3";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,sAuxCompletar);
+	
+	//6)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAE_SaveEntitiesBasico=true;
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	dynamicCodeTemplate.NumTabs="1";
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	sAuxFinal=sAuxFinal.Replace(sReplace,"");
+	sAuxFinal=sAuxFinal.Replace(sReplace2,sAuxCompletar);
+	
+	//7)
+	InicializarTipoGeneracion();
+	dynamicCodeTemplate.AAG_CompararLista=true;
+	dynamicCodeTemplate.TablaBase=TablaBase2;
+	dynamicCodeTemplate.TablaBase2=TablaBase;
+	//dynamicCodeTemplate.Tabs=GetTabs(1);
+	
+	sAuxCompletar=dynamicCodeTemplate.RenderToString();
+	//sAuxFinal=sAuxFinal.Replace(sReplace2,sAuxCompletar);
+	sAuxFinal+=sAuxCompletar;
+	
+	return sAuxFinal;	
+}
+
+public void InicializarTipoGeneracion() {
+	//Generacion
+	dynamicCodeTemplate.GeneracionOutputArchivo=false;
+	
+	dynamicCodeTemplate.AAA_ClaseTransaccion=false;
+	dynamicCodeTemplate.AAB_ForBasico=false;
+	dynamicCodeTemplate.AAC_GetEntityBasico=false;
+	dynamicCodeTemplate.AAC_GetEntitiesBasico=false;
+	dynamicCodeTemplate.AAD_SetCampoEntityBasico=false;
+	dynamicCodeTemplate.AAD_SetCamposEntityBasico=false;
+	dynamicCodeTemplate.AAE_SaveEntityBasico=false;
+	dynamicCodeTemplate.AAE_SaveEntitiesBasico=false;
+	dynamicCodeTemplate.AAF_DefFuncion=false;
+	dynamicCodeTemplate.AAG_CompararLista=false;
+	
+	
+	//PARAMETROS GENERALES
+	dynamicCodeTemplate.AAA_G001_Con_WithConnection=false;
+	dynamicCodeTemplate.AAC_D_Con_SufijoAux=false;
+	dynamicCodeTemplate.AAC_B_Con_DefinirVariableGeneral=true;
+	dynamicCodeTemplate.AAB_G002_Con_SetConnexion=false;
+	dynamicCodeTemplate.AAC_A_Con_CrearLogic=false;
+	dynamicCodeTemplate.AAD_A_Con_NuevoObjeto=false;
+	dynamicCodeTemplate.AAD_B_Con_AddObjetoLista=false;
+	dynamicCodeTemplate.AAB_A_Con_LogicObjetos=false;
+	
+	
+	//PARAMETROS TIPOS GENERACION
+	dynamicCodeTemplate.AAJ_IfBasico=false;
+	dynamicCodeTemplate.AAF_A_Static=false;
+	dynamicCodeTemplate.AAF_B_Nombre="";
+	dynamicCodeTemplate.AAF_C_ConParametro=false;
+	dynamicCodeTemplate.AAF_C_ConParametroProceso=false;
+	
+	dynamicCodeTemplate.TablaBase=TablaBase;
+	
+	dynamicCodeTemplate.NumTabs="0";
+}
+
+public String GetTabs(int iNumero) {
+	String sUtil="";
+	
+	
+	for(int i=1;i<=iNumero;i++) {
+		sUtil+="\t";
+	}
+	
+	Trace.WriteLine(sUtil);
+	
+	return sUtil;
+}
+</script>
+<%if(AAA_GeneracionGeneral) {%>
+<%=GetAAA_GeneracionGeneral()%>
+<%} else if(AAB_GeneracionTotalesGuardar) {%>
+<%=GetAAB_GeneracionTotalesGuardar()%>
+<%}%>

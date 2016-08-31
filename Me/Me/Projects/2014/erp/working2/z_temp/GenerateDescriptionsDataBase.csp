@@ -1,0 +1,113 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=2014_Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDescriptionsDataBase.cs" output="GenerateDescriptionsDataBase.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\GenerateDescriptionsDataBase.cst">
+      <property name="NombreEmpresa">ME</property>
+      <property name="EsGeneracionDescripcion">True</property>
+      <property name="EsGeneracionDescripcionActualizarMasivo">False</property>
+      <property name="EsGeneracionDescripcionCorreccion">False</property>
+      <property name="EsGeneracionCorrecionDiseno">False</property>
+      <property name="EsGeneracionCorrecionBaseDatos">False</property>
+      <property name="EsGeneracionInicializarSession">False</property>
+      <property name="EsGeneracionInicializarSwingJInternalFrame">False</property>
+      <property name="EsMySql">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="GeneracionTodos">False</property>
+      <property name="GeneracionPorTablas">True</property>
+      <property name="GeneracionPorModulo">False</property>
+      <property name="GeneracionPorEsquema">False</property>
+      <property name="GeneracionDescripcionSoloVacios">True</property>
+      <property name="GeneracionReportes">False</property>
+      <property name="EsConUpdateSqlSentence">False</property>
+      <property name="ConPaquetJavaGlobal">False</property>
+      <property name="SourceDataBase">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>Nomina</owner>
+        <name>Barrio</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>DefiProvisionEmpleado</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>EstadoGastoEmpleado</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>EstadoNovedadNomi</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>EstadoSolicitudNomi</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>GastoEmpleado</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>ImpuestoRenta</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>NovedadNomi</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>ProvisionEmpleado</name>
+      </table>
+      
+      <table>
+        <owner>Nomina</owner>
+        <name>RubroEmplea</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>SolicitudHoraExtra</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>SolicitudReemplazo</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>SolicitudVacacion</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>TipoCalculo</name>
+      </table>
+      
+      <table>
+        <owner>Nomina</owner>
+        <name>TipoNovedadNomi</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>TipoProvisionEmpleado</name>
+      </table>
+      
+	<table>
+        <owner>Nomina</owner>
+        <name>TipoValorVariableNomi</name>
+      </table>
+      <table>
+        <owner>Nomina</owner>
+        <name>VariableNomi</name>
+      </table>
+    </tableList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

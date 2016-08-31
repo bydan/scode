@@ -1,0 +1,1187 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+
+
+<script runat="template">
+
+public String GetJavaScriptSetforeignKeysNoUpdate() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+							
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					continue;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				
+				if(tablaRelacionadaObjetivo.Columns.Count>intNumeroMinimoColumnasTablaRompimiento)
+				{					
+					foreach(ColumnSchema column in tablaRelacionadaObjetivo.Columns)
+					{
+						if(column.IsForeignKeyMember)
+						{
+							if(column.Name.Replace(strId,"").Equals(TablaBase.Name)||column.Name.Replace(strId,"").Equals(tablaRelacionadaObjetivo.Name))
+							{
+								strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.Bit"+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(column))+"PermitirMantenimiento=false;";				
+							}
+													
+						}
+						
+					}
+				}
+				
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptVerificarEliminadosFromTablesClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+			
+			int count=0;
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				count++;
+				
+				if(count!=1)
+				{
+					strTablaClaseRelacionada+="&&";
+				}
+				
+				strTablaClaseRelacionada+=GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.VerificarNoEliminados"+ GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"()";
+				
+				
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptArraysFromTablesClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+	
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t\tvar arrData"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s="+ GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.ArrayGuardar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"ParaRelaciones();";
+						
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+
+public String GetJavaScriptFuncionesMostrarOcultarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			TableSchema tablaRelacionadaObjetivo;
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\nthis.MostrarOcultarFilas"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=function()"; 
+				strTablaClaseRelacionada+="\r\n{"; 					
+				strTablaClaseRelacionada+="\r\n\tvar bitEsMostrar=false;\r\n"; 					
+				strTablaClaseRelacionada+="\r\n\tvar rowTablaDatos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"TablaDatos');"; 
+				strTablaClaseRelacionada+="\r\n\t\tif(rowTablaDatos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+".style.display == \"none\")"; 
+				strTablaClaseRelacionada+="\r\n\t\t{"; 
+				strTablaClaseRelacionada+="\r\n\t\t\tbitEsMostrar=true;"; 
+				strTablaClaseRelacionada+="\r\n\t\t}\r\n"; 					
+				strTablaClaseRelacionada+="\r\n\tthis.MostrarOcultarFilas"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"ConEsMostrar(bitEsMostrar)";
+				strTablaClaseRelacionada+="\r\n}\r\n\r\n"; 	
+				
+				
+				strTablaClaseRelacionada+="\r\nthis.MostrarOcultarFilas"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"ConEsMostrar=function(bitEsMostrar)"; 
+				strTablaClaseRelacionada+="\r\n{"; 					
+				strTablaClaseRelacionada+="\r\n\tvar imgExpandirContraer"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('imgExpandirContraerRows"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"');"; 
+				strTablaClaseRelacionada+="\r\n\tvar rowTablaDatos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"TablaDatos');"; 
+				strTablaClaseRelacionada+="\r\n\tvar rowElementos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Elementos');"; 
+				strTablaClaseRelacionada+="\r\n\tvar rowAcciones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Acciones');"; 
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\tvar rowParametrosBusquedaNumeroRegistros"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('trParametrosBusquedaNumeroRegistros"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"');"; 				
+					strTablaClaseRelacionada+="\r\n\tvar rowRecargarInformacion"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('trRecargarInformacion"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"');"; 				
+					strTablaClaseRelacionada+="\r\n\tvar rowPaginacion"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Paginacion');"; 				
+					strTablaClaseRelacionada+="\r\n\tvar rowNuevo"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"=document.getElementById('tr"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Nuevo');"; 				
+				}
+				
+				strTablaClaseRelacionada+="\r\n\r\n\tfuncionGeneral.MostrarOcultarFilaCambiarImagenConEsMostrar(rowTablaDatos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",imgExpandirContraer"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					/*if(tablaRelacionadaObjetivo.Columns.Count==intNumeroMinimoColumnasTablaRompimiento)
+					{*/
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowElementos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",false);"; 
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowAcciones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",false);"; 
+					//}
+					/*
+					else
+					{
+						strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowElementos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+						strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowAcciones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+					}*/
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowElementos"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowAcciones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+				}
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowParametrosBusquedaNumeroRegistros"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowRecargarInformacion"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowPaginacion"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",bitEsMostrar);"; 
+					strTablaClaseRelacionada+="\r\n\tfuncionGeneral.MostrarOcultarFila(rowNuevo"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+",false);"; 
+				}
+								
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n\tvar rowBusquedas"+GetNombreClaseC(collectionInfo.SecondaryTableSchema.ToString())+"=document.getElementById('tr"+GetNombreClaseC(collectionInfo.SecondaryTableSchema.ToString())+"Busquedas');"; 
+					
+					strTablaClaseRelacionada+="\r\n\r\n\tif(bitEsMostrar==false)\r\n\t{";
+					strTablaClaseRelacionada+="\r\n\t\tfuncionGeneral.MostrarOcultarFila(rowBusquedas"+GetNombreClaseC(collectionInfo.SecondaryTableSchema.ToString())+",bitEsMostrar);"; 
+					strTablaClaseRelacionada+="\r\n\t}";
+				}
+				
+				
+				strTablaClaseRelacionada+="\r\n}\r\n\r\n"; 			
+				
+						
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetJavaScriptCallFuncionesMostrarOcultarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\tthis.MostrarOcultarFilas"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"();"; 
+										
+			}
+			
+			return "";//strTablaClaseRelacionada; 
+		}
+		
+public String GetJavaScriptFuncionesBuscarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\nthis.Buscar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"sRelaciones=function(int"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+")"; 
+				strTablaClaseRelacionada+="\r\n{";
+				strTablaClaseRelacionada+="\r\n\ttop.topFrame.MostrarOcultarProcesando(true);	";
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.Buscar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s(\""+strClaseAuxiliar+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Todos\",int"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+");";
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.Buscar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s(\"Por"+strIdGetSet+"\",int"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+");";
+				}
+				
+				
+				
+				strTablaClaseRelacionada+="\r\n}\r\n";							
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetJavaScriptCallFuncionesBuscarForeignKeysTablasClasesRelacionadas(bool esNuevo) 
+		{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				if(!esNuevo)
+				{
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						strTablaClaseRelacionada+="\r\n\tdocument.frmMantenimiento"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+".hdnIdActual.value=row"+GetNombreClaseC(TablaBase.ToString())+".id;";
+					}	
+					
+					
+					strTablaClaseRelacionada+="\r\n\tthis.Buscar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"sRelaciones(row"+GetNombreClaseC(TablaBase.ToString())+".id);"; 
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\tthis.Buscar"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"sRelaciones(\"1\");"; 
+				}						
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetJavaScriptCallFuncionesCargarCombosClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";				
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Servicio.CargarCombos();";
+										
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptSetEsPaginacionDinamicaClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.BitEsPaginacionDinamica=true;";
+				}						
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCallFuncionesSetIdUnicoCombosClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Servicio.Set"+GetNombreClaseC(TablaBase.ToString())+"Unico(-1,\"ninguno\");";
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Servicio.Set"+GetNombreClaseC(collectionInfo.SecondaryTableSchema.ToString())+"Unico(-1,\"ninguno\");";
+				}						
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCallFuncionesSetIdUnicoCombosClasesRelacionadasFromRow() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Servicio.Set"+GetNombreClaseC(TablaBase.ToString())+"Unico(row"+GetNombreClaseC(TablaBase.ToString())+".id,row"+GetNombreClaseC(TablaBase.ToString())+"."+GetJavascriptColumnaDescripcionComboFromTablaPropertiesC(TablaBase)+");";
+										
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptSetGuardarCambiosEnLote() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Constante.BitGuardarCambiosEnLote=true;";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Constante.BitEsMantenimientoRelacionado=true;";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.ActualizarEstadoBotones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"(\"n\");";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.HabilitarDeshabilitarControles(false);\r\n";
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"Constante.BitEsMantenimientoRelacionesRelacionadoUnico=true;";						
+				}
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCancelarClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.CancelarControles();";
+				strTablaClaseRelacionada+="\r\n\tjmaki.attributes.get('djtbl"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"').clear();\r\n";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptVerificarCambiosClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="||" +GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"PaginaWebInteraccion.VerificarCambios"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"()==true";
+				
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+
+public String GetJavaScriptEliminarEnLoteClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\r\nthis.Eliminar" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Relaciones=function()";
+				strTablaClaseRelacionada+="\r\n{";					
+				strTablaClaseRelacionada+="\r\n\tvar arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s = jmaki.attributes.get('djtbl" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"').getTable().store.get();\r\n";					
+				strTablaClaseRelacionada+="\r\n\tfor (var j = 0 ; j < arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s.length ; j++)"; 
+				strTablaClaseRelacionada+="\r\n\t{";
+				strTablaClaseRelacionada+="\r\n\t\tif(arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s[j].src.id>0&&arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s[j].src.isNew!=true&&arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s[j].src.isDeleted!=true)";
+				strTablaClaseRelacionada+="\r\n\t\t{";
+				strTablaClaseRelacionada+="\r\n\t\t\tarrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s[j].src.isDeleted=true;";
+				strTablaClaseRelacionada+="\r\n\t\t\tPaginaWebInteraccion" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"ArrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"sEliminados.push(arrData" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"s[j].src);";
+				strTablaClaseRelacionada+="\r\n\t\t}";		
+				strTablaClaseRelacionada+="\r\n\t}\r\n";					
+				strTablaClaseRelacionada+="\r\n\tjmaki.attributes.get('djtbl" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"').clear();";
+				strTablaClaseRelacionada+="\r\n}";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCallEliminarEnLoteClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+					
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\tthis.Eliminar" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"Relaciones();";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCallMostrarOcultarFilasClasesRelacionadas(bool esMostrar) 
+{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			String strEsMostrar="false";
+			
+			if(esMostrar)
+			{
+				strEsMostrar="true";
+			}
+			TableSchema tablaRelacionadaObjetivo;
+	
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\tthis.MostrarOcultarFilas" +GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"ConEsMostrar("+strEsMostrar+");";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+public String GetJavaScriptCallNuevoClasesRelacionadas() 
+{
+		return "";
+		
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				strTablaClaseRelacionada+="\r\n\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.MostrarOcultarControlesMantenimiento(true);";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.ActualizarEstadoBotones"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"(\"n\");";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.CancelarControles();";
+				strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseObjetoC(tablaRelacionadaObjetivo.ToString())+"FuncionGeneral.HabilitarDeshabilitarControles(true);";
+				strTablaClaseRelacionada+="\r\n\tjmaki.attributes.get('djtbl"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"').clear();";
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+</script>
+/*Empresa:<%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene todos los Accesos a BDD de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+
+var <%=GetNombreClaseC(TablaBase.ToString())%>PaginaWebInteraccionRelacion= function () 
+{
+	this.Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelaciones=undefined;
+	var Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelacionesParaEliminar=undefined;
+	
+	this.CargarPaginaRelaciones=function(strBusqueda) 
+	{
+		ajaxFuncionGeneral.CargarComboReporte("djcmbGenerarReporte");
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Constante.BitEsMantenimientoRelaciones=true;
+		
+		this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>ConEsMostrar(false);	
+		<%=GetJavaScriptCallMostrarOcultarFilasClasesRelacionadas(false)%>
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.CargarPagina(strBusqueda);
+		
+		<%=GetJavaScriptSetGuardarCambiosEnLote() %>
+		
+		<%=GetJavaScriptCallFuncionesSetIdUnicoCombosClasesRelacionadas()%>
+		
+		<%=GetJavaScriptCallFuncionesCargarCombosClasesRelacionadas()%>
+		
+		<%=GetJavaScriptSetEsPaginacionDinamicaClasesRelacionadas()%>
+		
+		<%=GetJavaScriptSetforeignKeysNoUpdate()%>
+		
+		top.topFrame.MostrarOcultarProcesando(false);
+		
+	};
+	
+	this.Seleccionar<%=GetNombreClaseC(TablaBase.ToString())%>RelacionesVerificar=function(row<%=GetNombreClaseC(TablaBase.ToString())%>)
+	{
+		this.Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelaciones=row<%=GetNombreClaseC(TablaBase.ToString())%>;
+		Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelacionesParaEliminar=row<%=GetNombreClaseC(TablaBase.ToString())%>;
+		
+		if(this.VerificarCambios<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones()==true)
+		{
+			this.CreateSimpleYahooDialogVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones() ;
+		}
+		else
+		{
+			this.Seleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(row<%=GetNombreClaseC(TablaBase.ToString())%>);
+		}
+	};
+	
+	this.Seleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones=function(row<%=GetNombreClaseC(TablaBase.ToString())%>)
+	{
+		this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>ConEsMostrar(true);
+		
+		<%=GetJavaScriptCallMostrarOcultarFilasClasesRelacionadas(true)%>
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.Seleccionar<%=GetNombreClaseC(TablaBase.ToString())%>(row<%=GetNombreClaseC(TablaBase.ToString())%>);	
+		
+		//MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>();
+		
+		<%=GetJavaScriptCallFuncionesSetIdUnicoCombosClasesRelacionadasFromRow()%>
+		
+		<%=GetJavaScriptCallFuncionesCargarCombosClasesRelacionadas()%>
+		
+		<%=GetJavaScriptCallFuncionesBuscarForeignKeysTablasClasesRelacionadas(false)%>
+		
+		<%=GetJavaScriptCallFuncionesMostrarOcultarTablasClasesRelacionadas() %>	
+	};
+	
+	this.Actualizar<%=GetNombreClaseC(TablaBase.ToString())%>DecidirRelaciones=function() 
+	{		
+		if(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.BitEsNuevoUsuario==true)
+		{
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.BitEsNuevoUsuario=false;
+			this.Nuevo<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones();
+		}
+		else
+		{
+			this.Actualizar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones();
+		}
+		
+	};
+	
+	this.Actualizar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones=function()
+	{
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Constante.BitGuardarCambiosEnLote=true;		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.Actualizar<%=GetNombreClaseC(TablaBase.ToString())%>DesdeRelaciones(this.Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelaciones);
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Constante.BitGuardarCambiosEnLote=false;
+		
+		var arrData<%=GetNombreClaseC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.ArrayGuardar<%=GetNombreClaseC(TablaBase.ToString())%>ParaRelaciones();
+		
+		<%=GetJavaScriptArraysFromTablesClasesRelacionadas()%>
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>LayerCommunication.Guardar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(arrData<%=GetNombreClaseC(TablaBase.ToString())%>s<%=GetJavaScriptArraysClasesRelacionadasC(TablaBase)%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.GetUltimaBusqueda());
+		
+		this.CancelarControlesRelaciones();
+	};
+	
+	this.Nuevo<%=GetNombreClaseC(TablaBase.ToString())%>MostrarRelaciones=function()
+	{
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>FuncionGeneral.MostrarOcultarControlesMantenimiento(true);
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.Nuevo<%=GetNombreClaseC(TablaBase.ToString())%>Preparar();
+		
+		var IntOidNuevo<%=GetNombreClaseC(TablaBase.ToString())%>=-1;
+		var <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Datos = {isNew:true,isChanged:false,isDeleted:false,<% for (int i = 0; i <TablaBase.Columns.Count; i++){ %><%=GetNombreColumnaClaseDefaultJavaScriptFiltradosC(TablaBase.Columns[i])%> <%if((i!=TablaBase.Columns.Count-1)&&TablaBase.Columns[i].Name!=strIsActive&&TablaBase.Columns[i].Name!=strIsExpired){%>,<% } %><% } %>}
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccionRelacion.Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelaciones=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Datos;
+
+		<%=GetJavaScriptCallFuncionesBuscarForeignKeysTablasClasesRelacionadas(true)%>
+		
+		
+		<%=GetJavaScriptCallMostrarOcultarFilasClasesRelacionadas(true)%>
+		<%=GetJavaScriptCallNuevoClasesRelacionadas() %>
+	};
+	
+	
+	function Eliminar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones()
+	{
+		if(<%=GetJavaScriptVerificarEliminadosFromTablesClasesRelacionadas()%>)
+		{
+			ajaxFuncionGeneral.CreateSimpleYahooDialogErrorValidacionMensajes('<%=GetNombreClaseC(TablaBase.ToString())%>','Existen elementos no eliminados relacionados al <%=GetNombreClaseC(TablaBase.ToString())%>, eliminelos');
+			return;
+		}
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.Eliminar<%=GetNombreClaseC(TablaBase.ToString())%>DesdeRelaciones(Row<%=GetNombreClaseC(TablaBase.ToString())%>ActualRelacionesParaEliminar);
+		
+		<%=GetJavaScriptCallEliminarEnLoteClasesRelacionadas()%>
+		
+		
+		
+		//<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.Eliminar<%=GetNombreClaseC(TablaBase.ToString())%>Publico();
+		
+		var arrData<%=GetNombreClaseC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.ArrayGuardar<%=GetNombreClaseC(TablaBase.ToString())%>ParaRelaciones();		
+		
+		<%=GetJavaScriptArraysFromTablesClasesRelacionadas()%>
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>LayerCommunication.Guardar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(arrData<%=GetNombreClaseC(TablaBase.ToString())%>s<%=GetJavaScriptArraysClasesRelacionadasC(TablaBase)%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.GetUltimaBusqueda());
+		
+		var <%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccionRelacionAux=new <%=GetNombreClaseC(TablaBase.ToString())%>PaginaWebInteraccionRelacion();
+
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccionRelacionAux.CancelarControlesRelaciones();
+	};
+	
+	this.CreateSimpleYahooDialogEliminacion<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones=function() 
+	{
+		
+		var cfg = {
+			width: "300px",
+			fixedcenter: true,
+			header: "Eliminaci??n",
+			text: "Esta seguro de eliminar el <%=GetNombreClaseC(TablaBase.ToString())%> seleccionado?",
+			draggable: true,
+			close: true,
+			visible: true,
+			modal: true,
+			icon: YAHOO.widget.SimpleDialog.ICON_ALARM,
+			constraintoviewport: true,
+			buttons: [ 
+			{ label:"Yes" },
+			{ label:'No', isDefault:true }
+			]
+		};
+		
+		cfg.buttons = createDialogTempButtonsEliminacion<%=GetNombreClaseC(TablaBase.ToString())%>();
+		var dlg =  new YAHOO.widget.SimpleDialog("dialogTempEliminacion" , cfg);
+		
+		dlg.setHeader(cfg.header);
+		dlg.render(document.body); 
+		dlg.show(); 
+	};
+	
+	function createDialogTempButtonsEliminacion<%=GetNombreClaseC(TablaBase.ToString())%>() 
+	{
+		var ybs = [];	 
+		var yb = {};
+			
+		yb.text = 'SI';
+		yb.handler = onClickDialogTempYes<%=GetNombreClaseC(TablaBase.ToString())%>;            
+		ybs.push(yb);
+			
+		var ybn = {};
+			
+		ybn.text = 'NO';
+		ybn.handler = onClickDialogTempNo<%=GetNombreClaseC(TablaBase.ToString())%>;            
+		ybs.push(ybn);
+			
+		return ybs;
+	};
+	
+	function onClickDialogTempYes<%=GetNombreClaseC(TablaBase.ToString())%>(evt) 
+	{      
+		this.hide();
+		Eliminar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones();
+	};
+	
+	function onClickDialogTempNo<%=GetNombreClaseC(TablaBase.ToString())%>(evt) 
+	{      
+		this.hide();
+	};
+	
+	
+	<%=GetJavaScriptEliminarEnLoteClasesRelacionadas()%>
+	
+	<%=GetJavaScriptFuncionesBuscarTablasClasesRelacionadas()%>
+	
+	this.CancelarControlesRelaciones=function()
+	{
+		this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>ConEsMostrar(false);
+		
+		<%=GetJavaScriptCallMostrarOcultarFilasClasesRelacionadas(false)%>
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.CancelarControles();
+		
+		<%=GetJavaScriptCallFuncionesSetIdUnicoCombosClasesRelacionadas()%>
+		
+		<%=GetJavaScriptCallFuncionesCargarCombosClasesRelacionadas()%>
+		
+		<%=GetJavaScriptCancelarClasesRelacionadas() %>
+	};
+	
+	this.VerificarCambios<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones=function()
+	{
+		var bitVerificado=false;
+		
+		if (<%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccion.VerificarCambios<%=GetNombreClaseC(TablaBase.ToString())%>()==true<%=GetJavaScriptVerificarCambiosClasesRelacionadas()%>)
+		{
+			bitVerificado=true;
+		}
+		
+		return bitVerificado;
+		
+	}
+	
+	function CreateSimpleYahooDialogVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones() 
+	{
+		
+		var cfg = {
+			width: "300px",
+			fixedcenter: true,
+			header: "Busqueda",
+			text: "Existe cambios en los datos desea cancelarlos?",
+			draggable: true,
+			close: true,
+			visible: true,
+			modal: true,
+			icon: YAHOO.widget.SimpleDialog.ICON_ALARM,
+			constraintoviewport: true,
+			buttons: [ 
+			{ label:"Yes" },
+			{ label:'No', isDefault:true }
+			]
+		};
+		
+		cfg.buttons = createDialogTempButtonsVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones();
+		var dlg =  new YAHOO.widget.SimpleDialog("dialogTempEliminacion" , cfg);
+		
+		dlg.setHeader(cfg.header);
+		dlg.render(document.body); 
+		dlg.show(); 
+	};
+	
+	function createDialogTempButtonsVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones() 
+	{
+		var ybs = [];	 
+		var yb = {};
+			
+		yb.text = 'SI';
+		yb.handler = onClickDialogTempYesVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones;            
+		ybs.push(yb);
+			
+		var ybn = {};
+			
+		ybn.text = 'NO';
+		ybn.handler = onClickDialogTempNoVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones;            
+		ybs.push(ybn);
+			
+		return ybs;
+	};
+	
+	function onClickDialogTempYesVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(evt) 
+	{      
+		Seleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(Row<%=GetNombreClaseC(TablaBase.ToString())%>Actual);
+		this.hide();
+	};
+	
+	function onClickDialogTempNoVerificarSeleccionar<%=GetNombreClaseC(TablaBase.ToString())%>Relaciones(evt) 
+	{      
+		this.hide();
+	};
+	
+	this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>=function()
+	{
+		var bitEsMostrar=false;
+		var rowElementos<%=GetNombreClaseC(TablaBase.ToString())%>=document.getElementById('tr<%=GetNombreClaseC(TablaBase.ToString())%>Elementos');
+		
+		if(rowElementos<%=GetNombreClaseC(TablaBase.ToString())%>.style.display == "none")
+		{
+			bitEsMostrar=true;
+		}
+	
+		this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>ConEsMostrar(bitEsMostrar);
+	};
+	
+	this.MostrarOcultarFilas<%=GetNombreClaseC(TablaBase.ToString())%>ConEsMostrar=function(bitEsMostrar)
+	{
+		var imgExpandirContraer<%=GetNombreClaseC(TablaBase.ToString())%>=document.getElementById('imgExpandirContraerRowElementos<%=GetNombreClaseC(TablaBase.ToString())%>');
+		var rowElementos<%=GetNombreClaseC(TablaBase.ToString())%>=document.getElementById('tr<%=GetNombreClaseC(TablaBase.ToString())%>Elementos');
+		var rowAcciones<%=GetNombreClaseC(TablaBase.ToString())%>=document.getElementById('tr<%=GetNombreClaseC(TablaBase.ToString())%>Acciones');
+		
+	
+		funcionGeneral.MostrarOcultarFilaCambiarImagenConEsMostrar(rowElementos<%=GetNombreClaseC(TablaBase.ToString())%>,imgExpandirContraer<%=GetNombreClaseC(TablaBase.ToString())%>,bitEsMostrar);
+		funcionGeneral.MostrarOcultarFila(rowAcciones<%=GetNombreClaseC(TablaBase.ToString())%>,bitEsMostrar);
+	};
+	<%= GetJavaScriptFuncionesMostrarOcultarTablasClasesRelacionadas() %>
+}
+
+var <%=GetNombreClaseObjetoC(TablaBase.ToString())%>PaginaWebInteraccionRelacion=new <%=GetNombreClaseC(TablaBase.ToString())%>PaginaWebInteraccionRelacion();

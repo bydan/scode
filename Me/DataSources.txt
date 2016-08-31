@@ -1,0 +1,32 @@
+Auditoria
+Data Source=.\SQLEXPRESS;Initial Catalog=Auditoria;Integrated Security=True;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+AulaVirtual
+Data Source=.\SQLEXPRESS;Initial Catalog=AulaVirtual;Integrated Security=True;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+Contrato
+Data Source=192.168.1.2;Initial Catalog=Garantia;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+EnvioMails
+Data Source=192.168.1.2;Initial Catalog=EnvioMails;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+Financial
+Data Source=192.168.1.2;Initial Catalog=Financiero;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+GuerraElectronica
+Data Source=192.168.1.2;Initial Catalog=GuerraElectronica;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+Joomla
+Data Source=192.168.1.2;Initial Catalog=Joomla;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+Medical
+Data Source=192.168.1.2;Initial Catalog=Medico;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+Seguridad
+Data Source=192.168.1.2;Initial Catalog=Seguridad;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+SeguridadCCFA
+Data Source=192.168.1.2;Initial Catalog=Seguridad;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;
+
+UniversidadProceso
+Data Source=.\SQLEXPRESS;Initial Catalog=UniversidadProceso;Integrated Security=True;Connect Timeout=30;User=sa;Pwd=sasasa;

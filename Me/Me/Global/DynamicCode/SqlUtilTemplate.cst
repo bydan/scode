@@ -1,0 +1,1029 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.Text" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Property Name="GeneracionCambiarDescripcionColumna" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCambiarNombreColumna" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionTest" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionNuevaQuitarDescripcionColumna" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="TGeneracionNuevaQuitarDescripcionTabla" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionMostrarIndicesRelaciones" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionIndices" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionReportes" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="SourceTablesForGenerate" Type="SchemaExplorer.TableSchemaCollection" Category="0.Tipo Generacion" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0.Tipo Generacion" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="0.Tipo Generacion"%>
+
+<%@ Property Name="ConCrearNuevaDescripcion" Type="System.Boolean" Default="false" Category="01.Parametros" Description="Si no existe descripcion se a?ade" %>
+<%@ Property Name="TipoTablaFuncionalidad" Type="System.String" Default="" Category="01.Parametros" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="NombreColumnaAplicar" Type="System.String" Default="" Category="01.Parametros" Description="Nombre del Programdor" Optional="True"%>
+
+<%@ Property Name="ModuloMenu" Type="System.String" Default="" Category="1.Objeto Base Datos" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="PalabraClaveBuscar" Type="System.String" Default="" Category="1.Objeto Base Datos" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="PalabraClaveReemplazo" Type="System.String" Default="" Category="1.Objeto Base Datos" Description="Nombre del Programdor" Optional="True"%>
+
+<%@ Property Name="PalabraClaveNombreDescripcion" Type="System.String" Default="" Category="1.Objeto Descripcion" Description="Nombre de la descripcion (NOMBRE,WEBTITULO,WEBPLURAL)" Optional="True"%>
+<%@ Property Name="PalabraClaveBuscarDescripcion" Type="System.String" Default="" Category="1.Objeto Descripcion" Description="Valor descripcion para ser reemplado" Optional="True"%>
+<%@ Property Name="PalabraClaveReemplazoDescripcion" Type="System.String" Default="" Category="1.Objeto Descripcion" Description="Nuevo valor" Optional="True"%>
+<%@ Property Name="PalabraNuevaDescripcion" Type="System.String" Default="" Category="1.Objeto Descripcion" Description="Nuevo valor" Optional="True"%>
+
+<script runat="template">
+public string GetIndicesBusquedasTablas() {//,bool conVarGlobal,bool conIndicesOcultos
+	//bool blnExisteBusqueda=false;
+	//bool blnEsBusquedaVariableGlobal=false;
+	string sIndices="";
+	
+	foreach (TableSchema tableSchema in SourceTablesForGenerate) {	//SourceDataBase.Tables) {//SourceTablesForGenerate		
+		sIndices+=GetIndicesBusquedasTabla(tableSchema);
+	}
+	
+	return sIndices; 
+}
+
+public string GetIndicesBusquedasTabla(TableSchema TablaBase) {//,bool conVarGlobal,bool conIndicesOcultos
+	//bool blnExisteBusqueda=false;
+	//bool blnEsBusquedaVariableGlobal=false;
+	string sIndices="";
+			
+	foreach(IndexSchema indexSchema in TablaBase.Indexes) {
+		if(!indexSchema.IsPrimaryKey){					
+			if(!indexSchema.IsUnique) {
+				sIndices+="\r\ndrop index if exists "+TablaBase.Owner.ToLower()+".\""+GetNombreTablaC(TablaBase)+"_"+indexSchema.Name.ToLower()+"\";";
+				
+				
+				//blnEsBusquedaVariableGlobal=false;
+				/*		
+				if(!conVarGlobal) {
+					if(indexSchema.MemberColumns.Count.Equals(1)) {
+						foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns) {
+							if(EsColumnaVariableGlobalDataBaseFromPropertiesC(memberColumnSchema.Column) || EsColumnaVariableModuloGlobalC(memberColumnSchema.Column)) {
+								blnEsBusquedaVariableGlobal=true;
+							}
+						}
+					}
+				}
+				*/
+				
+				/*
+				if(blnEsBusquedaVariableGlobal) {
+					continue;	
+				}
+				*/
+				
+				/*
+				if(!conIndicesOcultos) {							
+					if(GetExisteIndiceOcultoC(TablaBase,indexSchema.Name)) {
+						//Trace.WriteLine(indexSchema.Name);
+						continue;
+					}
+				}
+				*/
+				
+				/*
+				if(!blnExisteBusqueda) {
+					blnExisteBusqueda=true;
+				}	
+				*/
+			}																																			
+		}
+	}			
+			
+	return sIndices; 
+}
+		
+public string GetIndicesRelacionesTabla(TableSchema TablaBase) 	{
+	string strIndices="";
+	
+	strIndices+="|INDICESNO=";
+	strIndices+=GetIndicesBusquedasTabla(TablaBase,GeneracionReportes,false);	
+	strIndices+="\r\n";	
+	
+	strIndices+="|CLASESNO=";
+	strIndices+=GetRelacionesTabla(TablaBase,false,false);	
+	
+	return strIndices;
+}
+
+public string GetRelacionesTabla(TableSchema TablaBase,bool conVarGlobal,bool conIndicesOcultos) 
+{
+	string strIndices="";
+	bool existe=false;
+	
+	ArrayList tablasRelacionadasEncontradas=GetTablasRelacionadasFinal(TablaBase,conVarGlobal,conIndicesOcultos);
+	
+	foreach(TableSchema tablaRelacionadaObjetivo in tablasRelacionadasEncontradas){ 
+		if(!existe){
+			existe=true;	
+		} else {
+			strIndices+=",";
+		}	
+		
+		strIndices+=GetNombreClaseC(tablaRelacionadaObjetivo.ToString());
+	}
+	
+	return strIndices;
+}
+
+public string GetIndicesBusquedasTabla(TableSchema TablaBase,bool conVarGlobal,bool conIndicesOcultos) {
+	string strIndices=GetIndicesBusquedasTablaC(TablaBase,conVarGlobal,conIndicesOcultos,false);
+			/*
+			string strIndices="";
+			bool blnExisteBusqueda=false;
+			bool blnEsBusquedaVariableGlobal=false;
+			
+			foreach(IndexSchema indexSchema in TablaBase.Indexes) {
+				if(!indexSchema.IsPrimaryKey) {					
+					if(indexSchema.IsUnique) {
+						
+					} else {
+						blnEsBusquedaVariableGlobal=false;
+						
+						if(!conVarGlobal) {
+							if(indexSchema.MemberColumns.Count.Equals(1)) {
+								foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns) {
+									if(EsColumnaVariableGlobalDataBaseFromPropertiesC(memberColumnSchema.Column) || EsColumnaVariableModuloGlobalC(memberColumnSchema.Column)) {
+										blnEsBusquedaVariableGlobal=true;
+									}
+								}
+							}
+						}
+						
+						if(blnEsBusquedaVariableGlobal) {
+							continue;	
+						}
+						
+						if(!conIndicesOcultos) {
+							
+							if(GetExisteIndiceOcultoC(TablaBase,indexSchema.Name)) {
+								//Trace.WriteLine(indexSchema.Name);
+								continue;
+							}
+						}
+						
+						if(!blnExisteBusqueda) {
+							blnExisteBusqueda=true;
+						} else {
+							strIndices+=",";
+						}
+						
+						strIndices+=indexSchema.Name;
+					}																																			
+				}
+			}			
+			*/
+			
+			return strIndices; 
+		}
+		
+//GetNuevaDescripcionTabla
+public String GetNuevaQuitarDescripcionTabla() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	String sValorAnterior="";
+	String sValorNuevo="";
+	
+	String sWebTitulo="";
+	
+	//bool conActualizarFkTitulo=false;
+	//PalabraClaveNombreDescripcion="WEBTITULO";
+	
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {	//SourceDataBase.Tables) {//SourceTablesForGenerate		
+		existe=false;
+		
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			//Trace.WriteLine(columnSchema.Description);
+			
+			//sValorAnterior=GetDescripcionNombreValor(columnSchema.Description,PalabraClaveNombreDescripcion,true);
+			
+			/*
+			if(!sValorAnterior.Equals("")) {
+				Trace.WriteLine(tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+"="+sValorAnterior);
+			}
+			*/
+			
+			if(columnSchema.Name.Contains(strIdAnio)) {
+				//Trace.WriteLine("here");
+				sUtil+=GetQuitarDescripcionTabla(tableSchema,"INSERTEDITNO","true");					
+				
+				break;
+				
+				/*
+				if(ContieneColumna(tableSchema,strIdPeriodo)) {
+					existe=true;
+				}
+				*/
+				
+				//break;
+					//sUtil+="\r\nsp_RENAME '"+tableSchema.Name+"."+columnSchema.Name+"' , '"+columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo)+"', 'COLUMN'";
+					//sUtil+=GetCambiarNombreColumna(tableSchema,columnSchema,columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo));
+					//sValorNuevo=sValorAnterior.Replace(PalabraClaveBuscarDescripcion,PalabraClaveReemplazoDescripcion);
+					
+					//Trace.WriteLine(sValorNuevo);
+					
+					//sUtil+=GetCambiarDescripcionColumna(columnSchema,PalabraClaveNombreDescripcion,sValorNuevo);			
+					
+					
+					//sUtil+=GetNuevaDescripcionColumna(columnSchema,"INDICESNO","FK_IdAnio,FK_IdMes");					
+					//sUtil+=GetQuitarDescripcionColumna(columnSchema,"INDICESNO","FK_IdAnio,FK_IdMes");
+					
+					//sUtil+="\r\nGO";
+					//existe=true;
+					//break;
+			}						
+		}
+		
+		if(existe) {
+			//sUtil+=GetNuevaDescripcionTabla(tableSchema,"INSERTEDITNO","true");					
+			//sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+		}
+		
+	}
+	
+	//Trace.WriteLine(SourceDataBase.Tables.Count);
+	//sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+
+public String GetNuevaQuitarDescripcionColumna() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	String sValorAnterior="";
+	String sValorNuevo="";
+	
+	String sWebTitulo="";
+	
+	//bool conActualizarFkTitulo=false;
+	//PalabraClaveNombreDescripcion="WEBTITULO";
+	
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {	//SourceDataBase.Tables) {//SourceTablesForGenerate		
+		existe=false;
+		
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			//Trace.WriteLine(columnSchema.Description);
+			
+			//sValorAnterior=GetDescripcionNombreValor(columnSchema.Description,PalabraClaveNombreDescripcion,true);
+			
+			/*
+			if(!sValorAnterior.Equals("")) {
+				Trace.WriteLine(tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+"="+sValorAnterior);
+			}
+			*/
+			
+			if(columnSchema.Name.Contains(strIdMes)) {
+				/*
+				if(ContieneColumna(tableSchema,strIdPeriodo)) {
+					existe=true;
+					sUtil+=GetNuevaDescripcionColumna(columnSchema,"INSERTEDITNO","true");
+					
+					//break;
+				}
+				*/
+				
+				sUtil+=GetNuevaDescripcionColumna(columnSchema,"INSERTEDITNO","true");
+				
+					//sUtil+="\r\nsp_RENAME '"+tableSchema.Name+"."+columnSchema.Name+"' , '"+columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo)+"', 'COLUMN'";
+					//sUtil+=GetCambiarNombreColumna(tableSchema,columnSchema,columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo));
+					//sValorNuevo=sValorAnterior.Replace(PalabraClaveBuscarDescripcion,PalabraClaveReemplazoDescripcion);
+					
+					//Trace.WriteLine(sValorNuevo);
+					
+					//sUtil+=GetCambiarDescripcionColumna(columnSchema,PalabraClaveNombreDescripcion,sValorNuevo);			
+					
+					
+			//sUtil+=GetNuevaDescripcionColumna(columnSchema,"CONBUSQUEDA","true");					
+					//sUtil+=GetQuitarDescripcionColumna(columnSchema,"INDICESNO","FK_IdAnio,FK_IdMes");
+					
+					//sUtil+="\r\nGO";
+					//existe=true;
+					//break;
+			}
+			
+			if(existe) {
+				
+			}
+		}				
+	}
+	
+	//sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetTablasNoExistePersistencia() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilderTablas=new StringBuilder ();
+	
+	String FileName=@"F:\l\proyectos\2013\source\erp\erp_ejb\ejbModule\META-INF\persistence.xml";
+	string search_text = "";
+    string old;
+    string n="";
+    StreamReader sr = File.OpenText(FileName);
+    
+	while ((old = sr.ReadLine()) != null) {
+        stringBuilderTablas.Append(old);
+    }
+    
+	sr.Close();
+				
+	String sFilePersistence=stringBuilderTablas.ToString();
+	
+	
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {	//) {//SourceTablesForGenerate		
+		if(!sFilePersistence.Contains("."+GetNombreClaseC(tableSchema.ToString()))) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+		}
+	}
+	
+	//sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetCambiarNombreColumna() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	
+	foreach (TableSchema tableSchema in SourceTablesForGenerate) {	//SourceDataBase.Tables) {//		
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+				
+			if(columnSchema.Name.Contains(PalabraClaveBuscar)) {
+				//sUtil+="\r\nsp_RENAME '"+tableSchema.Name+"."+columnSchema.Name+"' , '"+columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo)+"', 'COLUMN'";
+				sUtil+=GetCambiarNombreColumnaSp(tableSchema,columnSchema,columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo));
+				
+				sUtil+="\r\nGO";
+				//existe=true;
+				//break;
+			}
+		}				
+	}
+	
+	//sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetCambiarDescripcionColumna() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	String sValorAnterior="";
+	String sValorNuevo="";
+	
+	String sWebTitulo="";
+	
+	bool conActualizarFkTitulo=false;
+	//PalabraClaveNombreDescripcion="WEBTITULO";
+	
+	foreach (TableSchema tableSchema in SourceTablesForGenerate) {	//SourceDataBase.Tables) {//SourceTablesForGenerate		
+		InicializarVariablesPorTabla(tableSchema);
+		//Trace.WriteLine(strTipoTablaFuncionalidad);
+		
+		
+		if(!TipoTablaFuncionalidad.Equals("") && TipoTablaFuncionalidad.Length>5) {
+			if(!strTipoTablaFuncionalidad.Equals(TipoTablaFuncionalidad)) {
+				continue;
+			}
+		}
+		
+				
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			if(!NombreColumnaAplicar.Equals("") && NombreColumnaAplicar.Length>1) {
+				if(!columnSchema.Name.Equals(NombreColumnaAplicar)) {
+					continue;
+				}
+			}
+			
+			//Trace.WriteLine("Descripcion Columna: "+columnSchema.Description);
+			
+			sValorAnterior=GetDescripcionNombreValor(columnSchema.Description,PalabraClaveNombreDescripcion,true);
+			
+			//Trace.WriteLine("Here");
+			
+			if(!sValorAnterior.Equals("")) {
+				//Trace.WriteLine("Valor Anterior:"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+"="+sValorAnterior);
+			}
+			
+			//Trace.WriteLine(sValorAnterior);
+			
+			if(!conActualizarFkTitulo) {
+				if(columnSchema.Description.Contains(PalabraClaveNombreDescripcion) && sValorAnterior.Contains(PalabraClaveBuscarDescripcion)) {
+					//sUtil+="\r\nsp_RENAME '"+tableSchema.Name+"."+columnSchema.Name+"' , '"+columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo)+"', 'COLUMN'";
+					//sUtil+=GetCambiarNombreColumna(tableSchema,columnSchema,columnSchema.Name.Replace(PalabraClaveBuscar,PalabraClaveReemplazo));
+					
+					if(!PalabraClaveBuscarDescripcion.Equals(PalabraClaveReemplazoDescripcion)) {
+						sValorNuevo=sValorAnterior.Replace(PalabraClaveBuscarDescripcion,PalabraClaveReemplazoDescripcion);
+												
+						//Trace.WriteLine(sValorNuevo);
+						
+						//TEMPORAL
+						//continue;
+						
+						sUtil+=GetCambiarDescripcionColumna(columnSchema,PalabraClaveNombreDescripcion,sValorNuevo,"");			
+						sUtil+="\r\nGO";
+						
+						//existe=true;
+						//break;
+					}
+				} else {
+					if(!columnSchema.Description.Contains(PalabraClaveNombreDescripcion) && ConCrearNuevaDescripcion) { //SINO EXISTE DESCRIPTIO SE CREA AL FINAL
+						sValorNuevo="|"+PalabraClaveNombreDescripcion+"="+PalabraClaveReemplazoDescripcion;
+						//Trace.WriteLine("Valor Nuevo="+sValorNuevo);
+						
+						sUtil+=GetCambiarDescripcionColumna(columnSchema,PalabraClaveNombreDescripcion,sValorNuevo,sValorNuevo);			
+						sUtil+="\r\nGO";						
+					}
+				}
+			} else {
+				if(conActualizarFkTitulo) {
+					if(columnSchema.IsForeignKeyMember) {
+						sWebTitulo=GetWebNameDescriptionTable(columnSchema);
+						
+						//Trace.WriteLine(sValorAnterior+"-"+sWebTitulo);
+						sValorNuevo=sWebTitulo;
+						
+						if( !sValorAnterior.Equals(sWebTitulo)
+							&& sValorNuevo!=null && !sValorNuevo.Equals("")
+							&& sValorAnterior!=null && !sValorAnterior.Equals("")) {
+								
+							sUtil+=GetCambiarDescripcionColumna(columnSchema,PalabraClaveNombreDescripcion,sValorNuevo,"");				
+							sUtil+="\r\nGO";
+						}
+					}
+				}
+			}
+		}				
+	}
+	
+	//sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetWebNameDescriptionTable(ColumnSchema columnSchema) {
+	String strDescritionTabla=string.Empty;
+	
+	String strNameTable=string.Empty;
+	String strCharNameTable=string.Empty;
+	bool esPrimeraVez=true;
+	
+	if(columnSchema.IsForeignKeyMember)	{
+		foreach(Char charName in columnSchema.Name.Replace("id","").ToCharArray()) {
+			strCharNameTable=charName.ToString();
+			
+			if(Char.IsUpper(charName)) {
+				if(!esPrimeraVez) {
+					strCharNameTable=" "+charName.ToString().ToLower();;
+				} else {
+					esPrimeraVez=false;
+				}
+			}			
+			strNameTable+=strCharNameTable;
+		}
+	}
+		
+	strDescritionTabla=strNameTable=strNameTable.ToUpper();
+	
+	return strDescritionTabla;		
+}
+
+public String GetCambiarDescripcionColumna(ColumnSchema columnSchema,String sNombreClave,String sValorNuevo,String sDescriptionCompletar) {
+	String sUtil="";
+		
+	String strDescriptionColumna="";
+	String strDescriptionColumnaNuevo="";
+	String strDescriptionColumnaTabla="";
+	
+	strDescriptionColumna=columnSchema.Description;
+	
+	String sDescripcionNombreValorAnterior="";
+	String sDescripcionNombreValorNuevo="";
+	
+	sDescripcionNombreValorAnterior=GetDescripcionNombreValor(strDescriptionColumna,sNombreClave,false);
+	
+	sDescripcionNombreValorNuevo=GetFormarDescripcionNombreValor(sNombreClave,sValorNuevo);		
+	
+	
+	if(!sDescripcionNombreValorAnterior.Equals("")) {
+		strDescriptionColumnaNuevo=strDescriptionColumna.Replace(sDescripcionNombreValorAnterior,sDescripcionNombreValorNuevo);
+	} else {
+		strDescriptionColumnaNuevo=strDescriptionColumna;
+		//Trace.WriteLine(sDescriptionCompletar);
+	}	
+	
+	
+	sUtil="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescriptionColumnaNuevo + sDescriptionCompletar+"' ,@level0type=N'SCHEMA', @level0name=N'"+columnSchema.Table.Owner+"', @level1type=N'TABLE', @level1name=N'"+columnSchema.Table.Name+"' , @level2type=N'COLUMN', @level2name=N'"+columnSchema.Name+"';";								   
+	
+	/*
+	String strDescriptionTabla="";
+	String strDescriptionNombreTabla="";
+	
+	strDescriptionTabla=tableSchema.Description;
+	
+	int intIndex=strDescriptionTabla.IndexOf("|");
+	
+	strDescriptionNombreTabla=strDescriptionTabla.Substring(0,intIndex);
+	//gnr_
+	strDescriptionTabla=strDescriptionTabla.Replace(strDescriptionNombreTabla,"NOMBRE="+GetNombreConSeparacionC(tableSchema.Name).ToLower());
+	*/
+	
+	/*
+	if(strDescritionTabla.Contains("NOMBRE="+columnSchema.Name)) {
+		//strDescritionTabla=strDescritionTabla.Replace("NOMBRE="+columnSchema.Name,"NOMBRE="+columnSchema.Name.ToUpper());
+		//strDescritionTablaTotal="\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescritionTabla+"' ,@level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'"+tableSchema.Name+"';\r\n";								   
+	
+	}
+	*/
+	
+	return sUtil;	
+}
+
+public String GetNuevaDescripcionColumna(ColumnSchema columnSchema,String sNombreClave,String sValorNuevo) {
+	String sUtil="";
+		
+	String strDescriptionColumna="";
+	String strDescriptionColumnaNuevo="";
+	String strDescriptionColumnaTabla="";
+	
+	strDescriptionColumna=columnSchema.Description;
+	
+	String sDescripcionNombreValorAnterior="";
+	String sDescripcionNombreValorNuevo="";
+	
+	//sDescripcionNombreValorAnterior=GetDescripcionNombreValor(strDescriptionColumna,sNombreClave,false);
+	
+	//sDescripcionNombreValorNuevo=GetFormarDescripcionNombreValor(sNombreClave,sValorNuevo);
+	
+	//strDescriptionColumnaNuevo=strDescriptionColumna.Replace(sDescripcionNombreValorAnterior,sDescripcionNombreValorNuevo);
+	
+	if(!strDescriptionColumna.Contains(sNombreClave)) {
+		strDescriptionColumnaNuevo=strDescriptionColumna+"|"+sNombreClave+"="+sValorNuevo;
+	
+		sUtil="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescriptionColumnaNuevo+"' ,@level0type=N'SCHEMA', @level0name=N'"+columnSchema.Table.Owner+"', @level1type=N'TABLE', @level1name=N'"+columnSchema.Table.Name+"' , @level2type=N'COLUMN', @level2name=N'"+columnSchema.Name+"';";								   
+		sUtil+="\r\nGO";
+	}
+	
+	
+	return sUtil;	
+}
+
+public String GetNuevaDescripcionTabla(TableSchema tableSchema,String sNombreClave,String sValorNuevo) {
+	String sUtil="";
+		
+	String strDescriptionColumna="";
+	String strDescriptionColumnaNuevo="";
+	String strDescriptionColumnaTabla="";
+	
+	strDescriptionColumna=tableSchema.Description;
+	
+	String sDescripcionNombreValorAnterior="";
+	String sDescripcionNombreValorNuevo="";
+	
+	//sDescripcionNombreValorAnterior=GetDescripcionNombreValor(strDescriptionColumna,sNombreClave,false);
+	
+	//sDescripcionNombreValorNuevo=GetFormarDescripcionNombreValor(sNombreClave,sValorNuevo);
+	
+	//strDescriptionColumnaNuevo=strDescriptionColumna.Replace(sDescripcionNombreValorAnterior,sDescripcionNombreValorNuevo);
+	
+	if(!strDescriptionColumna.Contains(sNombreClave)) {
+		strDescriptionColumnaNuevo=strDescriptionColumna+"|"+sNombreClave+"="+sValorNuevo;
+	
+		sUtil="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescriptionColumnaNuevo+"' ,@level0type=N'SCHEMA', @level0name=N'"+tableSchema.Owner+"', @level1type=N'TABLE', @level1name=N'"+tableSchema.Name+"';";								   
+		sUtil+="\r\nGO";
+	}
+	
+	
+	return sUtil;	
+}
+
+public String GetQuitarDescripcionTabla(TableSchema tableSchema,String sNombreClave,String sValorNuevo) {
+	String sUtil="";
+		
+	String strDescriptionColumna="";
+	String strDescriptionColumnaNuevo="";
+	String strDescriptionColumnaTabla="";
+	
+	strDescriptionColumna=tableSchema.Description;
+	
+	String sDescripcionNombreValorAnterior="";
+	String sDescripcionNombreValorNuevo="";
+	
+	//sDescripcionNombreValorAnterior=GetDescripcionNombreValor(strDescriptionColumna,sNombreClave,false);
+	
+	//sDescripcionNombreValorNuevo=GetFormarDescripcionNombreValor(sNombreClave,sValorNuevo);
+	
+	//strDescriptionColumnaNuevo=strDescriptionColumna.Replace(sDescripcionNombreValorAnterior,sDescripcionNombreValorNuevo);
+	
+	if(strDescriptionColumna.Contains(sNombreClave)) {
+		strDescriptionColumnaNuevo=strDescriptionColumna.Replace("|"+sNombreClave+"="+sValorNuevo,"");
+	
+		sUtil="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescriptionColumnaNuevo+"' ,@level0type=N'SCHEMA', @level0name=N'"+tableSchema.Owner+"', @level1type=N'TABLE', @level1name=N'"+tableSchema.Name+"';";								   
+		sUtil+="\r\nGO";
+	}
+	
+	
+	return sUtil;	
+}
+
+public String GetQuitarDescripcionColumna(ColumnSchema columnSchema,String sNombreClave,String sValorNuevo) {
+	String sUtil="";
+		
+	String strDescriptionColumna="";
+	String strDescriptionColumnaNuevo="";
+	String strDescriptionColumnaTabla="";
+	
+	strDescriptionColumna=columnSchema.Description;
+	
+	String sDescripcionNombreValorAnterior="";
+	String sDescripcionNombreValorNuevo="";
+	
+	//sDescripcionNombreValorAnterior=GetDescripcionNombreValor(strDescriptionColumna,sNombreClave,false);
+	
+	//sDescripcionNombreValorNuevo=GetFormarDescripcionNombreValor(sNombreClave,sValorNuevo);
+	
+	//strDescriptionColumnaNuevo=strDescriptionColumna.Replace(sDescripcionNombreValorAnterior,sDescripcionNombreValorNuevo);
+	
+	if(strDescriptionColumna.Contains(sNombreClave)) {
+		strDescriptionColumnaNuevo=strDescriptionColumna.Replace("|"+sNombreClave+"="+sValorNuevo,"");
+	
+		sUtil="\r\n\r\nEXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'"+strDescriptionColumnaNuevo+"' ,@level0type=N'SCHEMA', @level0name=N'"+columnSchema.Table.Owner+"', @level1type=N'TABLE', @level1name=N'"+columnSchema.Table.Name+"' , @level2type=N'COLUMN', @level2name=N'"+columnSchema.Name+"';";								   
+		sUtil+="\r\nGO";
+	}
+	
+	
+	return sUtil;	
+}
+
+public String GetDescripcionNombreValor(String sDescripcion,String sNombreClave,bool traerSoloValor) {
+	String[] descripciones;
+	String[] tipo;
+	String sDescripcionNombreValorEncontrada="";
+	
+	if(sDescripcion!=null && sDescripcion!="") {
+		descripciones=sDescripcion.Split('|');
+		
+		if(descripciones!=null) {
+			//Trace.WriteLine(sDescripcion);
+			
+			foreach(String sDescripcionNombreValor in descripciones) {								
+				tipo=sDescripcionNombreValor.Split('=');
+				
+				if(tipo!=null) {
+					//Trace.WriteLine(sNombreClave);
+					
+					if(tipo[0].Equals(sNombreClave)) {
+						if(!traerSoloValor) {
+							sDescripcionNombreValorEncontrada=sDescripcionNombreValor;
+						} else {
+							sDescripcionNombreValorEncontrada=tipo[1];
+						}
+						
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	return sDescripcionNombreValorEncontrada;
+}
+
+public String GetFormarDescripcionNombreValor(String sNombre,String sValor) {
+	String sDescripcionNombreValor="";
+	
+	sDescripcionNombreValor=sNombre+"="+sValor;
+	
+	return sDescripcionNombreValor;
+}
+
+public String GetCambiarNombreTabla(TableSchema tableSchema,String sNombreNuevo) {
+	String sUtil="";
+	
+	sUtil="\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME TO "+sNombreNuevo+";";
+				
+	return sUtil;	
+}
+
+public String GetCambiarNombreColumnaSp(TableSchema tableSchema,ColumnSchema columnSchema,String sNombreNuevo) {
+	String sUtil="";
+	
+	sUtil="\r\n\r\nsp_RENAME '"+tableSchema.Name+"."+columnSchema.Name+"' , '"+sNombreNuevo+"', 'COLUMN'";
+				
+	return sUtil;	
+}
+
+public String GetCambiarNombreColumna(TableSchema tableSchema,ColumnSchema columnSchema,String sNombreNuevo) {
+	String sUtil="";
+	
+	sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	return sUtil;	
+}
+
+public String GetTest() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	bool existe2=false;
+	bool existe3=false;
+	
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {//SourceTablesForGenerate) {
+		existe=false;
+		existe2=false;
+			
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			if(!columnSchema.IsForeignKeyMember) {
+				if(columnSchema.Description.Contains("CONEVENTDEPENDQUERY")) {
+					Trace.WriteLine(tableSchema.Name+"-"+columnSchema.Name);	
+				}
+			}
+			
+			/*
+			if(!EsDecimalColumn(columnSchema) && !EsBigIntColumn(columnSchema) && !EsIntColumn(columnSchema)
+				&& !EsSmallIntColumn(columnSchema)&& !EsCharColumn(columnSchema) && !EsVarCharColumn(columnSchema)
+				&& !EsDateTimeColumn(columnSchema)&& !EsDateColumn(columnSchema) && !EsBitColumn(columnSchema)) {
+				sUtil+="\r\n"+columnSchema.DataType;
+			}
+			*/
+			/*
+			if(EsBinaryColumn(columnSchema) && !columnSchema.Name.Equals(strVersionRow)) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+":"+columnSchema.DataType;
+			}
+			*/
+			
+			/*
+			if(columnSchema.Description==null || columnSchema.Description.Equals("")) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name;
+			}
+			*/
+			
+			/*if(columnSchema.Name.Equals("idReporte")) {//idReporte,idTipoDocumento,idTransaccion
+				existe=true;
+				//break;
+			}
+			*/
+			
+			//2 COLUMNAS
+			/*
+			if(columnSchema.Name.Equals("idBodega")) {
+				existe2=true;
+				//break;
+			}
+			
+			if(columnSchema.Name.Equals("idProducto") && existe2) {
+				existe=true;
+				break;
+			}
+			*/
+			/*
+			if(columnSchema.Name.Equals("idRequisicion")) {
+				existe=true;
+				//break;
+			}
+			*/
+			//3 COLUMNAS
+			/*
+			if(columnSchema.Name.Equals("idEmpresa")) {
+				existe3=true;
+				//break;
+			}
+			
+			if(columnSchema.Name.Equals("idSucursal") && existe3) {
+				existe2=true;
+				//break;
+			}
+			
+			if(columnSchema.Name.Equals("idBodega") && existe2) {
+				existe=true;
+				break;
+			}
+			*/
+		}
+		
+		/*
+		if(tableSchema.Description==null || tableSchema.Description.Equals("")) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+		
+		
+		if(existe) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			//sUtil+=GetFkMultipleTipoDocumento(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			//sUtil+=GetFkMultipleTransaccion(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			//sUtil+=GetFkMultipleCentroCosto(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			//sUtil+=GetFkMultipleSucursal(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			//sUtil+=GetFkMultiplePeriodo(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			
+			//sUtil+=GetFkMultipleProductoBodega(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			//sUtil+=GetFkMultipleSucursalBodega(tableSchema,"POSTGRES");//"MSSQL","POSTGRES"
+			
+			iCount++;
+		}
+	
+	}
+	
+	sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+public String GetFkMultipleSucursalBodega(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_SucursalBodega_2M] FOREIGN KEY([idEmpresa],[idSucursal],[idBodega])";
+		sUtil+="\r\nREFERENCES [Inventario].[BodegaSucursal] ([idEmpresa],[idSucursal],[idBodega])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_bodegasucursal_2M\" FOREIGN KEY (id_empresa,id_sucursal,id_bodega)";
+      	sUtil+="\r\nREFERENCES inventario.bodega_sucursal(id_empresa,id_sucursal,id_bodega) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultipleProductoBodega(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_Producto_2M] FOREIGN KEY([idBodega],[idProducto])";
+		sUtil+="\r\nREFERENCES [Inventario].[BodegaProducto] ([idBodega], [idProducto])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_producto_2M\" FOREIGN KEY (id_bodega, id_producto)";
+      	sUtil+="\r\nREFERENCES inventario.bodega_producto(id_bodega, id_producto) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultiplePeriodo(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_Periodo_2M] FOREIGN KEY([idPeriodo],[idEmpresa],[idEjercicio],[idAnio],[idMes])";
+		sUtil+="\r\nREFERENCES [Contabilidad].[Periodo] ([id],[idEmpresa],[idEjercicio],[idAnio],[idMes])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_periodo_2M\" FOREIGN KEY (id_periodo,id_empresa,id_ejercicio,id_anio,id_mes)";
+      	sUtil+="\r\nREFERENCES contabilidad.periodo(id, id_empresa,id_ejercicio,id_anio,id_mes) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultipleSucursal(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_Sucursal_2M] FOREIGN KEY([idSucursal],[idEmpresa])";
+		sUtil+="\r\nREFERENCES [Seguridad].[Sucursal] ([id], [idEmpresa])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_sucursal_2M\" FOREIGN KEY (id_sucursal, id_empresa)";
+      	sUtil+="\r\nREFERENCES seguridad.sucursal(id, id_empresa) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultipleCentroCosto(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_CentroCosto_2M] FOREIGN KEY([idCentroCosto],[idEmpresa])";
+		sUtil+="\r\nREFERENCES [Contabilidad].[CentroCosto] ([id], [idEmpresa])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_centro_costo_2M\" FOREIGN KEY (id_centro_costo, id_empresa)";
+      	sUtil+="\r\nREFERENCES contabilidad.centro_costo(id, id_empresa) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultipleTransaccion(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_Transaccion_2M] FOREIGN KEY([idTransaccion],[idEmpresa], [idSucursal],[idModulo], [idTipoTransaccionModulo])";
+		sUtil+="\r\nREFERENCES [Tesoreria].[Transaccion] ([id], [idEmpresa], [idSucursal],[idModulo], [idTipoTransaccionModulo])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_transaccion_2M\" FOREIGN KEY (id_transaccion, id_empresa,id_sucursal, id_modulo, id_tipo_transaccion_modulo)";
+      	sUtil+="\r\nREFERENCES tesoreria.transaccion (id, id_empresa, id_sucursal,id_modulo, id_tipo_transaccion_modulo) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+public String GetFkMultipleTipoDocumento(TableSchema tableSchema,String sTipoDb) {
+	String sUtil="";
+	
+	//sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner+"."+tableSchema.Name+" RENAME COLUMN "+columnSchema.Name+" TO "+sNombreNuevo+"";			
+	
+	if(sTipoDb.Equals("MSSQL")) {
+		sUtil="\r\n\r\nALTER TABLE ["+tableSchema.Owner+"].["+tableSchema.Name+"]  WITH CHECK ADD  CONSTRAINT [FK_"+tableSchema.Name+"_TipoDocumento_2M] FOREIGN KEY([idTipoDocumento],[idEmpresa], [idModulo], [idTipoMovimiento], [idTipoMovimientoModulo])";
+		sUtil+="\r\nREFERENCES [Contabilidad].[TipoDocumento] ([id], [idEmpresa], [idModulo], [idTipoMovimiento], [idTipoMovimientoModulo])";
+		sUtil+="\r\nGO";
+		
+	} else if(sTipoDb.Equals("POSTGRES")) {
+		sUtil="\r\n\r\nALTER TABLE "+tableSchema.Owner.ToLower()+"."+GetNombreTableFromProperties(tableSchema)+"";
+  		sUtil+="\r\nADD CONSTRAINT \"fk_x"+GetNombreTableFromProperties(tableSchema)+"_tipo_documento_2M\" FOREIGN KEY (id_tipo_documento, id_empresa, id_modulo, id_tipo_movimiento, id_tipo_movimiento_modulo)";
+      	sUtil+="\r\nREFERENCES contabilidad.tipo_documento (id, id_empresa, id_modulo, id_tipo_movimiento, id_tipo_movimiento_modulo) MATCH SIMPLE";
+      	sUtil+="\r\nON UPDATE NO ACTION ON DELETE NO ACTION;";
+
+	}
+	
+	return sUtil;	
+}
+
+/*
+ALTER TABLE [ActivosFijos].[SubGrupoActivoFijo]  WITH CHECK ADD  CONSTRAINT [FK_SubGrupoActivoFijo_DetalleGrupoActivoFijo_2M] FOREIGN KEY([idDetalleGrupoActivoFijo], [idEmpresa], [idTipoGrupoActivoFijo])
+REFERENCES [ActivosFijos].[DetalleGrupoActivoFijo] ([id], [idEmpresa], [idTipoGrupoActivoFijo])
+GO
+
+
+ALTER TABLE activosfijos.sub_grupo_activo_fijo
+ADD CONSTRAINT "fk_xsub_grupo_activo_fijo_detalle_grupo_activo_fijo_2M" FOREIGN KEY (id_detalle_grupo_activo_fijo, id_empresa, id_tipo_grupo_activo_fijo)
+REFERENCES activosfijos.detalle_grupo_activo_fijo (id, id_empresa, id_tipo_grupo_activo_fijo) MATCH SIMPLE
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+*/
+</script>
+
+<%if(GeneracionTest) {%>
+<%=GetTest()%>
+<%//=GetTablasNoExistePersistencia()%>
+<%}%>
+
+<%if(GeneracionCambiarNombreColumna) {%>
+<%=GetCambiarNombreColumna()%>
+<%}%>
+
+<%if(GeneracionCambiarDescripcionColumna) {%>
+<%=GetCambiarDescripcionColumna()%>
+<%}%>
+
+<%if(GeneracionNuevaQuitarDescripcionColumna){%>
+<%=GetNuevaQuitarDescripcionColumna()%>
+<%}%>
+
+<%if(TGeneracionNuevaQuitarDescripcionTabla){%>
+<%=GetNuevaQuitarDescripcionTabla()%>
+<%}%>
+
+<%if(GeneracionMostrarIndicesRelaciones){%>
+<%=GetIndicesRelacionesTabla(TablaBase)%>
+<%}%>
+
+<%if(GeneracionIndices) {%>
+<%=GetIndicesBusquedasTablas()%>
+<%}%>

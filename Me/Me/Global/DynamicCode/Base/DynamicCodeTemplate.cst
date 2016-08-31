@@ -1,0 +1,709 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+<%@ Property Name="GeneracionOutputArchivo" Type="System.Boolean" Default="false" Category="0.Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0._Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" Category="0._Tipo Generacion Source" Description="Select a set of tables." Optional="True"%>
+<%@ Property Name="TablaBase2" Type="SchemaExplorer.TableSchema" Category="0._Tipo Generacion Source" Description="Select a set of tables." Optional="True"%>
+<%@ Property Name="SourceColumnsForGenerate" Type="SchemaExplorer.ColumnSchemaCollection" Category="0._Tipo Generacion Source" Description="Database to get the extended properties from." Optional="True"%>
+
+
+<%@ Property Name="UsarCodigoTest" Type="System.Boolean" Default="false" Category="1._General" Description="Nombre del Programdor" %>
+<%@ Property Name="ArchivoOutputSobreEscribir" Type="System.Boolean" Default="false" Category="1._General" Description="Nombre del Programdor" %>
+<%@ Property Name="ArchivoNombre" Type="System.String" Default="archivo1" Category="1._General" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="NumTabs" Type="System.String" Default="0" Category="1._General" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="EsCodigoIncluyente" Type="System.Boolean" Default="false" Category="1._General" Description="Nombre del Programdor" %>
+
+
+<%@ Property Name="AAA_ClaseTransaccion" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAB_ForBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAC_GetEntityBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAC_GetEntitiesBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_SetCampoEntityBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_SetCamposEntityBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAE_SaveEntityBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAE_SaveEntitiesBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAF_DefFuncion" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAG_CompararLista" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAH_IfExisteLista" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAI_DeepLoad" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAJ_IfBasico" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAK_CrearLogic" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAL_CrearLista" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="AAF_A_Static" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAF_B_Nombre" Type="System.String" Default="" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" Optional="True"%>
+<%@ Property Name="AAF_C_ConParametro" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAF_C_ConParametroProceso" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_A_Con_NuevoObjeto" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_B_Con_AddObjetoLista" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_C_Con_AddObjetoLogic" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAD_D_Con_AddListaLogic" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAC_A_Con_CrearLogic" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAB_A_Con_LogicObjetos" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAC_B_Con_DefinirVariableGeneral" Type="System.Boolean" Default="true" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="AAC_D_Con_SufijoAux" Type="System.Boolean" Default="false" Category="2.1_Parametro Generacion" Description="Nombre del Programdor" %>
+
+
+<%@ Property Name="AAA_G001_Con_WithConnection" Type="System.Boolean" Default="false" Category="2.2_Parametro Generico" Description="Nombre del Programdor" %>
+<%@ Property Name="AAB_G002_Con_SetConnexion" Type="System.Boolean" Default="false" Category="2.2_Parametro Generico" Description="Nombre del Programdor" %>
+
+<script runat="template">
+String sReplace="//TO_REPLACE";
+String sReplace2="//TO2_REPLACE";
+String Tabs="";
+
+public void InicializarVariablesLocales(TableSchema tableSchema) {
+	int numTabs=int.Parse(NumTabs);
+	
+	for(int i=1;i<=numTabs;i++) {
+		Tabs+="\t";
+	}
+}
+
+
+public override void Render(TextWriter writer){
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Files\\"+ArchivoNombre+".txt";
+	StreamWriter streamWriter = null;//new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+	
+	
+	//CREA ARCHIVO
+	if(GeneracionOutputArchivo) {		
+		streamWriter = new StreamWriter(filePath, ArchivoOutputSobreEscribir);
+		
+		//ASIGNA GENERACION ARCHIVO
+		
+		this.Response.AddTextWriter(streamWriter);
+	}
+	
+	
+	//GENERA CODIGO
+	base.Render(writer);
+	
+	//CIERRA ARCHIVO
+	if(GeneracionOutputArchivo) {
+		streamWriter.Close();
+		Trace.WriteLine("ARCHIVO GENERADO "+filePath);
+	}	
+}
+
+public String GenerarOutput() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	
+	stringBuilder=new StringBuilder();
+	
+	string path = Directory.GetCurrentDirectory();
+	string filePath=path+"\\Files\\"+ArchivoNombre;
+	
+	Trace.WriteLine(filePath);
+	
+	/*
+	TextReader textReaderOrigen = new StreamReader(filePath);
+		
+	while ((sLinea = textReaderOrigen.ReadLine()) != null) {
+		if(sLinea.Contains(ClaveEscribir)) {
+			sLinea=sLinea.Replace(ClaveEscribir,ClaveEscribir+GetFuncionEscribir());	
+		}
+			
+		stringBuilder.Append("\r\n"+sLinea);
+		Console.WriteLine(sLinea);
+	}
+		
+	textReaderOrigen.Close();
+	*/
+	String sNuevaOpcion="";
+	
+	if(AAA_ClaseTransaccion) {
+		sNuevaOpcion=ClaseTransaccion();
+		stringBuilder.Append(sNuevaOpcion);
+	}
+	
+	String sNuevaOpcionSql="";
+	
+	/*
+	if(AAA_ClaseTransaccionSql) {
+		sNuevaOpcionSql=ClaseTransaccionSql();
+		stringBuilder.Append(sNuevaOpcionSql);
+	}
+	*/
+	
+	String sTest="";
+	
+	if(UsarCodigoTest) {
+		sTest=GetTest();
+		stringBuilder.Append(sTest);
+	}
+
+	using (StreamWriter streamWriterDestino = new StreamWriter(filePath,ArchivoOutputSobreEscribir)) {
+		streamWriterDestino.Write(stringBuilder.ToString());
+	}
+			
+	sUtil="ok";
+	
+	return sUtil;	
+}
+
+public String GetExisteLista() {
+	String sUtil="";
+	String sObjetos="";
+	
+	sUtil+="\r\n\t\t\tif(Existe"+GetNombreClaseC(TablaBase.ToString())+"EnLista"+GetNombreClaseC(TablaBase2.ToString())+"("+GetNombreClaseObjetoC(TablaBase.ToString())+","+GetNombreClaseObjetoC(TablaBase2.ToString())+"s) {";
+	sUtil+="\r\n\t\t\t\t"+sReplace;
+	sUtil+="\r\n\t\t\t}";
+	
+	return sUtil;
+}
+
+public String GetDeepLoad() {
+	String sUtil="";
+	String sObjetos="";
+	
+	sUtil+="\r\n\t\t\tclasses=new ArrayList<Classe>();";								
+	sUtil+="\r\n\t\t\tclasses.add(new Classe("+GetNombreClaseC(TablaBase.ToString())+".class));";
+									
+	sUtil+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.deepLoad(false, DeepLoadType.INCLUDE, classes,\"\");";
+	/*
+	sUtil+="\r\n\t\t\tif(Existe"+GetNombreClaseC(TablaBase.ToString())+"EnLista"+GetNombreClaseC(TablaBase2.ToString())+"("+GetNombreClaseObjetoC(TablaBase.ToString())+","+GetNombreClaseObjetoC(TablaBase2.ToString())+"s) {";
+	sUtil+="\r\n\t\t\t\t"+sReplace;
+	sUtil+="\r\n\t\t\t}";
+	*/
+	
+	return sUtil;
+}
+
+public String GetCompararLista() {
+	String sUtil="";
+	String sObjetos="";
+	
+	sObjetos=GetNombreClaseObjetoC(TablaBase.ToString())+"s";
+	
+	sUtil+="\r\n\tpublic Boolean Existe"+GetNombreClaseC(TablaBase.ToString())+"EnLista"+GetNombreClaseC(TablaBase2.ToString())+"("+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+",List<"+GetNombreClaseC(TablaBase2.ToString())+"> "+GetNombreClaseObjetoC(TablaBase2.ToString())+"s) throws Exception {";
+	sUtil+="\r\n\t\tBoolean existe=false;";
+		
+	sUtil+="\r\n\r\n\t\tfor("+GetNombreClaseC(TablaBase2.ToString())+" "+GetNombreClaseObjetoC(TablaBase2.ToString())+":"+GetNombreClaseObjetoC(TablaBase2.ToString())+"s) {";
+	sUtil+="\r\n\t\t\tif("+GetNombreClaseObjetoC(TablaBase2.ToString())+".getId().equals("+GetNombreClaseObjetoC(TablaBase.ToString())+".getId())) {";
+	sUtil+="\r\n\t\t\t\texiste=true;";
+								
+	sUtil+="\r\n\t\t\t\tbreak;";
+	sUtil+="\r\n\t\t\t}";
+	sUtil+="\r\n\t\t}";
+		
+	sUtil+="\r\n\r\n\t\treturn existe;";
+	sUtil+="\r\n\t}";
+	
+	/*
+	if(AAB_A_Con_LogicObjetos) {
+		sObjetos=GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()";
+	}
+	
+	sUtil+="\r\n\t\tfor("+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+":"+sObjetos+") {";		
+	sUtil+="\r\n\t\t//"+GetNombreClaseObjetoC(TablaBase.ToString())+".getId();";
+	sUtil+="\r\n"+sReplace;
+	
+	sUtil+="\r\n\r\n\t\t}";		
+	*/
+	
+	
+	
+	return sUtil;
+}
+
+public String GetGetFuncion() {
+	String sUtil="";
+	String sStatic="";
+	String sWithConnection="";
+	String sParametro="";
+	
+	if(AAF_A_Static) {
+		sStatic="static";
+	}
+	
+	if(AAF_C_ConParametro) {
+		sParametro+="ArrayList<"+GetNombreClaseC(TablaBase.ToString())+"> "+GetNombreClaseObjetoC(TablaBase.ToString())+"s";						
+		
+	}
+	
+	if(AAF_C_ConParametroProceso) {
+		sParametro+="String sFinalQuery,Pagination pagination,ParametroGeneralUsuario parametroGeneralUsuario,Modulo moduloActual";						
+		
+	}
+	
+	sUtil+="\r\npublic "+sStatic+"void "+AAF_B_Nombre+"("+sParametro+") throws Exception {";
+	sUtil+="\r\n"+sReplace;
+	sUtil+="\r\n}";
+	
+	return sUtil;
+}
+
+public String GetSaveEntityBasico() {
+	String sUtil="";
+	String sWithConnection="";
+	
+	if(AAA_G001_Con_WithConnection) {
+		sWithConnection="WithConnection";
+	}
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.save"+GetNombreClaseC(TablaBase.ToString())+""+sWithConnection+"();";						
+	sUtil+="\r\n\t"+Tabs+sReplace;
+	
+	return sUtil;
+}
+
+
+public String GetSaveEntitiesBasico() {
+	String sUtil="";
+	String sWithConnection="";
+	
+	if(AAA_G001_Con_WithConnection) {
+		sWithConnection="WithConnection";
+	}
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.save"+GetNombreClaseC(TablaBase.ToString())+"s"+sWithConnection+"();";						
+	sUtil+="\r\n\t"+Tabs+sReplace;
+	
+	return sUtil;
+}
+
+public String GetSetCampoEntityBasico() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"().set"+strIdGetSet+"(1L);";						
+	sUtil+="\r\n\t"+Tabs+sReplace;
+	
+	
+	return sUtil;
+}
+
+public String GetNewObjeto() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+"= new "+GetNombreClaseC(TablaBase.ToString())+"();\r\n";
+	
+	return sUtil;
+}
+
+public String GetAddObjetoLista() {
+	String sUtil="";
+	
+	sUtil+="\r\n\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"s.add("+GetNombreClaseObjetoC(TablaBase.ToString())+");\r\n";
+	
+	return sUtil;
+}
+
+public String GetAddObjetoLogic() {
+	String sUtil="";
+	
+	sUtil+="\r\n\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.set"+GetNombreClaseC(TablaBase.ToString())+"("+GetNombreClaseObjetoC(TablaBase.ToString())+");\r\n";
+	
+	return sUtil;
+}
+
+public String GetAddListaLogic() {
+	String sUtil="";
+	
+	sUtil+="\r\n\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.set"+GetNombreClaseC(TablaBase.ToString())+"s("+GetNombreClaseObjetoC(TablaBase.ToString())+"s);\r\n";
+	
+	return sUtil;
+}
+
+public String GetSetCamposEntityBasico() {
+	String sUtil="";
+	
+	//sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"().set"+strIdGetSet+"(1L);";						
+	
+	if(AAD_A_Con_NuevoObjeto) {
+		sUtil+=GetNewObjeto();//"\r\n\t"+Tabs+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+"= new "+GetNombreClaseC(TablaBase.ToString())+"();\r\n";
+	}
+	
+	for (int i = 0; i < TablaBase.Columns.Count; i++){ 
+		if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])){continue; }
+ 			sUtil+="\r\n\t"+Tabs+GetValueDefaultParameterClaseC(TablaBase.Columns[i],"",GetNombreClaseObjetoC(TablaBase.ToString()),true);
+	}
+	
+	if(AAD_B_Con_AddObjetoLista) {
+		sUtil+=GetAddObjetoLista();//"\r\n\t"+Tabs+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+"= new "+GetNombreClaseC(TablaBase.ToString())+"();\r\n";
+	}
+	
+	if(AAD_C_Con_AddObjetoLogic) {
+		sUtil+=GetAddObjetoLogic();
+	}
+	
+	if(AAD_D_Con_AddListaLogic) {
+		sUtil+=GetAddListaLogic();
+	}
+	
+	sUtil+="\r\n\t"+Tabs+sReplace;
+		
+	return sUtil;
+}
+
+public String GetEntityBasico() {
+	String sUtil="";
+	String sWithConnection="";
+	
+	if(AAA_G001_Con_WithConnection) {
+		sWithConnection="WithConnection";
+	}
+	
+	sUtil+="\r\n\t"+Tabs+"Long "+strId+GetNombreClaseC(TablaBase.ToString())+"=0L;";
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getEntity"+sWithConnection+"("+strId+GetNombreClaseC(TablaBase.ToString())+");";						
+	sUtil+="\r\n\t"+Tabs+sReplace;
+	
+	
+	return sUtil;
+}
+
+public String GetSetConnexion() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.setConnexion(this.connexion);";
+	
+	return sUtil;
+}
+
+public String GetEntitiesBasico() {
+	String sUtil="";
+	String sAux="";
+	String sWithConnection="";
+	String sStringLocal=sString;
+	String sSelectParameter="";
+	
+	if(AAA_G001_Con_WithConnection) {
+		sWithConnection="WithConnection";
+	}
+	
+	if(AAC_D_Con_SufijoAux) {
+		sAux="Aux";
+	}
+	
+	if(!AAC_B_Con_DefinirVariableGeneral) {
+		sStringLocal="";
+	}
+	
+	if(AAC_A_Con_CrearLogic) {
+		sUtil+=GetCrearLogic();
+	}
+	
+	if(AAB_G002_Con_SetConnexion) {
+		sUtil+=GetSetConnexion();
+	}
+	
+	sUtil+="\r\n\r\n\t"+Tabs+""+sStringLocal+" sFinalQuery"+sAux+"=\"\";";		
+	sUtil+="\r\n\t"+Tabs+""+sStringLocal+" sSelectQuery"+sAux+"=\"\";";
+	
+	if(blnEsReporte) {		
+		sSelectParameter="sSelectQuery"+sAux+",";
+	}
+	
+	sUtil+="\r\n\r\n\t"+Tabs+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getEntities"+sWithConnection+"("+sSelectParameter+"sFinalQuery"+sAux+");";						
+	sUtil+="\r\n\t"+Tabs+sReplace;
+		
+	return sUtil;
+}
+
+public bool ExisteCampoTabla(TableSchema tableSchema,String strCampo) {
+	bool existe=false;
+	
+	foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+		if(columnSchema.Name.Equals(strCampo)) {
+			existe=true;
+			
+			break;
+		}		
+	}
+	
+	return existe;
+}
+
+public String GetTest() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	
+	//foreach (TableSchema tableSchema in SourceDataBase.Tables) {//TablaBase) {
+		existe=false;
+			
+		foreach (ColumnSchema columnSchema in TablaBase.Columns) {
+			/*
+			if(!EsDecimalColumn(columnSchema) && !EsBigIntColumn(columnSchema) && !EsIntColumn(columnSchema)
+				&& !EsSmallIntColumn(columnSchema)&& !EsCharColumn(columnSchema) && !EsVarCharColumn(columnSchema)
+				&& !EsDateTimeColumn(columnSchema)&& !EsDateColumn(columnSchema) && !EsBitColumn(columnSchema)) {
+				sUtil+="\r\n"+columnSchema.DataType;
+			}
+			*/
+			/*
+			if(EsBinaryColumn(columnSchema) && !columnSchema.Name.Equals(strVersionRow)) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+":"+columnSchema.DataType;
+			}
+			*/
+			
+			/*
+			if(columnSchema.Description==null || columnSchema.Description.Equals("")) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name;
+			}
+			*/
+			
+			if(columnSchema.Name.Contains("idEjercicio")) {
+				existe=true;
+				break;
+			}
+			
+			
+		}
+		
+		if(existe) {
+			iCount++;
+			
+			if(!ExisteCampoTabla(TablaBase,"idEmpresa")) {
+			//if(!(ExisteCampoTabla(tableSchema,"idEmpresa") && ExisteCampoTabla(tableSchema,"idEjercicio"))) {
+				//Trace.WriteLine("Falta campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);	
+			} else {
+				//Trace.WriteLine("Si existe campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);
+			}
+		}
+		
+		
+		/*
+		if(tableSchema.Description==null || tableSchema.Description.Equals("")) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+		
+		/*
+		if(existe) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+	//}
+	
+	sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+
+//AAC_A_Con_CrearLogic
+public String GetCrearLogic() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t"+Tabs+GetNombreClaseC(TablaBase.ToString())+"Logic "+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic=new "+GetNombreClaseC(TablaBase.ToString())+"Logic();";
+	
+	if(AAB_G002_Con_SetConnexion) {
+		sUtil+=GetSetConnexion();
+	}
+	
+	return sUtil;
+}
+
+public String GetCrearLista() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t"+Tabs+"List<"+GetNombreClaseC(TablaBase.ToString())+"> "+GetNombreClaseObjetoC(TablaBase.ToString())+"s=new ArrayList<"+GetNombreClaseC(TablaBase.ToString())+">();";
+	
+	
+	
+	return sUtil;
+}
+
+public String ClaseTransaccion() {
+	String sUtil="";
+	
+	sUtil+=GetCrearLogic();//"\r\n\t"+GetNombreClaseC(TablaBase.ToString())+"Logic "+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic=new "+GetNombreClaseC(TablaBase.ToString())+"Logic();";
+	sUtil+="\r\n\r\n\ttry {";
+	sUtil+="\r\n\t\tthis.connexion=connexion.getNewConnexion(this.connexionType,this.parameterDbType,this.entityManagerFactory);connexion.begin();			";
+	sUtil+="\r\n"+sReplace;	
+	//sUtil+="\r\n\t\t"+GetNombreClaseObjetoC(tableSchema.ToString())+"Logic.get"+GetNombreClaseC(tableSchema.ToString())+"().getId();";
+	sUtil+="\r\n\r\n\t\tthis.connexion.commit();";
+	sUtil+="\r\n\r\n\t} catch(Exception e) {";
+	sUtil+="\r\n\t\tthis.connexion.rollback();";
+	sUtil+="\r\n\t\tFunciones.manageException(logger,e);";
+	sUtil+="\r\n\t\tthrow e;";
+	sUtil+="\r\n\r\n\t} finally {";
+	sUtil+="\r\n\t\tthis.connexion.close();";
+	sUtil+="\r\n\t}";
+			
+	/*
+	foreach (TableSchema tableSchema in TablaBase) {		
+		sUtil+="\r\n\r\n\telse if(strPantalla.equals("+GetNombreClaseC(tableSchema.ToString())+"ConstantesFunciones.CLASSNAME)) {";  
+	    sUtil+="\r\n\t\t"+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame=new "+GetNombreClaseC(tableSchema.ToString())+"BeanSwingJInternalFrame(true,true,desktop,this.usuarioActual,this.moduloActual,this.opcionActual,this.parametroGeneralSg,this.parametroGeneralUsuario,true,false,true);";
+    	sUtil+="\r\n\t\tjinternalFrame ="+GetNombreClaseObjetoC(tableSchema.ToString())+"BeanSwingJInternalFrame;";   			
+	    sUtil+="\r\n\t}";
+	}
+	*/
+	
+	return sUtil;
+}
+
+public String GetForBasico() {
+	String sUtil="";
+	String sObjetos="";
+	
+	sObjetos=GetNombreClaseObjetoC(TablaBase.ToString())+"s";
+	
+	if(AAB_A_Con_LogicObjetos) {
+		sObjetos=GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()";
+	}
+	
+	sUtil+="\r\n\t\tfor("+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+":"+sObjetos+") {";		
+	sUtil+="\r\n\t\t//"+GetNombreClaseObjetoC(TablaBase.ToString())+".getId();";
+	sUtil+="\r\n"+sReplace;
+		/*
+		if(AAJ_IfBasico) {
+			sUtil+="\r\n\t\t\tif("+GetNombreClaseObjetoC(tableSchema.ToString())+".getId().equals(0L)) {";
+			sUtil+="\r\n\t\t\t}";
+		}
+		*/
+		
+	sUtil+="\r\n\r\n\t\t}";		
+	sUtil+="\r\n\t"+Tabs+sReplace2;
+	
+	return sUtil;
+}
+
+public String GetIfBasico() {
+	String sUtil="";
+	
+	sUtil+="\r\n\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+".getId().equals(0L)) {";
+	sUtil+="\r\n\t\t\t\t"+sReplace;
+	sUtil+="\r\n\t\t\t}";						
+	
+	return sUtil;
+}
+
+public String ClaseTransaccionSql() {
+	String sUtil="";
+	
+	int iIdOpcion=0;
+	int iIdOpcion1=iIdOpcion;
+	int iIdOpcion2=iIdOpcion;
+	
+	String sModuloMenu="NONE";
+	
+	sUtil+="\r\n\tfor("+GetNombreClaseC(TablaBase.ToString())+" "+GetNombreClaseObjetoC(TablaBase.ToString())+":"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()) {";
+	sUtil+="\r\n\t\t//"+GetNombreClaseObjetoC(TablaBase.ToString())+".getId();";
+	sUtil+="\r\n\t}";
+		
+	iIdOpcion2++;
+	
+	
+	return sUtil;
+}
+</script>
+<%InicializarVariablesPorTabla(TablaBase);%>
+<%InicializarVariablesLocales(TablaBase);%>
+
+<%if(!EsCodigoIncluyente) {%>
+
+<%if(AAA_ClaseTransaccion) {%>
+<%=ClaseTransaccion()%>
+<%} else if(AAB_ForBasico) {%>
+<%=GetForBasico()%>
+<%} else if(AAJ_IfBasico) {%>
+<%=GetIfBasico()%>
+<%} else if(AAC_GetEntityBasico) {%>
+<%=GetEntityBasico()%>
+<%} else if(AAC_GetEntitiesBasico) {%>
+<%=GetEntitiesBasico()%>
+<%} else if(AAD_SetCampoEntityBasico) {%>
+<%=GetSetCampoEntityBasico()%>
+<%} else if(AAD_SetCamposEntityBasico) {%>
+<%=GetSetCamposEntityBasico()%>
+<%} else if(AAE_SaveEntityBasico) {%>
+<%=GetSaveEntityBasico()%>
+<%} else if(AAE_SaveEntitiesBasico) {%>
+<%=GetSaveEntitiesBasico()%>
+<%} else if(AAF_DefFuncion) {%>
+<%=GetGetFuncion()%>
+<%} else if(AAG_CompararLista) {%>
+<%=GetCompararLista()%>
+<%} else if(AAH_IfExisteLista) {%>
+<%=GetExisteLista()%>
+<%} else if(AAI_DeepLoad) {%>
+<%=GetDeepLoad()%>
+<%} else if(AAK_CrearLogic) {%>
+<%=GetCrearLogic()%>
+<%} else if(AAL_CrearLista) {%>
+<%=GetCrearLista()%>
+<%} %>
+
+<%} else {%>
+
+<%if(AAK_CrearLogic) {%>
+<%=GetCrearLogic()%>
+<%}%>
+
+<%if(AAL_CrearLista) {%>
+<%=GetCrearLista()%>
+<%}%>
+
+<%if(AAA_ClaseTransaccion) {%>
+<%=ClaseTransaccion()%>
+<%}%> 
+
+<%if(AAB_ForBasico) {%>
+<%=GetForBasico()%>
+<%}%>
+
+<%if(AAJ_IfBasico) {%>
+<%=GetIfBasico()%>
+<%}%>
+
+<%if(AAC_GetEntityBasico) {%>
+<%=GetEntityBasico()%>
+<%}%>
+
+<%if(AAC_GetEntitiesBasico) {%>
+<%=GetEntitiesBasico()%>
+<%}%>
+
+<%if(AAD_SetCampoEntityBasico) {%>
+<%=GetSetCampoEntityBasico()%>
+<%}%>
+
+<%if(AAD_SetCamposEntityBasico) {%>
+<%=GetSetCamposEntityBasico()%>
+<%}%>
+
+<%if(AAE_SaveEntityBasico) {%>
+<%=GetSaveEntityBasico()%>
+<%}%>
+
+<%if(AAE_SaveEntitiesBasico) {%>
+<%=GetSaveEntitiesBasico()%>
+<%} %>
+
+<%if(AAF_DefFuncion) {%>
+<%=GetGetFuncion()%>
+<%}%>
+
+<%if(AAG_CompararLista) {%>
+<%=GetCompararLista()%>
+<%}%>
+
+<%if(AAH_IfExisteLista) {%>
+<%=GetExisteLista()%>
+<%}%>
+
+<%if(AAI_DeepLoad) {%>
+<%=GetDeepLoad()%>
+<%}%>
+
+<%}%>
+<script runat="template">
+//<%@ Property Name="AAA_ClaseTransaccionSql" Type="System.Boolean" Default="false" Category="2.0_Tipo Generacion" Description="Nombre del Programdor" %>
+//AAG_CompararLista
+</script>

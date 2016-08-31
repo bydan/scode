@@ -1,0 +1,7 @@
+En ejecutarMantenimiento
+$this->alumnoLogic->deepLoads(false,DeepLoadType::$INCLUDE, $classes,'');
+$this->alumnoLogic->loadForeignsKeysDescription();
+
+
+En Actualizar
+$this->tipourlLogic->getEntityWithConnection($id);

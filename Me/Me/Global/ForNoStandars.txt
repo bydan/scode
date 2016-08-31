@@ -1,0 +1,141 @@
+
+
+if(!blnNoStandardTableFromProperties) {		
+
+} else {
+				ArrayList arrayListForeignKeys =GetArrayListForeignKeys(TablaBase);
+			
+				foreach(TableSchema tableSchemaForeignKey in arrayListForeignKeys) {
+												
+				}
+			}
+						
+GetNombreClaseC(tableSchemaForeignKey.ToString()) 
+GetNombreClaseC(TablaBase.ToString())
+						
+			
+strPorTablaColumnsPKParametros
+strPorTablaColumnsPKParametrosUso
+intPorTablaCountColumnsPKC
+				
+				
+				
+MemberColumnSchemaCollection memberColumnSchemaCollectionFK=GetMemberColumnSchemaForeignKeysC(TablaBase,tableSchemaForeignKey);
+strInitFuncion+=GetColumnsForeignKeysPersistenciaC(memberColumnSchemaCollectionFK);
+						
+memberColumnSchemaCollectionFK=GetMemberColumnSchemaForeignKeysC(TablaBase,tableSchemaForeignKey);
+strCallVariablesFK=GetColumnsForeignKeysCallDataAccessC(TablaBase,);
+												
+FALTA DEEPSAVE QUE GUARDE EN VEZ DE ID LOS FK DESDE PK COMPUESTOS
+SWING FALTA CARGAR COMBOS INDICES
+FALTA PERSISTENCIA NO STANDARD
+FALTA RELACION UNO A UNO
+
+strColumna= GetNombreColumnaClaseC(column);
+				strColumna=strColumna.Replace(strId,"");
+				strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+					
+				//strColumnName=/*"'"+*/GetNombreColumnaClaseJavaScriptC(column)/*+"Descripcion'"*/;
+				//strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+				
+				//PARA FOREIGN KEY USAR DESCRIPCION
+				//SI SE QUIERE USAR LO ANTERIOR SIMPLEMENTE COMENTAR LA LINEA
+				strColumnName=GetNombreClaseObjetoC(column.Table.ToString())+"."+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+GetNombreCompletoClaseRelacionadaFromColumn(column))+strDescripcion;
+				
+				
+				if(!ConRichFaces) {	
+					strColumn="\r\n\t\t\t\t\t<"+strPrefijoColumna+":column>\r\n";
+				} else {
+					strColumn="\r\n\t\t\t\t\t<"+strPrefijoColumna+":column sortBy=\"#{"+strColumnName+"}\""+strOcultarColumna+">\r\n";//strId
+				}
+				
+				
+				
+				strColumn+="\t\t\t\t\t\t<f:facet name=\"header\">\r\n\t\t\t\t\t\t\t<h:outputText value=\""+strColumnLabel+"\"/>\r\n\t\t\t\t\t\t</f:facet>\r\n";
+				strColumn+="\r\n\t\t\t\t\t\t<h:outputText value=\"#{"+strColumnName+"}\"/>\r\n";
+				strColumn+="\t\t\t\t\t</"+strPrefijoColumna+":column>\r\n";
+				
+				
+
+				
+				
+public  String DefinirFuncionesGuardarForeignKeys()
+{
+	String sVariablesArray="";
+	String sVariablesArrays="";
+	String sNombrePakage="";
+	TableSchema tableSchema=null;
+	
+	
+	if(!blnNoStandardTableFromProperties) {
+		/*	
+		foreach(ColumnSchema column in TablaBase.Columns) {
+			if(column.IsForeignKeyMember) {
+			}	
+		}
+		*/
+	} else {
+		//ArrayList arrayListForeignKeys =GetArrayListForeignKeys(TablaBase);
+		ArrayList arrayListForeignKeys =new ArrayList();
+		ArrayList arrayListPK =new ArrayList();
+		ArrayList arrayListFK =new ArrayList();
+		ArrayList arrayListPKFK =new ArrayList();
+		
+		String strPK="";
+		String strFK="";
+		String strPKFK="";
+		
+		foreach(TableKeySchema tableKeySchema in TablaBase.ForeignKeys) {		
+			//sNombrePakage=GetPackageTableFromProperties(tableSchemaForeignKey);
+			arrayListPK =new ArrayList();
+			arrayListFK =new ArrayList();
+			arrayListPKFK =new ArrayList();
+			
+			if(!ExisteTablaEnListaC(tableKeySchema.PrimaryKeyTable,arrayListForeignKeys)) {
+				arrayListForeignKeys.Add(tableKeySchema.PrimaryKeyTable);
+				
+				
+				sVariablesArray="\r\n\tpublic void guardar"+ GetNombreClaseC(tableKeySchema.PrimaryKeyTable.ToString())+"Para"+ GetNombreClaseC(TablaBase.ToString())+strForeignKey+"("+GetNombreClaseC(tableKeySchema.PrimaryKeyTable.ToString())+" "+GetNombreClaseObjetoC(tableKeySchema.PrimaryKeyTable.ToString())+") throws Exception ";
+				sVariablesArray+="{\r\n";
+				//sVariablesArray+="\t\treturn "+GetNombreClaseC(tableSchemaForeignKey.ToString()).ToLower() +"s"+strForeignKey+";\r\n";
+				
+				foreach(MemberColumnSchema memberColumnSchema in tableKeySchema.PrimaryKeyMemberColumns) {
+					strPK=GetNombreClaseObjetoC(tableKeySchema.PrimaryKeyTable.ToString())+"."+GetParameterClaseMethodC(memberColumnSchema.Column,true,false,false,"");
+					arrayListPK.Add(strPK);
+				}
+				
+				foreach(MemberColumnSchema memberColumnSchema in tableKeySchema.ForeignKeyMemberColumns) {
+					strFK=GetSetPartParameterClaseMethodC(memberColumnSchema.Column,"this."+GetNombreClaseObjetoC(tableKeySchema.ForeignKeyTable.ToString()),true);
+					arrayListFK.Add(strFK);
+				}
+				
+				for (int i = 0; i < arrayListPK.Count; i++){
+					strPKFK="\r\n\t\t"+((String)arrayListFK[i])+((String)arrayListPK[i])+");";
+					arrayListPKFK.Add(strPKFK);
+				}				
+				
+				foreach(String strPKFKArray in arrayListPKFK) {
+					sVariablesArray+=strPKFKArray;					
+				}
+				
+				sVariablesArray+="\r\n\t}\r\n\r\n";	
+				
+				//System.Windows.Forms.MessageBox.Show(sVariablesArray);
+				
+				sVariablesArrays+=sVariablesArray;
+			}
+			
+			
+		}
+	}
+			
+	return sVariablesArrays;
+}
+
+
+
+if(ciudadsnapSessionBean.getliddigoPaisActual()>0)
+				{
+					chaCodigoPaisFK_IdPaisSnap=ciudadsnapSessionBean.getliddigoPaisActual();
+					ciudadsnapSessionBean.setliddigoPaisActual(-1L);
+				}

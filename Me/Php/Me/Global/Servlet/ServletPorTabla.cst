@@ -1,0 +1,1793 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Collections" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="PackageSeguridad" Type="System.String" Default="Seguridad" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="TablasBaseCompuestoJunction" Type="SchemaExplorer.TableSchemaCollection" Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoDetalle" Type="SchemaExplorer.TableSchemaCollection" 	Category="Context"%>
+<%@ Property Name="TiposGeneracion" Type="System.String" Default=" " Category="Options" Description="Nombre de la Entidad" %>
+
+
+<script runat="template">
+
+
+		
+public String GetBusquedaFromForeigKeysSession() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsForeignKeyMember)
+				{
+										
+					strTablaClaseRelacionada+=" else if($httpSession->getAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\")!=null)";
+					strTablaClaseRelacionada+=" {";
+							
+					strTablaClaseRelacionada+="\r\n\t\t\t\tif($httpSession->getAttribute(\""+columnSchema.Name+"Actual\")!=null)";
+					strTablaClaseRelacionada+=" {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t$strAccionBusqueda=\""+strFK+"_"+strIdGetSet+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\";";						
+					strTablaClaseRelacionada+="\r\n\t\t\t\t}";
+								
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t$httpSession->removeAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\");";
+					
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t$strUltimaBusqueda=\"accionBusqueda=\"+$strAccionBusqueda+\"()"+GetNameControlHtml(columnSchema)+strFK+"_"+strIdGetSet+GetNombreClaseRelacionadaFromColumn(columnSchema)+"=\"+$httpSession->getAttribute(\""+columnSchema.Name+"Actual\")+\"()inicio=0()fin=10()tipo=SIGUIENTES\";";
+				
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,Constantes::$SMENSAJEULTIMABUSQUEDA,$strUltimaBusqueda,MensajeGrupo::$NONE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$sXml = $mensaje->toNewXmlMensaje();";
+
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+				
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\treturn;";
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+						
+					
+			
+				}
+			}
+			
+				
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetFuncionesAccionesNavegacionTablasClasesRelacionadasC() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			TableSchema tablaRelacionadaObjetivo;
+			String strPlural=string.Empty;
+			ArrayList tablasRelacionadasEncontradas=new ArrayList();
+			bool encontrado=false;
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}
+				else
+				{
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				
+				encontrado=false;
+				
+				foreach(TableSchema tableSchema in tablasRelacionadasEncontradas)
+				{
+					if(tableSchema.Equals(tablaRelacionadaObjetivo))
+					{
+						encontrado=true;
+					}
+				}
+				
+				
+				if(!encontrado)
+				{
+					tablasRelacionadasEncontradas.Add(tablaRelacionadaObjetivo);
+					
+					strPlural=GetPluralTituloNombreTableFromPropertiesC(tablaRelacionadaObjetivo);
+					
+					strTablaClaseRelacionada+=" else if($strAccionMantenimiento==\"RegistrarSesion"+GetNombreClaseC(TablaBase.ToString())+"Para"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+strPlural+"\")";
+					strTablaClaseRelacionada+=" {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual=Long.parseLong($request->getParameter(\""+strId+GetNombreClaseC(TablaBase.ToString())+"Actual\"));";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsession.setAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseC(TablaBase.ToString())+"\",true);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsession.setAttribute(\""+strId+GetNombreClaseC(TablaBase.ToString())+"Actual\", big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual);";
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsession.setAttribute(\"BusquedaDesdeForeignKeySesionForeignKey"+GetNombreClaseC(TablaBase.ToString())+"\",true);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsession.setAttribute(\""+strId+GetNombreClaseC(TablaBase.ToString())+"ActualForeignKey\", big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual);";
+					
+						
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\tString strPagina=Constantes.SNONE;";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"SistemaLogicAdditional sistemaLogicAdditional=new SistemaLogicAdditional();";
+					
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t"+strGlobalSeguridadComment+"if(sistemaLogicAdditional.TienePermisosEnPaginaWeb($usuarioActual, Constantes.getLOidSistemaActual(), Constantes::$SPREFIJOARCHIVOJSP+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes::$SEXTENSIONARCHIVOJSP))";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"{";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\tstrPagina=Constantes.getSCarpetaPaginas()+\"/\"+\""+GetRelativePathNavegacionFromTableFromPropertiesC(tablaRelacionadaObjetivo)+"\"+Constantes::$SPREFIJOARCHIVOJSP"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes::$SEXTENSIONARCHIVOJSP;";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"}";
+					
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t"+strGlobalSeguridadComment+"if(strPagina!=Constantes.SNONE)";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"{";
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,Constantes::$SMENSAJEREGISTROSESSION,strPagina,MensajeGrupo::$NONE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$sXml = $mensaje->toNewXml$mensaje();";
+						
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"}";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"else";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"{";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t"+strGlobalSeguridadComment+"throw new Exception(\"No tiene permisos, consulte con el administrador del sistema\");";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t"+strGlobalSeguridadComment+"}";
+				
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+				}
+				
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GenerarAccionesImagenServlet() 
+{
+			String strFuncionesAccionesImagen="";	
+			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{				
+				if((columnSchema.NativeType=="image"&&columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow)||(columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow))
+				{
+					strFuncionesAccionesImagen+=" else if($strAccionMantenimiento==\"cargarImagen"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"\")";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"\";";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\tif($httpSession->getAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\")!=null)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=$httpSession->getAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\");";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\tif(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual==\"0\")";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tthrow new Exception(\"Seleccione nuevamente un "+GetNombreClaseObjeto(TablaBase.ToString())+"\");";						  										 
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";//http://www.forosdelweb.com/clear.gif
+					strFuncionesAccionesImagen+=" else";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tthrow new Exception(\"No existe algun "+GetNombreClaseObjeto(TablaBase.ToString())+" seleccionado\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\ttry";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tFileItemFactory factory = new DiskFileItemFactory();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tServletFileUpload upload = new ServletFileUpload(factory);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tList fileItems = upload.parse$request($request);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tString nombreFicheroFoto=\"\";";
+						
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tIterator i = fileItems.iterator();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tFileItem actual = null;";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tbyte bytFoto[]=new byte[1];";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t$lngTamanioFichero=0;";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tString fileName = \"\";";					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\twhile (i.hasNext())";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tactual = (FileItem)i.next();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName = actual.getName();";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\tif(fileName != null)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\tFile fichero = new File(fileName);";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tif(!fichero.getName().contains(\"jpg\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t;";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+=" else";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\tlngTamanioFichero=actual.getSize();";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\t\tif(lngTamanioFichero>100000)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t\tthrow new Exception(\"El archivo no debe superar los 100 kb\");";						             	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t}";
+								
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tbytFoto =actual.get();";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tbreak;";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+GetPrefijoTablaC()+GetPrefijoTipoC(columnSchema)+GetNombreColumnaClaseC(columnSchema)+"(bytFoto);";
+					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\tif(fileName.contains(\"\\\\\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName=fileName.replace(\"\\\\\",\"@\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName=fileName.split(\"@\")[fileName.split(\"@\").length-1];";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_strNombre(fileName);";					
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.save"+GetNombreClase(TablaBase.ToString())+"WithConnection($intIdUsuarioSesion,$request->getRemoteUser(),$request->getRemoteHost(),$request->getRemoteAddr());";
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t$request->setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tsession->removeAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tsession->removeAttribute(\"accionMantenimiento\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+=" catch(Exception $e)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tString str$mensaje=e.getMessage();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tthrow new Exception(\"FOTO:\"+e.getMessage());";						             	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t/*$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes::$SPREFIJOARCHIVOJSP+\""+GetNombreClase(TablaBase.ToString())+"\"+Constantes::$SEXTENSIONARCHIVOJSP,MensajeGrupo::$NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$sXml = $mensaje->toNewXml$mensaje();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);*/";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t$httpServletResponse->sendRedirect(Constantes.getSCarpetaPaginas()+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes::$SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+"\"+Constantes::$SEXTENSIONARCHIVOJSP);";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t//disp=$request->get$requestDispatcher(Constantes.getSCarpetaPaginas()+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes::$SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+"\"+Constantes::$SEXTENSIONARCHIVOJSP);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t//disp.forward($request, httpServletResponse);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+					strFuncionesAccionesImagen+=" else if($strAccionMantenimiento==\""+GetNombreClaseObjeto(TablaBase.ToString())+"ActualCargarImagen"+GetNombreColumnaClaseC(columnSchema)+"\")";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"0\";";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=$request->getParameter(\"hdnIdActual\");";	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(ConstantesServlet::$SULTIMABUSQUEDA"+GetNombreClase(TablaBase.ToString())+"\", \"accionBusqueda=Por"+strIdGetSet+"&"+strId+GetNombreClase(TablaBase.ToString())+"=\"+str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(ConstantesServlet::$SULTIMABUSQUEDA"+GetNombreClase(TablaBase.ToString())+"Anterior\", $request->getParameter(\"ultimaBusquedaAnterior\"));";
+				
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\"Descripcion"+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", "+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"()"+GetDescripcionComboColumnFromProperties(TablaBase)+");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\"accionMantenimiento\", \"cargarImagen"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes.getSCarpetaPaginas()+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes::$SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"Imagen\"+Constantes::$SEXTENSIONARCHIVOJSP,MensajeGrupo::$NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$sXml = $mensaje->toNewXml$mensaje();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+					strFuncionesAccionesImagen+=" else if($strAccionMantenimiento==\""+GetNombreClaseObjeto(TablaBase.ToString())+"ActualMostrarImagen"+GetNombreColumnaClaseC(columnSchema)+"\")";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"0\";";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=$request->getParameter(\"hdnIdActual\").trim();";					  
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsession.setAttribute(\"Descripcion"+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", "+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"()"+GetDescripcionComboColumnFromProperties(TablaBase)+");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes.getSCarpetaPaginas()+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"ImagenMostrar\"+Constantes::$SEXTENSIONARCHIVOJSP,MensajeGrupo::$NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$sXml = $mensaje->toNewXml$mensaje();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+				}
+			}
+			
+	return strFuncionesAccionesImagen;
+}
+
+
+
+
+
+		
+public String GetXmlBusquedasIndicesTablasCompuestos() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			
+			String strIfFuncion=string.Empty;
+			strIfFuncion=" else if($strAccionBusqueda==\"{0}\") {";
+			
+			String strFuncionBusqueda="";
+			
+			String strDefinicionVariables="";
+			String strUsoVariables="";
+			
+			String strXmlFuncion=string.Empty;
+			
+			String strParametroPadre="\r\n\t\t\t\t$big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+ "=Long.parseLong($request->getParameter(\""+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"\"));";
+
+			String strFuncionTodos=string.Empty;
+			
+			if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+			{
+				
+				for(int i=0;i<TablasBaseCompuestoJunction.Count;i++)
+				{
+					
+					strFuncionTodos=" else if($strAccionBusqueda==\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"Todos\")";
+					strFuncionTodos+=" {\r\n\t\t\t\t"+strParametroPadre+"\r\n\t\t\t\t";					
+					strFuncionTodos+=GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"sTodos("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"$finalQueryPaginacion,big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+");";
+					strFuncionTodos+="\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"ServletAdditional.VerificarValidarToLoad("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic);";				
+					strFuncionTodos+="\r\n\t\t\t\t$sXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s();";
+						
+					strFuncionTodos+="\r\n\r\n\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0)";
+					strFuncionTodos+=" {";
+					strFuncionTodos+="\r\n\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones::$SCLASSNAME);";
+					strFuncionTodos+="\r\n\t\t\t\t}";
+					
+					strFuncionTodos+="\r\n\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strFuncionTodos+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+					strFuncionTodos+="\r\n\t\t\t}";
+					
+					
+					strXmlFuncion="\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"ServletAdditional->VerificarValidarToLoad($"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic);";				
+					strXmlFuncion+="\r\n\t\t\t\t$sXml =$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s();";
+					
+					strXmlFuncion+="\r\n\r\n\t\t\t\t\tif($"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s()==null||$"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic->get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s()->size()==0)";
+					strXmlFuncion+=" {\r\n\t\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones::$SCLASSNAME);\r\n\t\t\t\t\t}";
+					
+					strXmlFuncion+="\r\n\r\n\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strXmlFuncion+="\r\n\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+					
+					String strXmlFuncionObjeto=string.Empty;
+					
+					strXmlFuncionObjeto="\r\n\r\n\t\t\t\t\tif($"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic->get"+GetNombreClase(TablaBase.ToString())+"()!=null&&$"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic->get"+GetNombreClase(TablaBase.ToString())+"()->get"+strIdGetSet+"()!=0) {";
+					strXmlFuncionObjeto="\r\n\t\t\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"ServletAdditional->VerificarValidarToLoad("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic);";				
+					strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t$sXml =$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();\r\n\t\t\t\t\t}\r\n\t\t\t\t\telse\r\n\t\t\t\t\t{";
+					strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(\""+ GetNombreClase(TablaBase.ToString())+ "\");\r\n\t\t\t\t\t}";
+					
+					
+					//strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"()==null&&$sXml$mensajeMantenimiento==\"\")";
+					//strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);\r\n\t\t\t\t\t}";
+				
+					strXmlFuncionObjeto+="\r\n\r\n\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+					strXmlFuncionObjeto+="\r\n\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+						
+								
+					foreach(IndexSchema indexSchema in TablasBaseCompuestoDetalle[i].Indexes)
+					{
+						if(!indexSchema.IsPrimaryKey)
+						{
+							
+							if(indexSchema.IsUnique)
+							{
+								continue;
+								/*
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+indexSchema.Name+"(";
+								strIfFuncion="\r\n\t\t\telse if($strAccionBusqueda.equals(\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+indexSchema.Name+"\"))\r\n\t\t\t{";
+								*/
+							}
+							else
+							{
+								if(indexSchema.Name.Contains("Busqueda")|indexSchema.Name.Contains("FK"))
+								{
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s"+indexSchema.Name+"("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"$finalQueryPaginacion,$big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+",";
+								strIfFuncion=" else if($strAccionBusqueda==\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+indexSchema.Name+"\") {";
+								
+								}
+								else
+								{
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s"+indexSchema.Name+"(";
+								strIfFuncion=" else if($strAccionBusqueda==\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+indexSchema.Name+"\") {";	
+								}
+							}
+							
+							
+							strIfFuncion+=strParametroPadre;
+							
+							int count=1;
+							strDefinicionVariables="";
+							strUsoVariables="";							
+							//strFuncionBusqueda="";
+									foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+									{
+																						
+									if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+										{								
+											strDefinicionVariables+="\r\n\t\t\t\t"+/*GetTipoColumnaClaseC(memberColumnSchema.Column)+*/" $"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+											strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+											
+											if(!indexSchema.MemberColumns.Count.Equals(count))
+											{
+												strUsoVariables+=",";	
+											}
+										}
+										else
+										{
+											if(!indexSchema.Name.Contains("BusquedaRango"))
+											{
+												strDefinicionVariables+="\r\n\t\t\t\t"+/*GetTipoColumnaClaseC(memberColumnSchema.Column)+*/" $"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+												strUsoVariables+="$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 									
+											}
+											else
+											{
+												strDefinicionVariables+="\r\n\t\t\t\t"+/*GetTipoColumnaClaseC(memberColumnSchema.Column)+*/" $"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+")")+";";
+												strUsoVariables+="$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 									
+												
+												strUsoVariables+=",";	
+												
+												strDefinicionVariables+="\r\n\t\t\t\t"+/*GetTipoColumnaClaseC(memberColumnSchema.Column)+*/" $"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+")")+";";
+												strUsoVariables+="$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 									
+											}								
+										}
+										count++;
+									}
+									strFuncionBusqueda+=strUsoVariables+");";
+									
+							if(indexSchema.IsUnique)
+							{
+									strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strXmlFuncionObjeto+"\r\n\r\n\t\t\t}";																																		
+							}
+							else
+							{
+									strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strXmlFuncion+"\r\n\r\n\t\t\t}";																																		
+							}
+						}
+					}
+					
+					strInitFuncion=strFuncionTodos+strInitFuncion;
+				}
+			}
+			
+			return  strInitFuncion;
+		}
+
+public String GetMaintenanceTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " TR_"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\tArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> TR_"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetMaintenanceTablasClasesRelacionadasRelaciones() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="save"+GetNombreClase(TablaBase.ToString())+"Relaciones($intIdUsuarioSesion,$request->getRemoteUser(),$request->getRemoteHost(),$request->getRemoteAddr(),"+GetNombreClaseObjetoC(TablaBase.ToString());
+			String strFuncionEnd=");";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable);
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+				}
+			}
+			
+			strTablaClaseRelacionada=strFuncionInit+strTablaClaseRelacionada+strFuncionEnd;
+			return strTablaClaseRelacionada; 
+		}
+
+		
+public String GetValidarMaintenanceTablasClasesRelacionadasRelaciones() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="VerificarValidarToSaveRelaciones("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic";
+			String strFuncionEnd=");";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable);
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+				}
+			}
+			
+			strTablaClaseRelacionada=strFuncionInit+strTablaClaseRelacionada+strFuncionEnd;
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetXmlBusquedasIndicesTablas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			
+			String strIfFuncion=string.Empty;
+			strIfFuncion=" else if($strAccionBusqueda==\"{0}\") {";
+			
+			String strFuncionBusqueda="";
+			String strFuncionBusqueda2="";
+			
+			String strDefinicionVariables="";
+			String strUsoVariables="";
+			
+			String strXmlFuncion=string.Empty;
+			
+			
+			String strFuncionLogic="";
+			
+			strXmlFuncion="\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"ServletAdditional.VerificarValidarToLoad("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic);";				
+			strXmlFuncion+="\r\n\t\t\t\t$sXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getXml"+GetNombreClaseC(TablaBase.ToString())+"s();";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0)";
+			strXmlFuncion+=" {\r\n\t\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones::$SCLASSNAME);\r\n\t\t\t\t\t}";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\tif($strgenerarReporte!=\"\"&&$strgenerarReporte!=null) {";
+			
+			
+			strXmlFuncion+="\r\n\t\t\t\t\tif($blnMostrarTodosResultadosReporte) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s();";						
+			strXmlFuncion+="\r\n\t\t\t\t\t\t\t\txyzFuncionBusqueda";
+			strXmlFuncion+="\r\n\t\t\t\t\t}";			
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\tgenerarReporte"+GetNombreClase(TablaBase.ToString())+"s($request,$httpServletResponse,\"xyzTipoBusqueda\","+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s(),$blnEsReporteRelaciones,sDetalleReporte, "+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic,jasperPrint,$strgenerarReporte);";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\tif($blnMostrarTodosResultadosReporte) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.set"+GetNombreClaseC(TablaBase.ToString())+"s($"+GetNombreClaseObjetoC(TablaBase.ToString())+"s);";
+			strXmlFuncion+="\r\n\t\t\t\t\t}\r\n\t\t\t\t}";	
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+			strXmlFuncion+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+			
+			String strXmlFuncionObjeto=string.Empty;
+			
+			strXmlFuncionObjeto="\r\n\r\n\t\t\t\t\tif($"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic->get"+GetNombreClase(TablaBase.ToString())+"()!=null&&$"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic->get"+GetNombreClase(TablaBase.ToString())+"()->get"+strIdGetSet+"()!=0) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"ServletAdditional->VerificarValidarToLoad("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic);";				
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t$sXml =$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->getXml"+GetNombreClaseC(TablaBase.ToString())+"();\r\n\t\t\t\t\t} else {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(\""+ GetNombreClase(TablaBase.ToString())+ "\");\r\n\t\t\t\t\t}";
+			
+						
+			//strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"()==null&&$sXml$mensajeMantenimiento==\"\")";
+			//strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\t$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);\r\n\t\t\t\t\t}";
+		
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\t\t$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t$httpServletResponse->getWriter()->write($sXml);";
+				
+						
+			foreach(IndexSchema indexSchema in TablaBase.Indexes)
+			{
+				if(!indexSchema.IsPrimaryKey)
+				{
+					
+					strFuncionBusqueda2="\r\n\t\t\t\t"+GetNombreClase(TablaBase.ToString())+"ConstantesFunciones::getDetalleIndice"+indexSchema.Name+"(";
+					
+					if(indexSchema.IsUnique)
+					{
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"WithConnection(";
+						strIfFuncion=" else if($strAccionBusqueda==\""+indexSchema.Name+"\") {";
+					}
+					else
+					{
+						if(indexSchema.Name.Contains("Busqueda")||indexSchema.Name.Contains("FK"))
+						{
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"$finalQueryPaginacion,";
+						strIfFuncion=" else if($strAccionBusqueda==\""+indexSchema.Name+"\") {";
+						
+						}
+						else
+						{
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t$"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic->get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection(";
+						strIfFuncion=" else if($strAccionBusqueda==\""+indexSchema.Name+"\") {";	
+						}
+					}
+					
+					int count=1;
+					strDefinicionVariables="";
+					strUsoVariables="";							
+					//strFuncionBusqueda="";
+							foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+							{
+								
+								if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+								{								
+									strDefinicionVariables+="\r\n\t\t\t\t"+/*GetTipoColumnaClaseC(memberColumnSchema.Column)+*/"$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"=null;";
+									
+									strDefinicionVariables+="\r\n\r\n\t\t\t\tif($request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")!=null)";
+									strDefinicionVariables+=" {";
+									strDefinicionVariables+="\r\n\t\t\t\t\t$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+										
+									strDefinicionVariables+="\r\n\t\t\t\t}";
+										
+									
+									if(indexSchema.Name.Contains(strFK+"_"))
+									{
+										strDefinicionVariables+="\r\n\r\n\t\t\t\tif($httpSession->getAttribute(\""+memberColumnSchema.Column.Name+"Actual\")!=null)";
+										strDefinicionVariables+=" {";
+										strDefinicionVariables+="\r\n\t\t\t\t\t$"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"=("+GetTipoColumnaClaseC(memberColumnSchema.Column)+")$httpSession->getAttribute(\""+memberColumnSchema.Column.Name+"Actual\");";
+										strDefinicionVariables+="\r\n\t\t\t\t\t$httpSession->removeAttribute(\""+memberColumnSchema.Column.Name+"Actual\");";
+										
+										strDefinicionVariables+="\r\n\t\t\t\t}";
+									}
+									
+									strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+									
+									if(!indexSchema.MemberColumns.Count.Equals(count))
+									{
+										strUsoVariables+=",";	
+									}
+								}
+								else
+								{
+									if(!indexSchema.Name.Contains("BusquedaRango"))
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 									
+									}
+									else
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 									
+										
+										strUsoVariables+=",";	
+										
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final="+GetTipoColumnaParse(memberColumnSchema.Column,"$request->getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 									
+									}
+									
+								
+								}
+								count++;
+							}
+							
+							strFuncionBusqueda2+=strUsoVariables+");\r\n";
+							strFuncionBusqueda+=strUsoVariables+");";
+							
+					if(indexSchema.IsUnique)
+					{
+							strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strFuncionBusqueda2+strXmlFuncionObjeto+"\r\n\r\n\t\t\t}";																																		
+					}
+					else
+					{
+							
+							strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strFuncionBusqueda2+strXmlFuncion.Replace("xyzTipoBusqueda",indexSchema.Name).Replace("xyzFuncionBusqueda",strFuncionBusqueda.Replace("$finalQueryPaginacion","\"\"").Replace("\r\n\r\n","\r\n\t\t"))+"\r\n\r\n\t\t\t}";																																		
+					}
+				}
+			}								
+			return  strInitFuncion;
+		}
+		
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClass(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(/*column.Name.Equals(strId)||*/column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormularioNuevo(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo="$"+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);
+	
+	String strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\")== null|| $request->getParameter(\""+GetNameControlHtml(column) +"\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)||column.Name.Equals(strId)||column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+ strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"$request->getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\")== null||$request->getParameter(\""+GetNameControlHtml(column) + "\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"$request->getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+
+public string GetSetVariablesFormularioContador(ColumnSchema column,String table)
+{
+	String strTipo="";//GetTipoColumnaClaseC(column);	
+		   strTipo+="";
+	String strPrefijo="$"+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif($request->getParameter(\""+column.Name +GetNombreClaseC(TablaBase.ToString())+"\"+i)== null||$request->getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) + "\"+i)==\"\"){";
+	strIfElse+=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	String strReplace="";
+	
+	if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+	{
+		strReplace=".replace(\"/\", \"-\")";
+	}
+	
+	return strIfElse+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"="+GetTipoColumnaParse(column,"$request->getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) +"\"+i)"+strReplace)+";}";;
+}
+
+public string GetSetVariablesFormularioContadorParaBorrar(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif($request->getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\")== null||$request->getParameter(\""+GetNameControlHtml(column) + "\"+i.toString()+\"ParaBorrar\")==\"\"){";
+	strIfElse+=strPrefijo+strColumna+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(!column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"$request->getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\"")+");}";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="$request->setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+"Logic.get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo="";//GetTipoColumnaClaseC(column);	
+	String strPrefijo="$"+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strTipo+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+";";
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetSetVariablesToObjetoLogicNuevo(ColumnSchema column)
+{
+	String strTipo="";//GetTipoColumnaClaseC(column);	
+	String strPrefijo=""+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||$request->getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	return  "$"+GetNombreClaseObjeto(TablaBase.ToString())+"->setField_"+strPrefijo+ strColumna +"($"+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(ColumnSchema column)
+{
+	String strTipo="";//GetTipoColumnaClaseC(column);	
+	String strPrefijo=""+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||$request->getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+		return  "$"+GetNombreClaseObjeto(TablaBase.ToString())+"->set"+strIdGetSet+"($"+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	if(column.Name.Equals(strVersionRow))
+	{
+		//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+		return  "$"+GetNombreClaseObjeto(TablaBase.ToString())+"->set"+strVersionRowGetSet+"($"+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	return  "$"+GetNombreClaseObjeto(TablaBase.ToString())+"->setField_"+strPrefijo+ strColumna +"($"+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public String GetVariablesTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					if(TablaBase.Name!=collectionInfo.SecondaryTable)
+					{
+					strTablaClaseRelacionada+="\r\n\r\n\t\t "+/*GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+Logic*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=null;";
+					//strTablaClaseRelacionada+="\r\n\t"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+";");
+					strTablaClaseRelacionada+="\r\n\t\t"+/*ArrayList<GetNombreClase("dbo."+collectionInfo.SecondaryTable)+>*/"$"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s=new ArrayList<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">();";
+					}
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetVariablesNewTablasClasesRelacionadas() 
+		{
+			return "";
+			//DESHABILITADO
+			/*
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"Logic();";
+					//strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+"")+"=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"();";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s=new ArrayList<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">();";
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+			*/
+		}
+
+public String GetprocesarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="";
+			String strFuncionEnd="($request,$httpServletResponse);\r\n\t\t\t\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			TableSchema tablaRelacionada;
+			String strSufijo="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+					strSufijo="";
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{					
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+					strSufijo="s";
+				}
+				else
+				{
+					continue;
+				}
+				
+					strFuncionInit="\r\n\r\n\t\t\t\tif($request->getParameter(\"numeroDe"+GetNombreClaseC(tablaRelacionada.ToString())+"\")!=null) {\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+strSufijo+"=procesar";
+					strTablaClaseRelacionada+=strFuncionInit+GetNombreClaseC(tablaRelacionada.ToString())+"Relaciones"+strFuncionEnd;
+				
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetFuncionesMaintenanceTablasClasesRelacionadas() 
+		{
+			String strLastCode="";
+			String strFuncionBody="";
+			String strFuncionBody2="";
+			TableSchema tablaRelacionada;
+			
+			String strVariables="";
+			String strVariablesDocumento="";
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="\r\n\r\n\tpublic function procesar"+GetNombreClase(TablaBase.ToString())+"Relaciones($request,$httpServletResponse) {";
+			String strFuncionEnd="\r\n\t\t}\r\n\t} catch(Exception $e) {\r\n\t\tthrow $e;\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strFuncionInit="\r\n\r\npublic function"+/*ArrayList<GetNombreClase(tablaRelacionada.ToString())+>*/" procesar"+GetNombreClase(tablaRelacionada.ToString())+"Relaciones($request,$httpServletResponse){";
+					strFuncionInit+="\r\n\t$"+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s= array();";//+GetNombreClase(tablaRelacionada.ToString())+">();";					
+					strFuncionInit+="\r\n\ttry {";
+					
+					strFuncionBody="\r\n\r\n\t\t$intNumeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"=0;";
+					strFuncionBody+="\r\n\t\t$isNew"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\t$isChanged"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\t$isDeleted"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					
+					//strFuncionBody+="\r\n\t\t"+ GetNombreClase(tablaRelacionada.ToString())+" "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"=null;";
+					strFuncionBody+="\r\n\t\t$"+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Logic= new "+GetNombreClase(tablaRelacionada.ToString())+"Logic();";
+					strFuncionBody+="\r\n\r\n\t\tif($request->getParameter(\"numeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"\")!=null)\r\n\t\t{\r\n\t\t";
+					strFuncionBody+="\t$intNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"=(Integer)$request->getParameter(\"numeroDe"+GetNombreClase(tablaRelacionada.ToString())+ "\");\r\n\t\t}";
+					
+					strVariables=GetNombreVariables(tablaRelacionada);	
+					
+					
+					strFuncionBody2="\r\n\r\n\t\tfor ($i = 0; $i < $intNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"; $i++) {";
+					strFuncionBody2+="\r\n\t\t\t$isNew"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\t$isChanged"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\t$isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+	
+					strFuncionBody2+="\r\n\r\n\t\t\t$isNew"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean($request->getParameter(\"isNew"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\t$isChanged"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean($request->getParameter(\"isChanged"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\t$isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean($request->getParameter(\"isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					
+					strFuncionBody2+="\r\n\r\n\t\t\tif($isNew"+GetNombreClase(tablaRelacionada.ToString())+"==false&&$isChanged"+GetNombreClase(tablaRelacionada.ToString())+"==false&&$isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"==false) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}";
+					//strFuncionBody2+="\r\n\r\n\t\t\t"+GetNombreClase(tablaRelacionada.ToString())+" "+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=null;";
+					
+					strVariablesDocumento=GetSetVariablesFormularioContador(tablaRelacionada,TablaBase.ToString());
+					
+					strLastCode="\r\n\r\n\r\n\t\t\tif($isNew"+GetNombreClase(tablaRelacionada.ToString())+") {\r\n\t\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=new "+GetNombreClase(tablaRelacionada.ToString())+"();";
+					strLastCode+=GetSetVariablesToObjetoLogicNuevo(tablaRelacionada);
+					strLastCode+="\r\n\t\t\t} else {\r\n\t\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic->getEntityWithConnection($"+GetNombreIdVariable(tablaRelacionada)+");\r\n\t\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic->get"+GetNombreClase(tablaRelacionada.ToString())+"();\r\n\r\n\t\t\t\tif($isChanged"+GetNombreClase(tablaRelacionada.ToString())+") {";
+					strLastCode+=GetSetVariablesToObjetoLogicActualizar(tablaRelacionada); 
+					strLastCode+="\r\n\t\t\t\t} else {\r\n\t\t\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"->setIsDeleted(true);\r\n\t\t\t\t}\r\n\t\t\t}";
+					strLastCode+="\r\n\r\n\t\t\t$"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s->add($"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+");";
+						
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						strLastCode+="\r\n\r\n\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic->get"+GetNombreClase(tablaRelacionada.ToString())+"();";
+					}
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						strLastCode+="\r\n\r\n\t\t\t$"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"s->add($"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic->get"+GetNombreClase(tablaRelacionada.ToString())+"());";
+					}	
+					
+						
+					strTablaClaseRelacionada+=strFuncionInit+strFuncionBody+strVariables+strFuncionBody2+strVariablesDocumento+strLastCode+strFuncionEnd+"\r\n\r\n\treturn $"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s;\r\n}";								
+				}
+				
+												
+					
+
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public string GetNombreIdVariable(TableSchema table)
+{
+	String strNombreIdVariable="NONE";
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=""+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(table.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetNombreIdVariable()
+{
+	String strNombreIdVariable="NONE";
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=""+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(TableSchema tableSchema)
+{
+	String strVariablesActualizar="\r\n";
+	String strTipo="";	
+		   strTipo+="";
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo="";//GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||$request->getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+="$"+strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+		
+		if(column.Name.Equals(strId))
+		{
+			//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			strVariablesActualizar+="\r\n\t\t\t\t\t$"+GetNombreClaseObjeto(tableSchema.ToString())+"->set"+strIdGetSet+"($"+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		if(column.Name.Equals(strVersionRow))
+		{
+			//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			strVariablesActualizar+="\r\n\t\t\t\t\t$"+GetNombreClaseObjeto(tableSchema.ToString())+"->set"+strVersionRowGetSet+"($"+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		
+		//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+		strVariablesActualizar+="\r\n\t\t\t\t\t$"+GetNombreClaseObjeto(tableSchema.ToString())+"->setField_"+strPrefijo+ strColumna +"($"+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+	return  strVariablesActualizar;
+}
+
+		public string GetSetVariablesToObjetoLogicNuevo(TableSchema tableSchema)
+{
+	String strVariablesNuevo="\r\n";
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+			continue;
+		}
+		
+		strTipo="";//GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif($request->getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||$request->getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+="$"+strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+
+		//strVariablesNuevo+="\r\n\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+		strVariablesNuevo+="\r\n\t\t\t\t$"+GetNombreClaseObjeto(tableSchema.ToString())+"->setField_"+strPrefijo+ strColumna +"($"+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return  strVariablesNuevo;
+}
+
+public String GetNombreVariables(TableSchema table)
+{
+	
+	String strVariables="\r\n";
+	String strTipo="";
+	String strPrefijo="";
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		strTipo="";//GetTipoColumnaClaseC(column);	
+		strPrefijo="$"+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		strVariables+="\r\n\t\t"+strTipo+strPrefijo+strColumna+GetNombreClaseC(table.ToString())+";";
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	}
+	
+	return strVariables;
+}
+
+public string GetSetVariablesFormularioContador(TableSchema tableSchema,String table)
+{
+	String strVariables="";
+	
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";
+	String strIfElse="";
+	strIfElse="";
+	
+
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\n\r\n\t\t\tif($request->getParameter(\""+column.Name +GetNombreClaseC(tableSchema.ToString())+"\"+i)== null||$request->getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) + "\"+i)==\"\"){";
+		strIfElse+=strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"=null;}\r\n\t\t\telse{";	
+		
+		strVariables+=strIfElse+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"="+GetTipoColumnaParse(column,"$request->getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) +"\"+i)")+";}";
+	}	
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strVariables;
+}
+</script>
+<?php
+<%=GetByDanLicence()%>
+<%=strPhp53VersionComment%>namespace <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackagePresentation%>/<%=strPackageWeb%>/<%=strPackageServlet%>;
+/*
+import javax.servlet.ServletConfig;
+import javax.servlet.$requestDispatcher;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet$request;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+import javax.servlet.ServletContext;
+import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.File;
+import java.io.PrintWriter;
+//import javax.servlet.ServletOutputStream;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRRuntimeException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.export.JRHtmlExporter;
+import net.sf.jasperreports.j2ee.servlets.BaseHttpServlet;
+import net.sf.jasperreports.engine.JRExporterParameter;
+import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
+*/
+
+include_once('<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>/Classe.php');
+include_once('<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\Mensajes.php');
+include_once('<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>/Pagination.php');
+//include_once('<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>\*');
+include_once('<%=Empresa%>/<%= Package%>/<%= Module%><%= strPackageUtils%>/<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.php');
+//include_once('<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageEntities%>\*');
+//include_once('<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageLogic%>\*');
+//include_once('<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackagePresentation%>/<%=strPackageReporte%>/<%=strPackageSource%>/<%=GetNombreClase(TablaBase.ToString())%>SourceReporte.php');
+include_once('<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackagePresentation%>/<%=strPackageReporte%>/<%=strPackageSource%>/<%=GetNombreClase(TablaBase.ToString())%><%=strClaseBean%>.php');
+
+<%=strGlobalSeguridadComment%>include_once('<%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\SistemaLogic.php');
+<%=strGlobalSeguridadComment%>include_once('<%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>/SistemaLogicAdditional.php');
+<%=strGlobalSeguridadComment%>include_once('<%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\UsuarioLogic.php');
+<%=strGlobalSeguridadComment%>include_once('<%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\UsuarioLogicAdditional.php');
+include_once('<%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\Usuario;');
+
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\Classe;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\Mensajes;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\Pagination;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>\*;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%= strPackageUtils%>/<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageEntities%>\*;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageBusiness%>/<%=strPackageLogic%>\*;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackagePresentation%>/<%=strPackageReporte%>/<%=strPackageSource%>/<%=GetNombreClase(TablaBase.ToString())%>SourceReporte;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackagePresentation%>/<%=strPackageReporte%>/<%=strPackageSource%>/<%=GetNombreClase(TablaBase.ToString())%><%=strClaseBean%>;
+
+<%=strGlobalSeguridadComment%><%=strPhp53VersionComment%>use <%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\SistemaLogic;
+<%=strGlobalSeguridadComment%><%=strPhp53VersionComment%>use <%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\SistemaLogicAdditional;
+<%=strGlobalSeguridadComment%><%=strPhp53VersionComment%>use <%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\UsuarioLogic;
+<%=strGlobalSeguridadComment%><%=strPhp53VersionComment%>use <%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageLogic%>\UsuarioLogicAdditional;
+<%=strPhp53VersionComment%>use <%=Empresa%>/<%=PackageSeguridad%>/<%=strPackageBusiness%>/<%=strPackageEntities%>\Usuario;
+
+<%if(ContieneImagenesC(TablaBase)){%>
+	/*
+	<%=GetFuncionesImagenesC(TablaBase)%>
+	*/
+	<%}%>
+
+// extends javax.servlet.http.HttpServlet 
+
+class <%=GetNombreClase(TablaBase.ToString())%>Servlet {
+	private static final $serialVersionUID = 1;
+	
+	protected function doGet($httpServletRequest,$httpServletResponse)  {
+		requestProcess($httpServletRequest,$httpServletResponse);
+	}  		
+	
+	protected function doPost($httpServletRequest,$httpServletResponse)  {
+		requestProcess($httpServletRequest,$httpServletResponse);
+	}
+	
+	protected function requestProcess($request,$httpServletResponse)  {
+		$httpServletResponse->setHeader(ConstantesServlet::$SCACHECONTROL,ConstantesServlet::$SNOSTORE); //HTTP 1.1
+		$httpServletResponse->setHeader(ConstantesServlet::$SPRAGMA,ConstantesServlet::$SNOCACHE); //HTTP 1.0
+		$httpServletResponse->setDateHeader(ConstantesServlet::$SEXPIRES, -1); 
+		
+		$strgenerarReporte='';
+		$blnMostrarTodosResultadosReporte=false;
+		$sDetalleReporte="";
+		$blnEsReporteRelaciones=false;
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic=null;
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>=null;					
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s= array();
+		$<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional=null;
+		<%=GetVariablesTablasClasesRelacionadas()%> 
+		
+		$jasperPrint = null;
+		$disp;
+
+		$mensaje;
+		$sXml =$mensaje::getMensajeGeneraldefault();
+		$httpSession = $request->getSession();
+		$intIdUsuarioSesion=0;	
+		$usuarioActual=null;	
+		$intNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=0;
+		$sDetalleReporte="";
+		$blnMostrarTodosResultadosReporte=false;
+		$context = $this->getServletConfig()->getServletContext();
+				
+		try {
+			
+			$<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional=new <%=GetNombreClase(TablaBase.ToString())%>ServletAdditional($request,$httpServletResponse,"",context);
+		
+			if($httpSession->getAttribute(ConstantesServlet::$SUSUARIO.ConstantesServlet::$SACTUAL)!=null) {
+				$usuarioActual=$httpSession->getAttribute(ConstantesServlet::$SUSUARIO.ConstantesServlet::$SACTUAL);
+				$intIdUsuarioSesion=$usuarioActual->getId();
+			} else {
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>$mensaje=new $mensaje("verificarpermisosmantenimiento","Verificar permisos de usuario","Su sesion ha caducado, reinicie su sesion en la pagina inicial","false",MensajeGrupo::$APLICACION);
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>$httpServletResponse->getWriter()->write($sXml);
+				
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>return;
+			}
+			
+			<%=GetExtra1Servlet(TablaBase)%>
+										
+			$strAccionMantenimiento="";
+			$strAccionBusqueda="";
+			$strAccionAdicional="";
+			$strUltimaBusqueda="";
+			
+			$isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>			
+			<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+			<%=  GetNombreVariables(TablaBase.Columns[i]) %>	
+			<% } %>
+			
+			if($request->getParameter(ConstantesServlet::$SACCIONMANTENIMIENTO)!=null) {
+				$strAccionMantenimiento=$request->getParameter(ConstantesServlet::$SACCIONMANTENIMIENTO);
+				
+			} else {
+				if($httpSession->getAttribute(ConstantesServlet::$SACCIONMANTENIMIENTO)!=null) {
+					$strAccionMantenimiento=$httpSession->getAttribute(ConstantesServlet::$SACCIONMANTENIMIENTO);
+					$httpSession->removeAttribute(ConstantesServlet::$SACCIONMANTENIMIENTO);
+				}
+			}
+			
+			if($request->getParameter(ConstantesServlet::$SACCIONBUSQUEDA)!=null) {
+				$strAccionBusqueda=$request->getParameter(ConstantesServlet::$SACCIONBUSQUEDA);
+			}
+			
+			if($request->getParameter(ConstantesServlet::$SACCIONADICIONAL)!=null||$request->getAttribute(ConstantesServlet::$SACCIONADICIONAL)!=null) {
+				if($request->getParameter(ConstantesServlet::$SACCIONADICIONAL)!=null) {
+					$strAccionAdicional=$request->getParameter(ConstantesServlet::$SACCIONADICIONAL);
+					
+				} else {
+					$strAccionAdicional=$request->getAttribute(ConstantesServlet::$SACCIONADICIONAL);
+					$request->removeAttribute(ConstantesServlet::$SACCIONADICIONAL);
+				}
+				
+				$<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional->setSAccion($strAccionAdicional);
+				$<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional->procesar();
+				
+				return;
+			}
+			
+			if($httpSession->getAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+				if($httpSession->getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKey")!=null) {
+					$strAccionBusqueda="Por<%=strIdGetSet%>";
+					$httpSession->setAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras",$httpSession->getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKey"));
+				}
+				
+				$httpSession->setAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras",true);				
+				$httpSession->removeAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>");
+				
+			} else if($request->getParameter(ConstantesServlet::$SCARGARPAGINA)==null&&$httpSession->getAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras")!=null) {
+				if($httpSession->getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras")!=null) {
+					$strAccionBusqueda="Por<%=strIdGetSet%>";					
+				}				
+				
+				$httpSession->removeAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras");
+			}
+			
+			<%=GetBusquedaFromForeigKeysSession()%>
+			
+			else {
+				if($request->getParameter(ConstantesServlet::$SCARGARPAGINA)!=null&&$httpSession->getAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					$strUltimaBusqueda=$httpSession->getAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>");
+					$strUltimaBusqueda=$strUltimaBusqueda.replace("&", "()");
+					
+					if(!$strUltimaBusqueda.contains(ConstantesServlet::$SCARGARPAGINA)) {
+						$strUltimaBusqueda+="()esCargarPagina=true";	
+					}
+					
+					$httpSession->removeAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>");
+					
+					$mensaje=new $mensaje(Constantes::$SMENSAJEAUXILIAR,Constantes::$SMENSAJEULTIMABUSQUEDA,$strUltimaBusqueda,MensajeGrupo::$NONE);
+					$sXml = $mensaje->toNewXmlMensaje();
+	
+					$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+					$httpServletResponse->getWriter()->write($sXml);
+					
+					return;
+				}
+			}
+			
+			if($request->getParameter(ConstantesServlet::$SULTIMABUSQUEDA)!=null) {
+				$strUltimaBusqueda=$request->getParameter(ConstantesServlet::$SULTIMABUSQUEDA);
+				$httpSession->setAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>", $strUltimaBusqueda);
+			}
+									
+			if($request->getParameter(ConstantesServlet::$SGENERARREPORTE)!=null) {
+				if($request->getParameter(ConstantesServlet::$SESREPORTERELACIONES)!=null) {
+					$blnEsReporteRelaciones=true;
+				}
+				
+				if($request->getParameter("$blnMostrarTodosResultadosReporte")!=null) {
+					$blnMostrarTodosResultadosReporte=Boolean.parseBoolean($request->getParameter("$blnMostrarTodosResultadosReporte"));
+				}
+				
+				$strgenerarReporte=$request->getParameter(ConstantesServlet::$SGENERARREPORTE);
+				
+				if($strgenerarReporte==ConstantesServlet::$SHTMLGENERAR) {
+					this.generarReporte<%=GetNombreClaseC(TablaBase.ToString())%>s($request, httpServletResponse, $strAccionBusqueda,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>s(),$blnEsReporteRelaciones,sDetalleReporte, $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,jasperPrint,$strgenerarReporte);
+				} else if($strgenerarReporte==ConstantesServlet::$SHTML) {
+					$httpSession->setAttribute(ConstantesServlet::$SSERVLETGENERARHTMLREPORTE, "<%=GetNombreClaseC(TablaBase.ToString())%>Servlet");
+				}
+			}
+						
+			if($strAccionMantenimiento==ConstantesServlet::$SGUARDAR) {
+				$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();
+				
+				if($request->getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					$intNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=(Integer)$request->getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>");
+				}
+				
+				for ($i = 0; $i < $intNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>; $i++) {
+					$isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					
+					$isNew<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isNew<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					
+					if($isNew<%=GetNombreClaseC(TablaBase.ToString())%>==false&&$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>==false&&$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>==false) {
+						continue;
+					}
+					
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>					
+					<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+					<%=  GetSetVariablesFormularioContador(TablaBase.Columns[i],TablaBase.ToString()) %>	
+					<% } %>
+									
+					if($isNew<%=GetNombreClaseC(TablaBase.ToString())%>) {
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>=new <%=GetNombreClase(TablaBase.ToString())%>();						
+						
+						<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+						<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>					
+						<%= GetSetVariablesToObjetoLogicNuevo(TablaBase.Columns[i]) %>	
+						<% } %>
+												
+					} else  {
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->getEntityWithConnection($<%=GetNombreIdVariable()%>);
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>=$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->get<%=GetNombreClase(TablaBase.ToString())%>();
+						
+						if($isChanged<%=GetNombreClaseC(TablaBase.ToString())%>) {
+							<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+							<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+							<%= GetSetVariablesToObjetoLogicActualizar(TablaBase.Columns[i]) %>	
+							<% } %>
+						} else {
+							$<%=GetNombreClaseObjeto(TablaBase.ToString())%>->setIsDeleted(true);
+						}
+					}
+					
+					$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s->add($<%=GetNombreClaseObjeto(TablaBase.ToString())%>);					
+				}
+				
+				$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->set<%=GetNombreClase(TablaBase.ToString())%>s($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s);	
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ServletAdditional->VerificarValidarToSave($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic);
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->save<%=GetNombreClase(TablaBase.ToString())%>sWithConnection($intIdUsuarioSesion,$request->getRemoteUser(),$request->getRemoteHost(),$request->getRemoteAddr());
+							
+				$sXml = $mensaje->getMensajeGeneralActualizar(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);					
+				
+				$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+				$httpServletResponse->getWriter()->write($sXml);
+				
+			} <%if(GenerarTipoGeneracionC(strTipoGeneracionMantenimientoClasesRelacionadas,TiposGeneracion)) {%>
+			else if($strAccionMantenimiento=="guardarrelaciones") {
+				$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();
+				
+				if($request->getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					intNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=Integer.parseInt($request->getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>"));
+				}
+				
+				for (int i = 0; i < intNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>; i++) {
+					$isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					
+					$isNew<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isNew<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean($request->getParameter("$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					
+					if($isNew<%=GetNombreClaseC(TablaBase.ToString())%>==false&&$isChanged<%=GetNombreClaseC(TablaBase.ToString())%>==false&&$isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>==false) {
+						continue;
+					}
+					
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>					
+					<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+					<%=  GetSetVariablesFormularioContador(TablaBase.Columns[i],TablaBase.ToString()) %>	
+					<% } %>
+										
+					if($isNew<%=GetNombreClaseC(TablaBase.ToString())%>) {
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>=new <%=GetNombreClase(TablaBase.ToString())%>();						
+						
+						<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+						<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>					
+						<%= GetSetVariablesToObjetoLogicNuevo(TablaBase.Columns[i]) %>	
+						<% } %>												
+						
+					} else  {
+						
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->getEntityWithConnection(<%=GetNombreIdVariable()%>);
+						$<%=GetNombreClaseObjeto(TablaBase.ToString())%>=$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->get<%=GetNombreClase(TablaBase.ToString())%>();
+						
+						if($isChanged<%=GetNombreClaseC(TablaBase.ToString())%>) {
+							<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+							<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+							<%= GetSetVariablesToObjetoLogicActualizar(TablaBase.Columns[i]) %>	
+							<% } %>
+						} else {
+							$<%=GetNombreClaseObjeto(TablaBase.ToString())%>->setIsDeleted(true);
+						}
+					}					
+					$<%=GetNombreClaseObjeto(TablaBase.ToString())%>=$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic->get<%=GetNombreClase(TablaBase.ToString())%>();					
+				}
+								
+				<%=GetprocesarTablasClasesRelacionadas() %>
+				
+				<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ServletAdditional-><%=GetValidarMaintenanceTablasClasesRelacionadasRelaciones()%>				
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic-><%=GetMaintenanceTablasClasesRelacionadasRelaciones()%>	
+																
+				$sXml = $mensaje->getMensajeGeneralActualizar(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);					
+				
+				$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+				$httpServletResponse->getWriter()->write($sXml);
+			}
+			<% } %>
+			
+			<%=GetFuncionesAccionesNavegacionTablasClasesRelacionadasC()%>
+			
+			<%=GenerarAccionesImagenServlet()%>
+			
+			else if($strAccionBusqueda!="") {
+				procesarBusqueda($request,$httpServletResponse,$strAccionBusqueda,isReporteRelaciones,jasperPrint,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,$strgenerarReporte,$blnMostrarTodosResultadosReporte,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,sDetalleReporte);		
+			}		
+			
+		} catch(Exception $e) {
+			$mensaje=new $mensaje(Constantes::$SMENSAJEEXCEPCIONDEAPLICACION,Constantes::$SMENSAJEERRORDEAPLICACION,e.getMessage(),MensajeGrupo::$EXCEPTION);
+			$sXml = $mensaje->toNewXmlMensaje();
+			$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+			$httpServletResponse->getWriter()->write($sXml);				
+		}	    		
+	}
+	
+	public function procesarBusqueda($request,$httpServletResponse,$strAccionBusqueda,$blnEsReporteRelaciones,$jasperPrint,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,$strgenerarReporte,$blnMostrarTodosResultadosReporte,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,$sDetalleReporte) {		
+		$sXml ="";
+		$sTipoJsonResponse ="";
+		$finalQueryPaginacion="";
+		$inicioPaginacion;
+		$finPaginacion;
+		$httpSession = $request->getSession();
+		
+		try {
+			
+			if($request->getParameter(ConstantesServlet::$STIPOJSONRESPONSE)!=null) {
+				$sTipoJsonResponse = $request->getParameter(ConstantesServlet::$STIPOJSONRESPONSE);
+			}
+			
+			if($request->getParameter(ConstantesServlet::$SINICIO)!=null&&$request->getParameter(ConstantesServlet::$SFIN)!=null) {
+				$inicioPaginacion=(Integer)$request->getParameter(ConstantesServlet::$SINICIO);	
+				$finPaginacion=Integer.parseInt($request->getParameter(ConstantesServlet::$SFIN));							
+				//$finalQueryPaginacion=" <%=GetFinalQueryTableFromPropertiesC(TablaBase)%> LIMIT "+$inicioPaginacion.toString()+","+$finPaginacion.toString();
+			}
+			
+			$pagination=new Pagination();
+			$pagination->setFirstResult($inicioPaginacion);
+			$pagination->setMaxResults($finPaginacion);
+			
+			if($strAccionBusqueda==ConstantesServlet::$STODOS) {		
+				if($request->getParameter("esCargarCombos")!=null) {
+					$<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional->setSAccion("CargarCombosEspecial");				
+					$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ServletAdditional->procesarCombosEspecial($request->getParameter("tablaHija"),$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic);
+					
+					if($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClase(TablaBase.ToString())%>s().size()==0) {
+						$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getTodos<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>$finalQueryPaginacion,$pagination);
+					}
+					
+				} else {
+					$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getTodos<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>$finalQueryPaginacion,$pagination);
+				}
+				
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ServletAdditional->VerificarValidarToLoad($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic);
+				$sXml = $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getXml<%=GetNombreClaseC(TablaBase.ToString())%>s();
+				
+				if($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>s()==null|| $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>s().size()==0) {
+					$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);
+				}
+				
+				if($strgenerarReporte!=""&&$strgenerarReporte!=null) {
+					if($blnMostrarTodosResultadosReporte) {
+						$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>s();						
+						$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getTodos<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>"");						
+					}
+					
+					generarReporte<%=GetNombreClase(TablaBase.ToString())%>s($request,$httpServletResponse,ConstantesServlet::$STODOS,$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>s(),$blnEsReporteRelaciones,sDetalleReporte, $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,jasperPrint,$strgenerarReporte);
+					
+					$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->set<%=GetNombreClaseC(TablaBase.ToString())%>s($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s);
+				}
+			
+				$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+				$httpServletResponse->getWriter()->write($sXml);			
+				
+			} else if($strAccionBusqueda=="Por<%=strIdGetSet%>") {
+				
+				$<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=0;
+				
+				if($request->getParameter("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					$<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=(Integer)$request->getParameter("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>");	
+				}
+				
+				if($httpSession->getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey")!=null) {
+					$<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=$httpSession->getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey");	
+				
+					$httpSession->removeAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey");
+				
+				} else if($httpSession->getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras")!=null) {
+					$<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=$httpSession->getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras");	
+				
+					$httpSession->removeAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras");
+				}
+				
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getEntityWithConnection(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);
+				$<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::getDetalleIndicePor<%=strIdGetSet%>(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);
+
+				$<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ServletAdditional->verificarValidarToLoad($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic);
+				$sXml = $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->getXml<%=GetNombreClaseC(TablaBase.ToString())%>();
+				
+				if($<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic->get<%=GetNombreClaseC(TablaBase.ToString())%>()==null) {
+					$sXml =$mensaje->getMensajeGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$SCLASSNAME);
+				}
+				
+				$httpServletResponse->setContentType(ConstantesServlet::$SCONTENTTYPE);
+				$httpServletResponse->getWriter()->write($sXml);			
+			}
+			
+		<%=GetXmlBusquedasIndicesTablas()%> 
+		
+		<%if(GenerarTipoGeneracionC(strTipoGeneracionCompuestos,TiposGeneracion)) {%>
+		<%if(!GetEsReporteFromPropertiesC(TablaBase)){%>
+		<%=GetXmlBusquedasIndicesTablasCompuestos()%> 
+		<%}%>
+		<%}%>
+		} catch(Exception $e) {
+			throw $e;
+      	}
+	}	
+	
+	
+	
+	<%=GetFuncionesMaintenanceTablasClasesRelacionadas()%>
+	
+	public function init()  {		
+		try {
+			/*
+			$<%=GetNombreClaseObjeto(TablaBase.ToString())%>s= new ArrayList<<%=GetNombreClase(TablaBase.ToString())%>>();
+			$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();	
+			*/
+			<%=GetVariablesNewTablasClasesRelacionadas()%>
+		/*} catch(ServletException $e) {
+			throw $e;*/
+		} catch(Exception $e) {
+			;//e.printStackTrace();
+		}
+	}
+	
+	public function init($config)  {
+		try {
+			$super->init($config);
+			
+			/*
+			if(<%=Empresa%>.<%=strPackageFramework%>.<%=Package%>.<%=strPackageUtils%>.Constantes.SCONNEXION!=super.getServletContext().getInitParameter("Conexion<%=SoloSiEsParaSeguridadC(TablaBase.Database)%>")) {
+				<%=Empresa%>.<%=strPackageFramework%>.<%=Package%>.<%=strPackageUtils%>.Constantes.SCONNEXION=super.getServletContext().getInitParameter("Conexion<%=SoloSiEsParaSeguridadC(TablaBase.Database)%>");
+			}
+			
+			<%=strGlobalAuditoriaComment%>if(<%=Empresa%>.<%=strPackageFramework%>.<%=strPackageAuditoria%>.<%=strPackageUtils%>.Constantes.getSConnexion()!=super.getServletContext().getInitParameter("ConexionAuditoria")) {
+				<%=strGlobalAuditoriaComment%><%=Empresa%>.<%=strPackageFramework%>.<%=strPackageAuditoria%>.<%=strPackageUtils%>.Constantes.setSConnexion(super.getServletContext().getInitParameter("ConexionAuditoria"));
+			<%=strGlobalAuditoriaComment%>}
+			
+			<%=strGlobalSeguridadComment%>if(<%=Empresa%>.<%=strPackageFramework%>.<%=PackageSeguridad%>.<%=strPackageUtils%>.Constantes.getSConnexion()!=super.getServletContext().getInitParameter("ConexionSeguridad")) {
+				<%=strGlobalSeguridadComment%><%=Empresa%>.<%=strPackageFramework%>.<%=PackageSeguridad%>.<%=strPackageUtils%>.Constantes.setSConnexion(super.getServletContext().getInitParameter("ConexionSeguridad"));
+			<%=strGlobalSeguridadComment%>}
+			
+			*/
+			
+		} catch(Exception $e){
+			throw $e;
+		}
+	}
+}
+?>

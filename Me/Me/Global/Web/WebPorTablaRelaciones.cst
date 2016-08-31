@@ -1,0 +1,988 @@
+﻿<%@ Template Language="C#" Debug="true" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Collections" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ConFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ConRichFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="RichFaces_Version" Type="System.String" Default="4.3" Category="4.3 Versiones" Description="Nombre de la Entidad" %>
+<%@ Property Name="ConCamposGlobalesOcultos" Type="System.Boolean" Default="true" Category="5. Presentation" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+public string GetControlVariables(TableSchema tableSchema,bool ConFaces,String RichFaces_Version)
+{	
+	String strRow="";
+	String strControl="";
+	String strTituloControl="";
+	String strColumna="";
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		else if(column.Name.Equals(strId))
+		{
+				strControl="\r\n\t\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t\t"+"<input name=\"hdnIdActual\"type=\"text\" readonly=\"readonly\">"+"\r\n\t\t\t\t\t\t\t</td>";
+				
+		}
+		else
+		{
+			strColumna= column.Name;
+			strColumna=strColumna.Replace(strId,"");
+					
+			strControl="\r\n\t\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t\t\t"+GetControlHtml(column,ConFaces,ConRichFaces,RichFaces_Version)+"\r\n\t\t\t\t\t\t\t</td>";	
+		
+		}
+		
+		
+		strTituloControl=GetTituloControlVariables(column);
+		
+		strTituloControl=strTituloControl.Replace("<td><h2>","\t<td>\r\n\t\t\t\t\t\t\t\t<h2>");
+		strTituloControl=strTituloControl.Replace("</td>","\t</td>");
+		
+		strRow+="\r\n\t\t\t\t\t\t<tr style=\"visibility:visible\">"+strTituloControl+strControl+"\r\n\t\t\t\t\t\t</tr>";
+	}
+	
+	return strRow;
+}
+
+public string GetColumnsTableMaintenance(TableSchema tableSchema,bool conPrefijoCompuesto,bool esTablaJunction,TableSchema tableJunction)
+{
+	
+	String strTipo="";
+	String strPrefijo="";
+	String strColumna="";
+	String strPrefijoTablaCompuesto="";		
+	
+	String strColumnName="";
+	String strColumnLabel="";
+	String strColumn="";
+	
+	if(conPrefijoCompuesto)
+	{
+		strPrefijoTablaCompuesto=GetNombreClaseC(tableSchema.ToString());
+	}
+	
+	int count=0;
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		count++;
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);
+		
+		strColumnName="";
+		strColumnLabel="'"+GetWebNombreTituloColumnFromPropertiesC(column)+"'";
+		//strColumn="";
+	
+		
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+				continue;
+		}
+		else if(column.Name.Replace(strId,"").Equals(TablaBase.Name))
+		{
+			continue;
+		}
+		else if(esTablaJunction&&tableJunction!=null&&column.Name.Replace(strId,"").Equals(tableJunction.Name))
+		{
+			continue;
+						
+		}		
+		else
+		{
+			
+			strColumn+=",";
+			
+			if(!column.IsForeignKeyMember&&column.DataType!=DbType.Boolean)
+			{
+				strColumnName="'"+strPrefijoTablaCompuesto+GetNombreColumnaClaseJavaScriptC(column)+"'";
+				strColumn+="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+			}
+			else if(column.DataType==DbType.Boolean)
+			{
+				strColumna= GetNombreColumnaClaseC(column);
+				strColumna=strColumna.Replace(strId,"");
+				strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+				
+				strColumnName="'"+strPrefijoTablaCompuesto+GetNombreColumnaClaseJavaScriptC(column)+"Control'";
+				strColumn+="{ label :" +strColumnLabel+", id :"+strColumnName +"}";	
+			}
+			else if(column.IsForeignKeyMember)
+			{
+				strColumna= GetNombreColumnaClaseC(column);
+				strColumna=strColumna.Replace(strId,"");
+				strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+				
+				strColumnName="'"+strPrefijoTablaCompuesto+GetNombreColumnaClaseJavaScriptC(column)+"Descripcion'";
+				strColumn+="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+			}
+		}
+		
+		/*
+		if(count<tableSchema.Columns.Count)
+		{
+			strColumn+=",";
+		}
+		*/
+	}	
+
+	
+	return strColumn;
+}
+
+
+public TableSchema GetTablaDetalleClaseRelacionada(String strTabla) 
+{
+	return GetTablaDetalleClaseRelacionadaC(strTabla,TablaBase) ;
+}
+		
+public String GetHtmlMaintenanceTablasClasesRelacionadas(bool ConFaces,bool ConRichFaces,String RichFaces_Version) 
+{
+	String strTablaClaseRelacionada="";				
+	System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+	TableSchema tablaRelacionadaObjetivo;
+	
+	foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+	{
+		
+		
+		
+		if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+		{
+			tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+		}	
+		else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+		{
+			
+			tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+		}
+		else
+		{
+			continue;
+		}
+		
+		if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+		{
+			continue;
+		}
+										
+		if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+		{					
+			strTablaClaseRelacionada+="\r\n\r\n\t\t<tr id=\"trImagenExpandirContraerRows"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" class=\"busqueda\">\r\n\t\t\t<td>\r\n\t\t\t\t<img id=\"imgExpandirContraerRows"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" align=\"left\" src=\"Imagenes/xcollapse.png\" width=\"20\" height=\"20\"  onclick=\""+GetNombreClaseObjeto(TablaBase.ToString())+"PaginaWebInteraccionRelacion.MostrarOcultarFilas"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"()\"><h1>"+GetTituloNombreTableFromPropertiesC(tablaRelacionadaObjetivo)+"</h1>\r\n\t\t\t</td>\r\n\t\t</tr>\r\n";
+			
+			if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+			{	
+				
+				strTablaClaseRelacionada+=GetWebRowControlesBusquedasIndicesTablasClasesC(collectionInfo.SecondaryTableSchema,false,false,false,ConFaces,ConRichFaces,RichFaces_Version);
+				
+			}
+			
+			
+			if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+			{
+				strTablaClaseRelacionada+=GetWebRowParametrosBusquedaTablaClaseC(tablaRelacionadaObjetivo,false,false,false,false,ConFaces,ConRichFaces,RichFaces_Version);
+			}
+			
+			strTablaClaseRelacionada+="\r\n\t\t<tr id=\"tr"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"TablaDatos\" >";
+			
+			if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+			{	
+				String strColumnaEdicion="";
+				
+				if(tablaRelacionadaObjetivo.Columns.Count>intNumeroMinimoColumnasTablaRompimiento)
+				{
+					strColumnaEdicion="{ label :'', id :'"+strEdicion+"'},";
+				}
+				
+					strTablaClaseRelacionada+="\r\n\t\t\t<td>\r\n\t\t\t\t<a:widget id=\"djtbl"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.table\" value=\"{columns:["+strColumnaEdicion+"{ label :'', id :'SELECCION'}";   
+					strTablaClaseRelacionada+=GetColumnsTableMaintenance(tablaRelacionadaObjetivo,false,true,collectionInfo.SecondaryTableSchema);
+					strTablaClaseRelacionada+=GetColumnsTableMaintenance(collectionInfo.SecondaryTableSchema,true,false,null);
+					
+			}
+			else
+			{
+				strTablaClaseRelacionada+="\r\n\t\t\t<td>\r\n\t\t\t\t<a:widget id=\"djtbl"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.table\" value=\"{columns:[{ label :'', id :'"+strEdicion+"'}";   
+				strTablaClaseRelacionada+=GetColumnsTableMaintenance(tablaRelacionadaObjetivo,false,false,null);
+			}
+			
+			strTablaClaseRelacionada+="],rows : []}\"/>";
+			strTablaClaseRelacionada+="\r\n\t\t\t</td>";  
+			strTablaClaseRelacionada+="\r\n\t\t</tr>\r\n";
+			
+			if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+			{
+				strTablaClaseRelacionada+=GetWebRowPaginacionYNuevoTablaClaseC(tablaRelacionadaObjetivo,true,false,false,ConFaces,ConRichFaces,RichFaces_Version);
+			}
+			
+			strTablaClaseRelacionada+="\r\n\t\t<tr id=\"tr"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"Elementos\" class=\"elementos\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t<td align=\"center\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t<A name=\"Campos\"></A>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t<form name=\"frmMantenimiento"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t<table width=\"200\"  align=\"center\" >";
+			strTablaClaseRelacionada+=GetControlVariables(tablaRelacionadaObjetivo,ConFaces,RichFaces_Version);
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t</table>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t</form>";
+			strTablaClaseRelacionada+="\r\n\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t</tr>"; 	
+		
+					
+			
+			strTablaClaseRelacionada+="\r\n\r\n\t\t<tr id=\"tr"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"Acciones\" class=\"acciones\">";	
+			strTablaClaseRelacionada+="\r\n\t\t\t<td align=\"center\">";	 
+			strTablaClaseRelacionada+="\r\n\t\t\t\t<A name=\"Acciones\" ></A>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t<form name=\"frmAccionesMantenimiento"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t<table id=\"tblAccionesMantenimiento"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" width=\"50%\" align=\"center\" >";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t<tr id=\"trAccionesMantenimiento"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"Basicos\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t<td id=\"tdbtnNuevo"+ GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" style=\"visibility:visible\">\r\n\t\t\t\t\t\t\t\t<a:widget id=\"btndjdjtNuevo"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strNuevo+"'}\" />";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t<td id=\"tdbtnActualizar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\"style=\"visibility:visible\">\r\n\t\t\t\t\t\t\t\t<a:widget id=\"btndjdjtActualizar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strActualizar+"'}\" />";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t<td id=\"tdbtnEliminar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" style=\"visibility:visible\">\r\n\t\t\t\t\t\t\t\t<a:widget id=\"btndjdjtEliminar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strEliminar+"'}\" />";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t<td id=\"tdbtnCancelar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" style=\"visibility:visible\">\r\n\t\t\t\t\t\t\t\t<a:widget id=\"btndjdjtCancelar"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strCancelar+"'}\" />";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t</tr>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t<tr id=\"trAccionesMantenimiento"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"Guardar\" style=\"visibility:hidden\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t<td id=\"tdbtnGuardarCambios"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" colspan=\"4\" align=\"center\" style=\"visibility:hidden\">";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t\t<br><a:widget id=\"btndjdjtGuardarCambios"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strGuardarCambios+"'}\" />";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t</td>";						
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t</tr>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t\t</table>";
+			strTablaClaseRelacionada+="\r\n\t\t\t\t</form>";
+			strTablaClaseRelacionada+="\r\n\t\t\t</td>";
+			strTablaClaseRelacionada+="\r\n\t\t</tr>";
+			
+		}
+			
+	}
+					
+	return strTablaClaseRelacionada; 
+}
+		
+public String GetHtmlMaintenanceTablasClasesRelacionadas0() 
+		{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionada;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				tablaRelacionada=GetTablaFromNombreC(collectionInfo.SecondaryTable,TablaBase);
+				
+				strTablaClaseRelacionada+="<tr>\r\n\t\t<td><a:widget id=\"djtbl"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" name=\"dojo.table\" value=\"{columns: { 'button' : '.',";
+				strTablaClaseRelacionada+=GetColumnsTableMaintenance(tablaRelacionada,false,false,null);
+				strTablaClaseRelacionada+="\"/>\r\n\t\t</td>\r\n\t</tr>";
+				strTablaClaseRelacionada+="\r\n\t<tr>\r\n\t\t<td>\r\n<table width=\"100\"  align=\"center\">\r\n\t<tr>";
+				strTablaClaseRelacionada+="\r\n\t\t<td align=\"center\"><button onclick=\"anteriores"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"s()\"><<</button>\r\n\t\t</td>";
+				strTablaClaseRelacionada+="\r\n\t\t<td align=\"center\"><button onclick=\"siguientes"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"s()\">>></button>\r\n\t\t</td>";
+				strTablaClaseRelacionada+="\r\n\t</tr>\r\n\t<tr height=\"10\">\r\n\t\t<td>\r\n\t\t</td>\r\n\t\t<td>\r\n\t\t</td>\r\n\t</tr>\r\n</table>\r\n";
+				
+				strTablaClaseRelacionada+="\r\n<form name=\"frmMantenimiento"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\">";
+				strTablaClaseRelacionada+="\r\n<table width=\"200\"  align=\"center\">"+GetControlVariables(tablaRelacionada,ConFaces,RichFaces_Version);
+				strTablaClaseRelacionada+="\r\n</table>\r\n</form>\r\n\t\t</td>\r\n\t<tr>\r\n\t\t<td>\r\n<table width=\"50%\" align=\"center\">";
+				strTablaClaseRelacionada+="\r\n\t<tr>";									
+					
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t\t<td><button  id=\"btnNuevo"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"nuevo" +GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Nuevo</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button  id=\"btnActualizar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"actualizar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Actualizar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnEliminar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"createSimpleYahooDialogEliminacion"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Eliminar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnCancelar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"cancelar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Cancelar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnGuardar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"guardar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Guardar cambios realizados</button>\r\n\t\t</td>";			
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\t\t<td><button  id=\"btnNuevo"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"nuevo" +GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Nuevo</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button  id=\"btnActualizar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"actualizar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Actualizar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnEliminar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"createSimpleYahooDialogEliminacion"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Eliminar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnCancelar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"cancelar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Cancelar</button>\r\n\t\t</td>";
+					strTablaClaseRelacionada+="\r\n\t\t<td><button id=\"btnGuardar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"\" style=\"visibility:hidden\"  onclick=\"guardar"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"()\">Guardar cambios realizados</button>\r\n\t\t</td>";			
+				}
+				
+				strTablaClaseRelacionada+="\r\n\t</tr>\r\n</table>\r\n\t\t</td>\r\n\t</tr>";
+			
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetOrderFuncionesColumns() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsPrimaryKeyMember||columnSchema.IsForeignKeyMember||columnSchema.Name.Equals(strId)||columnSchema.Name.Equals(strIsActive)||columnSchema.Name.Equals(strIsExpired)||columnSchema.Name.Equals(strVersionRow))
+				{
+					continue;
+				}
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\tif(args.value==\""+GetNombreColumnaClaseMinusculaC(columnSchema)+"\")"+"\r\n\t\t\t\t\t\t\t{";					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t\tarrData"+GetNombreClase(TablaBase.ToString())+"s.sort(orderBy"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+");\r\n\t";
+					strTablaClaseRelacionada+="\t\t\t\t\t\t}\r\n";
+			}
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetControlesBusquedasIndicesTablasClases() 
+		{
+			String strHtml=">";
+			
+			String strRowSearch="\r\n\t\t<tr class=\"busqueda\">\r\n\t\t\t<td>\r\n\t\t\t\t<img id=\"imgExpandirContraerRowBusqueda"+GetNombreClase(TablaBase.ToString())+"\" align=\"left\" src=\"Imagenes/xcollapse.png\" width=\"20\" height=\"20\"  onclick=\"LibraryGeneralFuncionesGeneralesMostrarOcultarFilaCambiarImagen('tr"+GetNombreClase(TablaBase.ToString())+"Busquedas',this)\"><h1>"+strBusquedas+"</h1>\r\n\t\t\t</td>\r\n\t\t</tr>\r\n";
+			
+			String strhtmlformularioinicial="";
+			String strHtmlInicial0="\r\n\t\t<tr id=\"tr"+GetNombreClase(TablaBase.ToString())+"Busquedas\" class=\"busqueda\" style=\"display:none\">\r\n\t\t\t<td align=\"center\">\r\n\t\t\t\t<A name=\"Busquedas\"></A>\r\n\r\n\t\t\t\t<form name=\"frmBusqueda"+GetNombreClase(TablaBase.ToString())+"\">\r\n\r\n\t\t\t\t<table width=\"30%\" align=\"center\" style=\"visibility:visible\">";
+			String strHtmlFinal0="\r\n\t\t\t\t</table>\r\n\t\t\t\t</form>\r\n\r\n\t\t\t</td>\r\n\t\t</tr>";
+			
+			String strHtmlInicial="\r\n<tr class=\"busqueda\">\r\n<td align=\"center\">\r\n<A name=\"Busquedas\"></A>\r\n<table width=\"30%\" align=\"center\" style=\"visibility:visible\">";
+				strHtmlInicial+="";
+			String strHtmlFinal="\r\n\t</tr>\r\n</table>\r\n</td>\r\n</tr>";
+				strHtmlFinal+="";
+			String strHtmlFormularioFinal="";
+			String strTituloBusqueda="";
+			String strTituloBusquedaInicial="\r\n\t\t\t\t\t<tr>\r\n\t\t\t\t\t\t<td colspan=\"3\" align=\"left\">\r\n\t\t\t\t\t\t\t<h1>"+strBusqueda;
+			String strTituloBusquedaMiddle="";
+			String strTituloBusquedaFinal="</h1>\r\n\t\t\t\t\t\t</td>\r\n\t\t\t\t\t</tr>";
+			String strTitulo=string.Empty;
+			String strComboText=string.Empty;
+			String strBoton=string.Empty;
+			
+			String strFuncion=string.Empty;
+			bool existe=false;
+			
+			
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			foreach(IndexSchema indexSchema in TablaBase.Indexes)
+			{
+			
+				if(!indexSchema.IsPrimaryKey)
+				{
+					
+					if(indexSchema.IsUnique)
+					{
+						continue;
+																					//strTitulo=GetNombreClaseC(TablaBase.ToString())+"</td>";
+						//strBoton="\r\n\t\t<td width=\"11%\"><input type=\"button\" value=\"Buscar\" onclick=\"PaginaWebInteraccion"+  GetNombreClaseC(TablaBase.ToString())+"Buscar"+GetNombreClaseC(TablaBase.ToString())+"s('"+indexSchema.Name+ "')\">\r\n\t\t</td>";
+																					//strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC(TablaBase.ToString())+"\" name=\"dojo.combobox\"/></td>";					
+				
+																					//strInitFuncion+=GetNombreClaseC(TablaBase.ToString())+" "+"Traer"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"(";
+					}
+					else
+					{
+						existe=true;
+						//strTitulo=GetNombreClaseC(TablaBase.ToString())+"s</td>";
+						//strBoton="\r\n\t\t\t\t\t\t<td width=\"11%\">\r\n\t\t\t\t\t\t\t<input type=\"button\" value=\"Buscar\" onclick=\"PaginaWebInteraccion"+  GetNombreClaseC(TablaBase.ToString())+"Buscar"+GetNombreClaseC(TablaBase.ToString())+"s('"+indexSchema.Name+ "')\">\r\n\t\t\t\t\t\t</td>";
+						strBoton="\r\n\t\t\t\t\t\t<td width=\"11%\">\r\n\t\t\t\t\t\t\t<a:widget id=\"btndjdjtBuscar"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"\" name=\"dojo.dijit.button\" value=\"{label: '"+strBuscar+"'}\" />\r\n\t\t\t\t\t\t</td>";
+						
+						if(indexSchema.Name.Contains("FK") ||indexSchema.Name.Contains("fk"))
+						{
+							strTitulo="\r\n\t\t\t\t\t\t<td width=\"10%\"><h2>"+ GetWebNombreTituloColumnFromPropertiesC(indexSchema.MemberColumns[0])+"</h2>\r\n\t\t\t\t\t\t</td>";
+							strComboText="\r\n\t\t\t\t\t\t<td width=\"79%\">\r\n\t\t\t\t\t\t\t<a:widget id=\""+   GetNameControlHtmlBusqueda(indexSchema.MemberColumns[0],indexSchema.Name)+"\" name=\"dojo.combobox\"/>\r\n\t\t\t\t\t\t</td>";								
+							strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(indexSchema.MemberColumns[0]);
+							strTituloBusqueda=strTituloBusquedaInicial+strTituloBusquedaMiddle+ strTituloBusquedaFinal;
+						}
+					}	
+					
+					if(!indexSchema.Name.Contains("FK"))
+					{
+						strComboText="";
+						strTitulo="";
+						strTituloBusquedaMiddle="";
+						int count=1;count+=0;	
+						foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+						{
+							if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+							{
+								strTitulo+="\r\n\t\t\t\t\t\t<td width=\"10%\"><h2>"+ GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+"</h2>\r\n\t\t\t\t\t\t</td>";
+								strComboText+="\r\n\t\t\t\t\t\t<td width=\"79%\">\r\n\t\t\t\t\t\t\t"+ GetControlHtmlBusqueda( memberColumnSchema.Column,indexSchema.Name,ConFaces,ConRichFaces,false)+"\r\n\t\t\t\t\t\t</td>";
+								strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column);
+							}
+							else
+							{
+								if(!indexSchema.Name.Contains("BusquedaRango"))
+								{
+									strTitulo+="\r\n\t\t\t\t\t\t<td width=\"10%\"><h2>"+ GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+"</h2>\r\n\t\t\t\t\t\t</td>";
+									strComboText+="\r\n\t\t\t\t\t\t<td width=\"79%\">\r\n\t\t\t\t\t\t"+ GetControlHtmlBusqueda( memberColumnSchema.Column,indexSchema.Name,ConFaces,ConRichFaces,false)+"\r\n\t\t\t\t\t\t</td>";
+									
+									if(indexSchema.Name.Contains("BusquedaMayor"))
+									{
+										strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Inicial";
+									}
+									else if(indexSchema.Name.Contains("BusquedaMenor"))
+									{
+										strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Final";
+									}
+								}
+								else
+								{
+									strTitulo+="\r\n\t\t\t\t\t\t<td width=\"10%\"><h2>"+ GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Inicial</h2>\r\n\t\t\t\t\t\t</td>";
+									strComboText+="\r\n\t\t\t\t\t\t<td width=\"79%\">\r\n\t\t\t\t\t\t"+ GetControlHtmlBusqueda( memberColumnSchema.Column,indexSchema.Name,ConFaces,ConRichFaces,false).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"\"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+"\r\n\t\t\t\t\t\t</td>";
+															
+									strTitulo+="\r\n\t\t\t\t\t\t<td width=\"10%\"><h2>"+ GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Final</h2>\r\n\t\t\t\t\t\t</td>";
+									strComboText+="\r\n\t\t\t\t\t\t<td width=\"79%\">\r\n\t\t\t\t\t\t\t"+ GetControlHtmlBusqueda( memberColumnSchema.Column,indexSchema.Name,ConFaces,ConRichFaces,false).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"\"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+"\r\n\t\t\t\t\t\t</td>";
+									
+									strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Inicial";
+									strTituloBusquedaMiddle+=" "+strPor+" "+GetWebNombreTituloColumnFromPropertiesC(memberColumnSchema.Column)+" Final";
+									break;
+								}
+							}
+						}
+						
+						strTituloBusqueda=strTituloBusquedaInicial+strTituloBusquedaMiddle+ strTituloBusquedaFinal;
+						
+					}
+					
+					
+					strInitFuncion+=strTituloBusqueda+"\r\n\t\t\t\t\t<tr>"+strTitulo+strComboText+strBoton+"\r\n\r\n";
+				}
+				
+			}
+			
+			strHtml=strRowSearch+strHtmlInicial0+strhtmlformularioinicial+strInitFuncion +strHtmlFormularioFinal+strHtmlFinal0+"\r\n\r\n";
+			
+			if(!existe)
+			{
+				strHtml="";
+			}
+								
+			return strHtml; 
+		}
+
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="\t<script type=\"text/javascript\" language=\"javascript\" src=\"JavaScript/";
+	String strNameFin="\"><//script>";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;yaValidacionOtros=false;
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="ValidacionText.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="ValidacionDate.js";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strHtmlInicial="<table width=\"250\" align=\"center\">\r\n<tr>\r\n<td width=\"10%\">";
+			String strHtmlFinal="</tr>\r\n</table>";
+			String strTitulo=string.Empty;
+			String strCombo=string.Empty;
+			String strBoton=string.Empty;
+			
+			String strFuncion=string.Empty;
+			
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"\" name=\"dojo.combobox\"/></td>";					
+				}
+				else
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s\" name=\"dojo.combobox\"/></td>";								
+				}
+				
+			strFuncion+=strHtmlInicial+	strTitulo+strCombo+strBoton+strHtmlFinal+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public string GetTituloControlVariables(ColumnSchema column)
+{
+	
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetWebNombreTituloColumnFromPropertiesC(column);
+	
+	String strTitleControl="";
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired) )
+	{
+			return string.Empty;
+	}
+	else if(column.Name.Equals(strVersionRow))
+	{
+		return "\r\n\t\t\t\t\t\t<td>\r\n\t\t\t\t\t\t</td>";
+	}
+	else if(column.Name.Equals(strId))
+	{
+		return "\r\n\t\t\t\t\t\t<td><h2>"+strCodigoUnico+"</h2>\r\n\t\t\t\t\t\t</td>";
+	}
+	else
+	{
+		if(!column.IsForeignKeyMember)
+		{
+			strTitleControl="\r\n\t\t\t\t\t\t<td><h2>"+ strColumna +"</h2>\r\n\t\t\t\t\t\t</td>";
+		}
+		else
+		{
+			/*
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			*/
+			strTitleControl="\r\n\t\t\t\t\t\t<td><h2>"+ strColumna +"</h2>\r\n\t\t\t\t\t\t</td>";
+		}
+	}	
+	return strTitleControl;
+}
+
+public string GetColumnsTableMaintenance(ColumnSchema column)
+{
+	
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);
+	
+	String strColumnName="";
+	String strColumnLabel="'"+GetWebNombreTituloColumnFromPropertiesC(column)+"'";
+	String strColumn="";
+	
+	if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow)||column.DataType==DbType.Binary)
+	{
+			return string.Empty;
+	}
+	else
+	{
+		if(!column.IsForeignKeyMember&&column.DataType!=DbType.Boolean)
+		{
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+		}
+		else if(column.DataType==DbType.Boolean)
+		{
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"Control'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";	
+		}
+		else if(column.IsForeignKeyMember)
+		{
+			strColumna= GetNombreColumnaClaseC(column);
+			strColumna=strColumna.Replace(strId,"");
+			strColumna=strColumna.Substring(0, 1).ToUpper() + strColumna.Substring(1, strColumna.Length-1).ToLower();
+			
+			strColumnName="'"+GetNombreColumnaClaseJavaScriptC(column)+"Descripcion'";
+			strColumn="{ label :" +strColumnLabel+", id :"+strColumnName +"}";
+		}
+	}	
+			
+	return strColumn;
+}
+
+public string GetControlVariables(ColumnSchema column,bool ConFaces,String RichFaces_Version)
+{			
+	String strControl="";
+	String strTituloControl="";
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+	else if(column.Name.Equals(strId))
+	{
+			strControl="\r\n\t\t\t\t\t\t<td>"+"<input name=\"hdnIdActual\" type=\"text\" readonly=\"readonly\">"+"\r\n\t\t\t\t\t\t</td>";
+			
+	}
+	else
+	{
+		strControl="\r\n\t\t\t\t\t\t<td>"+GetControlHtml(column,ConFaces,ConRichFaces,RichFaces_Version)+"\r\n\t\t\t\t\t\t</td>";	
+	
+	}
+	
+	
+	strTituloControl=GetTituloControlVariables(column);
+	
+	return "\r\n\t\t\t\t\t<tr style=\"visibility:visible\">"+strTituloControl+strControl+"\r\n\t\t\t\t\t</tr>";
+}
+
+public string GetNombreColumnaClaseTituloTablaC(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		String strParamtroInit="<td>";
+		String strParamtroEnd="</td>";
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		
+		strParamtro=strParamtroInit+GetNombreColumnaClaseTituloC(column)+strParamtroEnd;
+		return strParamtro;
+}
+
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+"("+GetTipoColumnaClaseC(column)+")"+"request.getAttribute(\""+GetNombreColumnaClaseC(column)+"\""+");";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="request.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+
+public string GetSetVariablesObjetoTabla(ColumnSchema column,String table)
+{
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	String strColumnaInit="<td><!%=";	
+	String strColumnaEnd="%></td>";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+	 strColumna=strId;
+	}
+	
+	return strColumnaInit+GetNombreClaseObjetoC(table)+".get"+GetNombreCompletoColumnaClaseC(column)+"()"+strColumnaEnd;
+}
+
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+".get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strTipo+strPrefijo+strColumna+";";
+}
+public string GetNombreVariablesStringDefault(ColumnSchema column)
+{
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"=\"\""+";";
+}
+
+public string GetFormVariablesEdit(ColumnSchema column)
+{
+	String strPrefijoInit="<td><input type=\"hidden\" name=\"";
+	String strPrefijoType="txt";
+	String strPrefijoMiddle="\" value=\"<!%="; 
+	String strPrefijoEnd="%>\"></td>";
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijoInit+strPrefijoType+strColumna+strPrefijoMiddle+strPrefijo+strColumna+strPrefijoEnd;
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+
+
+public String GetJavaScriptCallFuncionesImportEventsClasesRelacionadas() 
+{
+			String strTablaClaseRelacionada="";	
+			TableSchema tablaRelacionadaObjetivo;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				strTablaClaseRelacionada+="\r\n\t\tfuncionGeneral.Import('JavaScript/WebPageInteraction/"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"WebPageInteractionEvents.js');";
+										
+			}
+			
+			return strTablaClaseRelacionada; 
+}
+
+</script>
+<%=strStartPageInclude%> page contentType="text/html; charset=UTF-8" %>
+
+<%=strStartPageInclude%> taglib prefix="a" uri="http://jmaki/v1.0/jsp" %>
+
+<html>
+  <head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+	
+ 	 <title><%=GetNombreClase(TablaBase.ToString())%> Mantenimiento</title>
+		<script type="text/javascript" language="javascript" src="JavaScript/Library/General/FuncionGeneral.js"></script>
+		<script type="text/javascript" language="javascript" src="JavaScript/Load/<%=GetNombreClase(TablaBase.ToString())%>LoadRelaciones.js"></script>
+		
+		<link rel="stylesheet" type="text/css" href="Css/style.css" media="screen" />
+	</head>
+	
+ <body onLoad="<%=GetNombreClaseObjeto(TablaBase.ToString())%>PaginaWebInteraccionRelacion.CargarPaginaRelaciones('Todos')">
+	
+	<a:widget name="yahoo.simpledlg" id="dialog1"/>
+
+	<table width="100%"  align="center">
+	
+		<%=GetWebRowTituloTablaClaseC(TablaBase,false,false)%> 
+		
+		<%=GetWebRowControlesBusquedasIndicesTablasClasesC(TablaBase,false,false,false,ConFaces,ConRichFaces,RichFaces_Version)%> 
+		
+		<%=GetWebRowParametrosBusquedaTablaClaseC(TablaBase,true,false,false,false,ConFaces,ConRichFaces,RichFaces_Version) %>
+		
+		<%=GetWebRowTablaDatosTablaClaseC(TablaBase,null,null,false,false,null,false,false,ConFaces,ConRichFaces,RichFaces_Version)%>
+		
+		<%=GetWebRowPaginacionYNuevoTablaClaseC(TablaBase,false,false,false,ConFaces,ConRichFaces,RichFaces_Version)%>
+				
+		<%=GetWebRowElementosTablaClaseC(TablaBase,false,false,ConFaces,ConRichFaces,RichFaces_Version,false,ConCamposGlobalesOcultos) %>	
+	
+		<%=GetHtmlMaintenanceTablasClasesRelacionadas(ConFaces,ConRichFaces,RichFaces_Version)%>
+	
+		<%=GetWebRowAccionesTablaClaseC(TablaBase,false,false,ConFaces,ConRichFaces) %>
+		
+	</table>
+	
+	<script type="text/javascript" language="javascript">
+		funcionGeneral.Import('JavaScript/WebPageInteraction/<%=GetNombreClase(TablaBase.ToString())%>WebPageInteractionEventsRelaciones.js');	
+	</script>
+	
+</body>
+</html>
+

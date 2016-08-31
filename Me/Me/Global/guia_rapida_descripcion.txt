@@ -1,0 +1,81 @@
+MODULO DEL CUAL SE OBLIGA FILTRAR FK
+
+|MODULODOMI=LID_MODULO_INVENTARIO DONDE
+ModuloConstantesFuncionesAdditional.XXXXXXXXXXXXX
+
+
+DISEÑO
+|WIDTHPE=50
+|ESNUEVAFILA=true|TITULOFILA=CUENTAS CONTABLES
+|INDICESNO=FK_IdEmpresa,FK_IdTipoTransaccionModulo
+
+REPORTES Y PROCESOS
+
+----- REPORTES (Generar Additional Files)----- 
+VERIFICAR(|ESREPORTE=true,|INDICESNO= y |ESREPORTEPARAM=true)
+
+
+TABLA
+|ESREPORTE=true|SINRECARGARI=true|PREFIJOSQL=f   
+|CONMAXCODE=false
+Donde:
+SINRECARGARI si tiene parametros busqueda
+PREFIJOSQL prefijo para los parametros
+
+Quitar Fk Indices
+|INDICESNO=FK_IdEmpresa,FK_IdSucursal,FK_IdEjercicio,FK_IdPeriodo,FK_IdModulo,,FK_IdTipoDocumento,,FK_IdTipoMovimiento
+
+COLUMNA PARAMETRO
+NOTA:
+Se escoge igual empresa,sucursal solo en columnas parametros
+|ESREPORTEPARAM=true -->Ejm:(idEmpresa,idSucursal)
+|PREFIJOSQL=f
+
+COLUMNA NAVEGACION O GROUP BY(SUM)
+Para FK Auxiliar y luego poder navegar
+|INSERTEDITNO=true|SHOWTABLE=false --> Ejm:(idCaja,idCliente)
+
+TIPS
+No olvidar escoger GeneracionReportes para INDICESNO
+----- REPORTES----- 
+
+
+
+----- PROCESOS----- 
+DE_REPORTE
+|ESREPORTE=true|SINRECARGARI=true
+
+|ESPROCESO=true
+|ESLABELPROCESAR=true	("Procesar" solo label)
+
+|SINUSODATOS=true	(No genera tabla de datos)
+|ESREPORTEADDITIONAL=true	(Utiliza clase LogicAdditional para procesar la informacion)
+
+|ESREPORTEBASECOL usa columnas id,version_row
+
+TIPOS
+1)Solo Procesar ActivosFijos.ProcesarCrearIndices --> (Se crea indice con id)
+2)Procesar Con Parametros	ActivosFijos.ProcesarCalcularDepreciaciones
+3)Procesar con Tabla Busqueda para seleccionar filas  ActivosFijos.ProcesarMayorizar 
+----- PROCESOS----- 
+
+
+
+DISEÑO
+TABLA
+|CELLSPACING=0
+
+COLUMNA
+|INSERTEDITNO=true|SHOWTABLE=false
+|ESNUEVAFILA=true
+|COLSPAN=3
+|WIDTHPE=200
+|PANELSINBASICO=true
+|WIDTHPE_CHECKBOX=-70
+|NUMXEXTRA=1
+|NUMYEXTRA=1
+
+EVENTOS PARENT
+COLUMNA
+|ONCHANGEPARENT=true|ONEVENT_DB_PARENT=true|CLASESSIONCHANGE_PARENT=DetalleAsientoContable
+|NOMBRE_REF=id_linea (Si el nombre referencia es para una Tabla autoreferenciada)

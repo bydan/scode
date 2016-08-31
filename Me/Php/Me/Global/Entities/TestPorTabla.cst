@@ -1,0 +1,711 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="ConStoreProcedures" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+
+
+public String GetNombreTabla() 
+		{
+			String strNombreTabla=string.Empty;
+										 			
+			strNombreTabla=GetNombreTableFromProperties(TablaBase);
+								
+			return strNombreTabla; 
+		}
+		
+public String GetTablasClasesRelacionadasForeigKeys() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+					
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";";
+				
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetTablasClasesRelacionadasForeigKeysInicializar() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+					
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+					if(GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))==GetNombreClaseObjetoC(TablaBase.ToString()))
+					{
+						continue;
+					}
+					
+					strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"=new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"();";
+				
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetFuncionesTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\r\n\tpublic  void  set"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t}\r\n\t\tcatch(Exception ex)\r\n\t\t{\r\n\t\t\t;\r\n\t\t}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+ "("+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" "+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+")\r\n\t{\r\n\t\ttry\r\n\t\t{\r\n";
+					strTablaClaseRelacionada+="\t\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"="+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";";
+					strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+			
+				}
+				
+			}
+						
+			return strFuncion; 
+		}
+
+public String GetFuncionesGetTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion="";
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\tpublic ";// void  getTR[";
+			
+			String strEndFuncion="\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				
+				
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+						strInitFuncion="\r\n\tpublic ";
+					
+					
+						strInitFuncion+=GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" get"+GetPrefijoRelacionC()+GetNombreClase("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"()\r\n\t{\r\n";
+						strTablaClaseRelacionada="\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";\r\n";
+					
+			    		strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+				}
+			}
+								
+			return strFuncion; 
+		}
+
+public String GetFuncionesGetTablasClasesRelacionadas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public ";// void  getTR_";
+			
+			String strEndFuncion="\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strInitFuncion="\r\n\tpublic ";
+			
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strInitFuncion+=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+" get"+GetPrefijoRelacionC()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\r\n\t{";
+					strTablaClaseRelacionada="\r\n\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";\r\n";
+				}
+				else
+				{
+					strInitFuncion+="ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> get"+GetPrefijoRelacionC()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s()\r\n\t{";
+					strTablaClaseRelacionada="\r\n\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;\r\n";
+				}
+				
+			strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\r\n\tpublic  void  set"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t}\r\n\t\tcatch(Exception ex)\r\n\t\t{\r\n\t\t\t;\r\n\t\t}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ "("+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+")\r\n\t{\r\n\ttry\r\n{\r\n";
+					strTablaClaseRelacionada+="\t\t\tthis."+GetPrefijoRelacionC().ToLower()+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else
+				{
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"("+"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s)\r\n\t{\r\n\t\ttry\r\n\t\t{\r\n";
+					strTablaClaseRelacionada+="\t\t\tthis."+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+			
+				}
+				
+			strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public String GetTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " "+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\tArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetTablasClasesRelacionadasInicializar() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					continue;
+					//strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"();";
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s=new ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">();";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public string GetParameterNoLastIndex(TableSchema table)
+{		
+	string strNombre =String.Empty; 
+	int count=0;	
+		
+    for (int i = 0; i < table.Columns.Count; i++){ 	
+    strNombre=table.Columns[i].Name;
+	switch (strNombre)
+	{
+		case strVersionRow:
+		{
+			break;
+		}
+		
+		default:
+		{
+			count++;
+			break;
+		}
+
+	}
+		 } 
+		
+	return count.ToString();
+}
+
+public string GetParameterLastIndex(TableSchema table)
+{		
+	string strNombre =String.Empty; 
+	int count=0;	
+		
+    for (int i = 0; i < table.Columns.Count; i++){ 	
+   
+			count++;
+			
+
+		 } 
+		
+	return count.ToString();
+}
+
+
+
+public string GetNombreCampoTabla(ColumnSchema column)
+{
+	string strPrefijo = "\r\n\tpublic static String getColumnName"+column.Name+"()";
+	strPrefijo += "\r\n\t{\r\n\t\treturn \""+ column.Name+"\";\r\n\t}";
+	
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strIsExpired:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strIsActive:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strId:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}
+	}
+	
+	return strPrefijo;
+}
+
+
+
+
+
+public string GetSqlParameterInsert(ColumnSchema column)
+{
+	
+	String param=GetNombreColumnFromProperties(column);
+	
+	
+	
+	param+="=?";
+	
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			param=GetNombreColumnFromProperties(column);
+			param+="=CURRENT_TIMESTAMP";
+			break;
+		}	
+		/*case "isActive":
+		{
+			param+="=true";
+			break;
+		}	
+		case "isExpired":
+		{
+			param+="=false";
+			break;
+		}	
+		*/
+		case strId:
+		{
+			param="";
+			break;
+		}
+		
+	}
+	
+	return param;
+}
+
+public string GetSqlStoreProcedureParameterInsert(ColumnSchema column)
+{
+	
+	String param="";//GetNombreColumnFromProperties(column);	
+	
+	param+="?";
+	
+	switch (column.Name)
+	{
+		/*
+		case strVersionRow:
+		{
+			param="CURRENT_TIMESTAMP";GetNombreColumnFromProperties(column);
+			//param+="=CURRENT_TIMESTAMP";
+			break;
+		}
+		*/
+		/*case "isActive":
+		{
+			param+="=true";
+			break;
+		}	
+		case "isExpired":
+		{
+			param+="=false";
+			break;
+		}	
+		*/
+		case strId:case strVersionRow:
+		{
+			param="";
+			break;
+		}
+		
+	}
+	
+	return param;
+}
+
+public string GetSqlStoreProcedureParameterUpdate(ColumnSchema column)
+{
+	
+	String param="";// GetNombreColumnFromProperties(column);
+	
+	param+="?";
+	
+	switch (column.Name)
+	{
+		/*
+		case strVersionRow:
+		{
+			param="CURRENT_TIMESTAMP";// GetNombreColumnFromProperties(column);
+			//param+="=CURRENT_TIMESTAMP";
+			break;
+		}	
+		*/
+		case strId:case strVersionRow:
+		{
+			param=String.Empty;
+			break;
+		}
+	}
+	
+	return param;
+}
+
+public string GetSqlParameterUpdate(ColumnSchema column)
+{
+	
+	String param= GetNombreColumnFromProperties(column);
+	
+	param+="=?";
+	
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			param= GetNombreColumnFromProperties(column);
+			param+="=CURRENT_TIMESTAMP";
+			break;
+		}	
+		case strId:
+		{
+			param=String.Empty;
+			break;
+		}
+	}
+	
+	return param;
+}
+
+public string GetSqlParameterSelect(ColumnSchema column)
+{
+	
+	String param= Schema+"."+GetNombreTabla()+"."+GetNombreColumnFromProperties(column);
+	
+	if(column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired|| column.Name==strVersionRow)
+	{
+	param=Schema+"."+TablaBase.ToString().Replace("dbo.","")+"."+column.Name;
+	}
+	
+	return param;
+}
+
+public string GetNombreClase(string strTablaBase)
+{	
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetCampoTabla(ColumnSchema column)
+{
+	string strPrefijo = column.Name;
+	return strPrefijo;
+	}
+
+public static string GetNombreColumnaClase(ColumnSchema column)
+{
+	return GetNombreColumnaClaseC(column);
+}
+
+public static string GetTipoColumnaClase(ColumnSchema column)
+	{
+		return GetTipoColumnaClaseC(column);
+	}
+	
+public static string GetTipoColumnaClaseEnum(ColumnSchema column)
+	{
+		return GetTipoColumnaClaseEnumC(column);
+	}
+	
+public static string GetNombreCompletoColumnaClase(ColumnSchema column)
+{
+	return GetNombreCompletoColumnaClaseC(column);
+	}
+</script>
+<%=GetByDanLicence()%>
+package <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>;
+
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.GeneralEntity;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.Mensajes;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageUtils%>.*;
+import java.util.ArrayList;
+import java.sql.*;
+import java.io.Serializable;
+
+public class <%=GetNombreClase(TablaBase.ToString())%> extends GeneralEntity implements Serializable
+{
+	private static final long serialVersionUID=1L;
+	
+	static  String strSchema="<%=GetSchemaTableFromProperties(TablaBase,Schema)%>";
+	
+	public static String getStrSchema() 
+	{
+		return strSchema;
+	}
+
+	public static void setStrSchema(String strSchema) 
+	{
+		<%=GetNombreClase(TablaBase.ToString())%>.strSchema = strSchema;
+	}
+	
+	static  String strTableName="<%=GetNombreTabla()%>";
+		
+	public static String getStrTableName() 
+	{
+		return strTableName;
+	}
+
+	public static void setStrTableName(String strTableName) 
+	{
+		<%=GetNombreClase(TablaBase.ToString())%>.strTableName = strTableName;
+	}
+	
+	public static String getColumnNameId()
+	{
+		return "id";
+	}
+	
+	public <%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Original;
+	
+	public <%=GetNombreClase(TablaBase.ToString())%> get<%=GetNombreClase(TablaBase.ToString())%>Original()
+	{
+		return <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Original;
+	}
+	
+	public  void  set<%=GetNombreClase(TablaBase.ToString())%>Original(<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>)
+	{
+		try
+		{
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Original=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>;
+		}
+		catch(Exception ex)
+		{
+			;
+		}
+	}
+		
+	<%= GetTablasClasesRelacionadasForeigKeys() %>
+	 
+	<%= GetFuncionesGetTablasClasesRelacionadasForeigKeys() %>
+	
+	<%= GetFuncionesTablasClasesRelacionadasForeigKeys() %>
+	
+	<%= GetTablasClasesRelacionadas() %>
+	
+	<%= GetFuncionesGetTablasClasesRelacionadas() %>
+	
+	<%= GetFuncionesTablasClasesRelacionadas() %>
+	
+	private static Boolean blnDeleteCascade=<%=GetCascadeTableFromPropertiesC(TablaBase)%>;
+	private static String QueryInsert="insert into "+<%=GetNombreClase(TablaBase.ToString())%>.getStrSchema()+"."+<%=GetNombreClase(TablaBase.ToString())%>.getStrTableName()+" set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterInsert(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %>";
+	private static String QueryUpdate="update "+<%=GetNombreClase(TablaBase.ToString())%>.getStrSchema()+"."+<%=GetNombreClase(TablaBase.ToString())%>.getStrTableName()+" set <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterUpdate(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0) { %>,<% } %><% } %> where id=? AND versionRow=?";
+	private static String QueryDelete="delete from "+<%=GetNombreClase(TablaBase.ToString())%>.getStrSchema()+"."+<%=GetNombreClase(TablaBase.ToString())%>.getStrTableName()+" where id=?";
+	public static String QuerySelect="select <% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlParameterSelect(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1) { %>,<% } %><% } %> from "+<%=GetNombreClase(TablaBase.ToString())%>.getStrSchema()+"."+<%=GetNombreClase(TablaBase.ToString())%>.getStrTableName();
+	
+	private static String StoreProcedureInsert="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_INSERT(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterInsert(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %>,?)";
+	private static String StoreProcedureUpdate="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_UPDATE(<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %><%= GetSqlStoreProcedureParameterUpdate(TablaBase.Columns[i]) %><% if (i < TablaBase.Columns.Count - 1&&i!=0&&TablaBase.Columns[i].Name!=strVersionRow) { %>,<% } %><% } %> ,? ,?,?)";
+	private static String StoreProcedureDelete="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_DELETE(?,?)";
+	public static String StoreProcedureSelect="call SP_<%=GetNombreClase(TablaBase.ToString()).ToUpper()%>_SELECT(?,?)";
+	
+	<%for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+	<%= GetParameterClaseC(TablaBase.Columns[i]) %>
+	<% } %>
+				
+	public <%=GetNombreClase(TablaBase.ToString())%> ()
+    {
+		super();		
+		
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Original=this;
+		
+		<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+		<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+ 		<%= GetValueDefaultParameterClaseC(TablaBase.Columns[i]) %>
+		<% } %>
+		
+		<%= GetTablasClasesRelacionadasForeigKeysInicializar() %>
+		
+		<%= GetTablasClasesRelacionadasInicializar() %>
+		
+		super.setQueryInsert(QueryInsert);
+		super.setQueryUpdate(QueryUpdate);
+		super.setQueryDelete(QueryDelete);
+		super.setQuerySelect(QuerySelect);
+		
+		super.setStoreProcedureInsert(StoreProcedureInsert);
+		super.setStoreProcedureUpdate(StoreProcedureUpdate);
+		super.setStoreProcedureDelete(StoreProcedureDelete);
+		super.setStoreProcedureSelect(StoreProcedureSelect);
+		
+		<%if(ConStoreProcedures||GetConStoreProceduresTableFromPropertiesC(TablaBase)) %>
+		<%{ %>
+		super.setWithStoreProcedures(true);
+		<%} %>
+		
+    } 
+	
+	public static Boolean getBlnDeleteCascade() 
+	{
+		return blnDeleteCascade;
+	}
+
+	public static void setBlnDeleteCascade(Boolean blnDeleteCascade) 
+	{
+		<%=GetNombreClase(TablaBase.ToString())%>.blnDeleteCascade = blnDeleteCascade;
+	}
+	
+	public static String getTableName()
+    {
+         return "<%=GetSchemaTableFromProperties(TablaBase,Schema)%>.<%=TablaBase.Name%>";
+    }
+	
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetNombreCampoTabla(TablaBase.Columns[i]) %>
+	<% } %>
+     
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetParameterClaseMethodC(TablaBase.Columns[i]) %>
+	<% } %>
+	
+	<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>	
+	<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>
+    <%= GetParameterClaseSetMethodC(TablaBase.Columns[i]) %>
+	<% } %>
+		
+	public  void BuildParametersMaintenance(ParameterDbType newDbType,ParametersType parametersType) throws Exception
+	{
+		try
+		{
+			ParametersMaintenance parametersMaintenance=super.getParametersMaintenance();		
+			ArrayList<ParameterMaintenance> parametersTemp=new ArrayList<ParameterMaintenance>();
+			ParameterMaintenance parameterMaintenance;
+			ParameterValue<Long> parameterMaintenanceValueId;
+			
+			<% int iCount=0; %>
+				if(!parametersType.equals(ParametersType.DELETE))
+				{		
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ if(TablaBase.Columns[i].Name.Equals(strId)||TablaBase.Columns[i].Name.Equals(strVersionRow)){ continue;}%>
+					<% iCount++; %>				
+					parameterMaintenance=new ParameterMaintenance();
+					parameterMaintenance.setOrder(<% =iCount.ToString()%>);		
+					parameterMaintenance.setParameterMaintenanceType(ParameterType.<%= GetTipoColumnaClaseEnum(TablaBase.Columns[i]) %>);
+					ParameterValue<<%= GetTipoColumnaClase(TablaBase.Columns[i]) %>> parameterMaintenanceValue<%= GetNombreColumnaClase(TablaBase.Columns[i]) %>=new ParameterValue<<%= GetTipoColumnaClase(TablaBase.Columns[i]) %>>();
+					parameterMaintenanceValue<%= GetNombreColumnaClase(TablaBase.Columns[i]) %>.setValue(this.get<%= GetNombreCompletoColumnaClase(TablaBase.Columns[i]) %>());
+					parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValue<%= GetNombreColumnaClase(TablaBase.Columns[i]) %>);
+					parametersTemp.add(parameterMaintenance);
+					
+					<% if(TablaBase.Columns[i].Name.Equals(strVersionRow)){iCount--;} %>
+					<% } %>				
+						if(parametersType.equals(ParametersType.UPDATE))
+						{					
+							parameterMaintenance=new ParameterMaintenance();
+							parameterMaintenance.setOrder(<%= GetParameterNoLastIndex(TablaBase) %>);
+							parameterMaintenance.setParameterMaintenanceType(ParameterType.LONG);
+							parameterMaintenanceValueId=new ParameterValue<Long>();
+							parameterMaintenanceValueId.setValue(this.get<%=strIdGetSet%>());
+							parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueId);		
+							parametersTemp.add(parameterMaintenance);
+							
+							parameterMaintenance=new ParameterMaintenance();
+							parameterMaintenance.setOrder(<%= GetParameterLastIndex(TablaBase) %>);
+							parameterMaintenance.setParameterMaintenanceType(ParameterType.TIMESTAMP);
+							ParameterValue<Timestamp> parameterMaintenanceValueVersionRow=new ParameterValue<Timestamp>();
+							parameterMaintenanceValueVersionRow.setValue(this.get<%=strVersionRowGetSet%>());
+							parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueVersionRow);		
+							parametersTemp.add(parameterMaintenance);					
+						}
+				}
+				else
+				{
+					parameterMaintenance=new ParameterMaintenance();
+					parameterMaintenance.setOrder(1);
+					parameterMaintenance.setParameterMaintenanceType(ParameterType.LONG);
+					parameterMaintenanceValueId=new ParameterValue<Long>();
+					parameterMaintenanceValueId.setValue(this.get<%=strIdGetSet%>());
+					parameterMaintenance.setParameterMaintenanceValue(parameterMaintenanceValueId);		
+					parametersTemp.add(parameterMaintenance);
+				}
+			
+			parametersMaintenance= new ParametersMaintenance();
+			parametersMaintenance.setDbType(newDbType);
+			parametersMaintenance.setParametersMaintenance(parametersTemp);
+			super.setParametersMaintenance(parametersMaintenance);		
+		}
+		catch(Exception ex)
+		{
+			throw ex;
+		}
+	}
+}

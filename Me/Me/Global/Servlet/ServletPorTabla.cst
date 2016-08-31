@@ -1,0 +1,2395 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Collections" %>
+<%@ Import Namespace="System.Text" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="PackageSeguridad" Type="System.String" Default="Seguridad" Category="General" Description="Nombre del Programdor" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="TablasBaseCompuestoJunction" Type="SchemaExplorer.TableSchemaCollection" Category="Context"%>
+<%@ Property Name="TablasBaseCompuestoDetalle" Type="SchemaExplorer.TableSchemaCollection" 	Category="Context"%>
+<%@ Property Name="TiposGeneracion" Type="System.String" Default=" " Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="ConJson" Type="System.Boolean" Default="true" Category="Options" Description="json or xml" %>
+<%@ Property Name="ConEjb" Type="System.Boolean" Default="false" Category="Options" Description="json or xml" %>
+
+
+<script runat="template">
+		
+public String GetBusquedaFromForeigKeysSession() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsForeignKeyMember)
+				{
+										
+					strTablaClaseRelacionada+=" else if(httpSession.getAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\")!=null)";
+					strTablaClaseRelacionada+=" {";
+							
+					strTablaClaseRelacionada+="\r\n\t\t\t\tif(httpSession.getAttribute(\""+columnSchema.Name+"Actual\")!=null)";
+					strTablaClaseRelacionada+=" {";
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\tsAccionBusqueda=\""+strFK+"_"+strIdGetSet+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\";";						
+					strTablaClaseRelacionada+="\r\n\t\t\t\t}";
+								
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\thttpSession.removeAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseRelacionadaFromColumn(columnSchema)+"\");";
+					
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\tsUltimaBusqueda=\"accionBusqueda=\"+sAccionBusqueda+\"()"+GetNameControlHtml(columnSchema)+strFK+"_"+strIdGetSet+GetNombreClaseRelacionadaFromColumn(columnSchema)+"=\"+httpSession.getAttribute(\""+columnSchema.Name+"Actual\")+\"()inicio=0()fin=10()tipo=SIGUIENTES()\"+ConstantesServlet.STIPOJSONRESPONSE+\"=\"+ConstantesServlet.SCONTROLDEFAULTTABLE;";
+				
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\tmensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,Constantes.SMENSAJEULTIMABUSQUEDA,sUltimaBusqueda,MensajeGrupo.NONE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\tsXml = FuncionesJsp.getJsonMensaje(mensaje);";
+
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strTablaClaseRelacionada+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+				
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t\treturn;";
+					
+					strTablaClaseRelacionada+="\r\n\t\t\t}";
+						
+					
+			
+				}
+			}
+			
+				
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetFuncionesAccionesNavegacionTablasClasesRelacionadasC() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			StringBuilder stringBuilder=new StringBuilder();
+			String strClasesNoRelacionadas=string.Empty;
+			
+			
+						
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			TableSchema tablaRelacionadaObjetivo;
+			String strPlural=string.Empty;
+			ArrayList tablasRelacionadasEncontradas=new ArrayList();
+			bool encontrado=false;
+			
+			String[] strClases;
+			bool blClaseNo=false;
+			
+			
+				
+			
+			
+			
+			//Trace.WriteLine("asdfdasfsda");
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}
+				else
+				{
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				
+				strClasesNoRelacionadas=GetNombresClasesNoNavegacionFromTableFromPropertiesC(TablaBase);
+				
+				strClases=strClasesNoRelacionadas.Split(',');
+				
+				blClaseNo=false;
+				
+				foreach(String strClase in strClases)
+				{		//Trace.WriteLine(strClase);				
+					if(strClase.Equals(GetNombreClaseC(tablaRelacionadaObjetivo.ToString()))||strClase.Equals("NINGUNO"))
+					{	
+						blClaseNo=true;
+						break;
+					}
+				}
+					
+				
+				if(blClaseNo)
+				{
+					continue;
+				}
+				
+				encontrado=false;
+				
+				foreach(TableSchema tableSchema in tablasRelacionadasEncontradas)
+				{
+					if(tableSchema.Equals(tablaRelacionadaObjetivo))
+					{
+						encontrado=true;
+					}
+				}
+				
+				
+				if(!encontrado)
+				{
+					String strComentarioParaEjb="";
+					String strComentarioInicioParaEjb="";
+					String strComentarioFinParaEjb="";
+				
+					if(ConEjb){
+						strComentarioParaEjb="//";
+						strComentarioInicioParaEjb="\r\n\t\t\t\t/*";
+						strComentarioFinParaEjb="*/";
+					}
+			
+					tablasRelacionadasEncontradas.Add(tablaRelacionadaObjetivo);
+					
+					strPlural=GetPluralTituloNombreTableFromPropertiesC(tablaRelacionadaObjetivo);
+					
+					stringBuilder.Append(" else if(sAccionMantenimiento.equals(\"RegistrarSesion"+GetNombreClaseC(TablaBase.ToString())+"Para"+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+strPlural.ToLower()+"\"))");
+					stringBuilder.Append(" {");
+					stringBuilder.Append("\r\n\t\t\t\tLong big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual=Long.parseLong(httpServletRequest.getParameter(\""+strId+GetNombreClaseC(TablaBase.ToString())+"Actual\"));");
+					stringBuilder.Append("\r\n\t\t\t\thttpSession.setAttribute(\"BusquedaDesdeForeignKeySesion"+GetNombreClaseC(TablaBase.ToString())+"\",true);");
+					stringBuilder.Append("\r\n\t\t\t\thttpSession.setAttribute(\""+strId+GetNombreClaseC(TablaBase.ToString())+"Actual\", big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual);");
+					
+					stringBuilder.Append("\r\n\t\t\t\thttpSession.setAttribute(\"BusquedaDesdeForeignKeySesionForeignKey"+GetNombreClaseC(TablaBase.ToString())+"\",true);");
+					stringBuilder.Append("\r\n\t\t\t\thttpSession.setAttribute(\""+strId+GetNombreClaseC(TablaBase.ToString())+"ActualForeignKey\", big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"Actual);");
+					
+						
+					stringBuilder.Append("\r\n\r\n\t\t\t\tString strPagina=Constantes.SNONE;");
+					stringBuilder.Append("\r\n\t\t\t\t"+strComentarioParaEjb+strGlobalSeguridadComment+"SistemaLogicAdditional sistemaLogicAdditional=new SistemaLogicAdditional();");
+					
+					//stringBuilder.Append("\r\n\r\n\t\t\t\tif(Constantes.ISUSAEJBREMOTE) {";
+					//stringBuilder.Append("\r\n\t\t\t\t\tsistemaAdditionable= (SistemaAdditionable) initialContext.lookup(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+SistemaConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);";
+					//stringBuilder.Append("\r\n\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {";
+					//stringBuilder.Append("\r\n\t\t\t\t\tsistemaAdditionableHome= (SistemaAdditionableHome) initialContext.lookup(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+SistemaConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);";
+					//stringBuilder.Append("\r\n\t\t\t\t}";
+		
+					//<%if(ConEjb){%>if(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>==null) {	<%}%>							
+					//ESTA LLAVES ES AFECTADA POR strComentarioParaEjb DE LINEA 138
+					String  strTablaClaseRelacionadaFunction="\r\n\t\t\t\t\t"+strGlobalSeguridadComment+"{";					
+							strTablaClaseRelacionadaFunction+="\r\n\t\t\t\t\t\t"+"strPagina="+GetNombreClaseC(TablaBase.ToString())+"ConstantesFunciones.SRELATIVEPATH + Constantes.SCARPETAPAGINAS+\"/\"+\""+GetRelativePathNavegacionFromTableFromPropertiesC(tablaRelacionadaObjetivo)+"\"+Constantes.SPREFIJOARCHIVOJSP+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP;";
+							strTablaClaseRelacionadaFunction+="\r\n\t\t\t\t\t"+strGlobalSeguridadComment+"}";
+					
+					
+					stringBuilder.Append("\r\n\r\n\t\t\t\t//ARCHITECTURE");
+					stringBuilder.Append("\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {");
+					stringBuilder.Append("\r\n\t\t\t\t"+strComentarioParaEjb+strGlobalSeguridadComment+"if(sistemaLogicAdditional.tienePermisosEnPaginaWeb(usuarioActual, Constantes.LIDSISTEMAACTUAL, Constantes.SPREFIJOARCHIVOJSP+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP))");
+					stringBuilder.Append(strComentarioInicioParaEjb+strTablaClaseRelacionadaFunction+strComentarioFinParaEjb);
+					stringBuilder.Append("\r\n\t\t\t\t}");
+					
+					
+					//if(ConEjb){
+						stringBuilder.Append(" else if(Constantes.ISUSAEJBREMOTE) {");
+						stringBuilder.Append("\r\n\t\t\t\t\t"+strGlobalSeguridadComment+"if(sistemaAdditionable.tienePermisosEnPaginaWeb(usuarioActual, Constantes.LIDSISTEMAACTUAL, Constantes.SPREFIJOARCHIVOJSP+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP))");					
+						stringBuilder.Append(strTablaClaseRelacionadaFunction);
+						stringBuilder.Append("\r\n\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {");
+						stringBuilder.Append("\r\n\t\t\t\t\t"+strGlobalSeguridadComment+"if(sistemaAdditionableHome.tienePermisosEnPaginaWeb(usuarioActual, Constantes.LIDSISTEMAACTUAL, Constantes.SPREFIJOARCHIVOJSP+\""+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP))");					
+						stringBuilder.Append(strTablaClaseRelacionadaFunction);
+						stringBuilder.Append("\r\n\t\t\t\t}");
+						stringBuilder.Append("\r\n\t\t\t\t//ARCHITECTURE");
+					//}
+					
+					
+					stringBuilder.Append("\r\n\r\n\t\t\t\tmensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,Constantes.SMENSAJEREGISTROSESSION,strPagina,MensajeGrupo.NONE);");
+					stringBuilder.Append("\r\n\t\t\t\tsXml =  FuncionesJsp.getJsonMensaje(mensaje);");
+						
+					stringBuilder.Append("\r\n\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);");
+					stringBuilder.Append("\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);");
+					stringBuilder.Append("\r\n\t\t\t}");
+				}
+				
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GenerarAccionesImagenServlet() 
+{
+			String strFuncionesAccionesImagen="";	
+			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{				
+				if((columnSchema.NativeType=="image"&&columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow)||(columnSchema.DataType==DbType.Binary&&columnSchema.Name!=strVersionRow))
+				{
+					strFuncionesAccionesImagen+=" else if(sAccionMantenimiento.equals(\"cargarImagen"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"\";";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\tif(httpSession.getAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\")!=null)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=(String)httpSession.getAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\");";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\tif(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual.equals(\"0\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tthrow new Exception(\"Seleccione nuevamente un "+GetNombreClaseObjeto(TablaBase.ToString())+"\");";						  										 
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";http://www.forosdelweb.com/clear.gif
+					strFuncionesAccionesImagen+=" else";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tthrow new Exception(\"No existe algun "+GetNombreClaseObjeto(TablaBase.ToString())+" seleccionado\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\ttry";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tFileItemFactory factory = new DiskFileItemFactory();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tServletFileUpload upload = new ServletFileUpload(factory);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tList fileItems = upload.parseRequest(httpServletRequest);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tString nombreFicheroFoto=\"\";";
+						
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tIterator i = fileItems.iterator();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tFileItem actual = null;";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tbyte bytFoto[]=new byte[1];";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tLong lngTamanioFichero=0L;";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tString fileName = \"\";";					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\twhile (i.hasNext())";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tactual = (FileItem)i.next();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName = actual.getName();";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\tif(fileName != null)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\tFile fichero = new File(fileName);";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tif(!fichero.getName().contains(\"jpg\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t;";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+=" else";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\tlngTamanioFichero=actual.getSize();";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\t\tif(lngTamanioFichero>100000)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t\tthrow new Exception(\"El archivo no debe superar los 100 kb\");";						             	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t\t}";
+								
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tbytFoto =actual.get();";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t\t\tbreak;";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+						
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+GetPrefijoTablaC()+GetPrefijoTipoC(columnSchema)+GetNombreColumnaClaseC(columnSchema)+"(bytFoto);";
+					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\tif(fileName.contains(\"\\\\\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName=fileName.replace(\"\\\\\",\"@\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t\tfileName=fileName.split(\"@\")[fileName.split(\"@\").length-1];";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t}";
+					
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_sNombre"+GetNombreColumnaClaseC(columnSchema)+"(fileName);";					
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.save"+GetNombreClase(TablaBase.ToString())+"WithConnection();";//iIdUsuarioSesion,httpServletRequest.getRemoteUser(),httpServletRequest.getRemoteHost(),httpServletRequest.getRemoteAddr()
+						
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\thttpServletRequest.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\thttpSession.removeAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\thttpSession.removeAttribute(\"accionMantenimiento\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+=" catch(Exception e)";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tString strMensaje=e.getMessage();";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t\tthrow new Exception(\"FOTO:\"+e.getMessage());";						             	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t}";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t/*mensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes.SPREFIJOARCHIVOJSP+\""+GetNombreClase(TablaBase.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP,MensajeGrupo.NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsXml =  FuncionesJsp.getJsonMensaje(mensaje);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);*/";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\thttpServletResponse.sendRedirect(Constantes.SCARPETAPAGINAS+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes.SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP);";
+					strFuncionesAccionesImagen+="\r\n\r\n\t\t\t\t//requestDispatcher=httpServletRequest.getRequestDispatcher(Constantes.SCARPETAPAGINAS+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes.SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+"\"+Constantes.SEXTENSIONARCHIVOJSP);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t//requestDispatcher.forward(httpServletRequest, httpServletResponse);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+					strFuncionesAccionesImagen+=" else if(sAccionMantenimiento.equals(\""+GetNombreClaseObjeto(TablaBase.ToString())+"ActualCargarImagen"+GetNombreColumnaClaseC(columnSchema)+"\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"0\";";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=httpServletRequest.getParameter(\"hdnIdActual\");";	
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(ConstantesServlet.SULTIMABUSQUEDA+\""+GetNombreClase(TablaBase.ToString())+"\", \"accionBusqueda=Por"+strIdGetSet+"&"+strId+GetNombreClase(TablaBase.ToString())+"=\"+str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(ConstantesServlet.SULTIMABUSQUEDA+\""+GetNombreClase(TablaBase.ToString())+"Anterior\", httpServletRequest.getParameter(\"ultimaBusquedaAnterior\"));";
+				
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"Actual\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\"Descripcion"+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", "+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"()"+GetDescripcionComboColumnFromProperties(TablaBase)+");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\"accionMantenimiento\", \"cargarImagen"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"\");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tmensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes.SCARPETAPAGINAS+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+"Constantes.SPREFIJOARCHIVOJSP"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"Imagen\"+Constantes.SEXTENSIONARCHIVOJSP,MensajeGrupo.NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsXml =  FuncionesJsp.getJsonMensaje(mensaje);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+					strFuncionesAccionesImagen+=" else if(sAccionMantenimiento.equals(\""+GetNombreClaseObjeto(TablaBase.ToString())+"ActualMostrarImagen"+GetNombreColumnaClaseC(columnSchema)+"\"))";
+					strFuncionesAccionesImagen+=" {";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tString str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=\"0\";";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tstr"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual=httpServletRequest.getParameter(\"hdnIdActual\").trim();";					  
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\""+strId+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual);";
+					
+					strFuncionesAccionesImagen+="\r\n\t\t\t\t"+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.getEntityWithConnection(Long.parseLong(str"+strIdGetSet+GetNombreClase(TablaBase.ToString())+"Actual));";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpSession.setAttribute(\"Descripcion"+GetNombreClase(TablaBase.ToString())+"ActualMostrarImagen\", "+GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"()"+GetDescripcionComboColumnFromProperties(TablaBase)+");";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tmensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,\"Registro de sesion de imagen\",Constantes.SCARPETAPAGINAS+\"/"+GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+"ImagenMostrar\"+Constantes.SEXTENSIONARCHIVOJSP,MensajeGrupo.NONE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\tsXml =  FuncionesJsp.getJsonMensaje(mensaje);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+					strFuncionesAccionesImagen+="\r\n\t\t\t}";
+				}
+			}
+			
+	return strFuncionesAccionesImagen;
+}
+
+
+
+
+
+		
+public String GetXmlBusquedasIndicesTablasCompuestos() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			
+			String strIfFuncion=string.Empty;
+			strIfFuncion=" else if(sAccionBusqueda==\"{0}\") {";
+			
+			String strFuncionBusqueda="";
+			
+			String strDefinicionVariables="";
+			String strUsoVariables="";
+			
+			String strXmlFuncion=string.Empty;
+			
+			String strParametroPadre="\r\n\t\t\t\tLong big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+ "=Long.parseLong(httpServletRequest.getParameter(\""+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+"\"));";
+
+			String strFuncionTodos=string.Empty;
+			
+			if(TablasBaseCompuestoDetalle!=null&&TablasBaseCompuestoJunction!=null&&TablasBaseCompuestoDetalle.Count==TablasBaseCompuestoJunction.Count&&TablasBaseCompuestoJunction.Count>0)
+			{
+				
+				for(int i=0;i<TablasBaseCompuestoJunction.Count;i++)
+				{
+					
+					strFuncionTodos=" else if(sAccionBusqueda.equals(\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+"Todos\"))";
+					strFuncionTodos+=" {\r\n\t\t\t\t"+strParametroPadre+"\r\n\t\t\t\t";					
+					strFuncionTodos+=GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"sTodos("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"sFinalQueryPaginacion,big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+");";
+					strFuncionTodos+="\r\n\t\t\t\tsXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s();";
+						
+					strFuncionTodos+="\r\n\r\n\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0)";
+					strFuncionTodos+=" {";
+					strFuncionTodos+="\r\n\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+".class.getSimpleName());";
+					strFuncionTodos+="\r\n\t\t\t\t}";
+					
+					strFuncionTodos+="\r\n\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strFuncionTodos+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+					strFuncionTodos+="\r\n\t\t\t}";
+					
+					
+					
+					strXmlFuncion="\r\n\t\t\t\tsXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s();";
+					
+					strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s().size()==0)";
+					strXmlFuncion+=" {\r\n\t\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+".class.getSimpleName());\r\n\t\t\t\t\t}";
+					
+					strXmlFuncion+="\r\n\r\n\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strXmlFuncion+="\r\n\t\t\thttpServletResponse.getWriter().write(sXml);";
+					
+					String strXmlFuncionObjeto=string.Empty;
+					
+					strXmlFuncionObjeto="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"()!=null&&"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"().get"+strIdGetSet+"()!=0) {";
+					strXmlFuncionObjeto+="\r\n\t\t\t\t\t\tsXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.getXml"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"();\r\n\t\t\t\t\t}\r\n\t\t\t\t\telse\r\n\t\t\t\t\t{";
+					strXmlFuncionObjeto+="\r\n\t\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda(\""+ GetNombreClase(TablaBase.ToString())+ "\");\r\n\t\t\t\t\t}";
+					
+					
+					//strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"()==null&&sXmlMensajeMantenimiento==\"\")";
+					//strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+".class.getSimpleName());\r\n\t\t\t\t\t}";
+				
+					strXmlFuncionObjeto+="\r\n\r\n\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+					strXmlFuncionObjeto+="\r\n\t\t\thttpServletResponse.getWriter().write(sXml);";
+						
+								
+					foreach(IndexSchema indexSchema in TablasBaseCompuestoDetalle[i].Indexes)
+					{
+						if(!indexSchema.IsPrimaryKey)
+						{
+							
+							if(indexSchema.IsUnique)
+							{
+								continue;
+								/*
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+indexSchema.Name+"(";
+								strIfFuncion="\r\n\t\t\telse if(sAccionBusqueda.equals(\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+indexSchema.Name+"\"))\r\n\t\t\t{";
+								*/
+							}
+							else
+							{
+								if(indexSchema.Name.Contains("Busqueda")|indexSchema.Name.Contains("FK"))
+								{
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s"+indexSchema.Name+"("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"sFinalQueryPaginacion,big"+strIdGetSet+GetNombreClaseC(TablaBase.ToString())+",";
+								strIfFuncion=" else if(sAccionBusqueda.equals(\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+indexSchema.Name+"\")) {";
+								
+								}
+								else
+								{
+								strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+GetNombreClase(TablasBaseCompuestoDetalle[i].ToString())+strClaseAuxiliar+"s"+indexSchema.Name+"(";
+								strIfFuncion=" else if(sAccionBusqueda.equals(\""+strClaseAuxiliar+GetNombreClase(TablasBaseCompuestoJunction[i].ToString())+indexSchema.Name+"\")) {";	
+								}
+							}
+							
+							
+							strIfFuncion+=strParametroPadre;
+							
+							int count=1;
+							strDefinicionVariables="";
+							strUsoVariables="";							
+							//strFuncionBusqueda="";
+									foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+									{
+																						
+									if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+										{								
+											strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+											strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+											
+											if(!indexSchema.MemberColumns.Count.Equals(count))
+											{
+												strUsoVariables+=",";	
+											}
+										}
+										else
+										{
+											if(!indexSchema.Name.Contains("BusquedaRango"))
+											{
+												strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+												strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 									
+											}
+											else
+											{
+												strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+")")+";";
+												strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 									
+												
+												strUsoVariables+=",";	
+												
+												strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+")")+";";
+												strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 									
+											}								
+										}
+										count++;
+									}
+									strFuncionBusqueda+=strUsoVariables+");";
+									
+							if(indexSchema.IsUnique)
+							{
+									strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strXmlFuncionObjeto+"\r\n\r\n\t\t\t}";																																		
+							}
+							else
+							{
+									strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strXmlFuncion+"\r\n\r\n\t\t\t}";																																		
+							}
+						}
+					}
+					
+					strInitFuncion=strFuncionTodos+strInitFuncion;
+				}
+			}
+			
+			return  strInitFuncion;
+		}
+
+public String GetMaintenanceTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " TR_"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+strTypeCollection+"<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> TR_"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetMaintenanceTablasClasesRelacionadasRelaciones(bool esParaEjb) 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="";
+			
+			if(!esParaEjb) {
+				strFuncionInit="save"+GetNombreClase(TablaBase.ToString())+"Relaciones("+GetNombreClaseObjetoC(TablaBase.ToString());
+			} else {
+				strFuncionInit="save"+GetNombreClase(TablaBase.ToString())+"Relaciones("+GetNombreClaseObjetoC(TablaBase.ToString())+",datosCliente";
+			}
+			
+			String strFuncionEnd=");";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			ArrayList arrayListRelaciones=new ArrayList();
+			String strNombreAdicional="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				
+				//CON DESORDEN NO FUNCIONA
+				/*
+				if(ExisteTablasClasesYaRelacionadas(arrayListRelaciones,collectionInfo.SecondaryTable)) {
+					//continue;
+					strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				} else {
+					strNombreAdicional="";
+					arrayListRelaciones.Add(collectionInfo.SecondaryTable);
+				}
+				*/
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable);
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+ "s";
+				}
+			}
+			
+			strTablaClaseRelacionada=strFuncionInit+strTablaClaseRelacionada+strFuncionEnd;
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetXmlBusquedasIndicesTablas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			
+			String strIfFuncion=string.Empty;
+			strIfFuncion=" else if(sAccionBusqueda==\"{0}\") {";
+			
+			String strFuncionBusqueda="";
+			String strFuncionBusqueda2="";
+			
+			String strFuncionBusquedaEjbInit0="\r\n\t\t\t\t//ARCHITECTURE";
+				   strFuncionBusquedaEjbInit0+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			String strFuncionBusquedaEjbInit="\r\n\t\t\t\t} else if(Constantes.ISUSAEJBREMOTE) {";
+			String strFuncionBusquedaEjbMiddle="\r\n\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {";
+			String strFuncionBusquedaEjbEnd="\r\n\t\t\t\t}";
+				   strFuncionBusquedaEjbEnd+="\r\n\t\t\t\t//ARCHITECTURE";
+			String strFuncionBusquedaEjbRemote="";
+			String strFuncionBusquedaEjbHome="";
+			String strFuncionBusquedaEjb="";
+			
+			String strDefinicionVariables="";
+			String strUsoVariables="";
+			
+			String strXmlFuncion=string.Empty;
+			
+			
+			String strFuncionLogic="";
+				strFuncionLogic+="";
+			String strComentarioParaEjb="";
+			String strComentarioBloqueInicioParaEjb="";
+			String strComentarioBloqueFinParaEjb="";
+			
+			if(ConEjb){
+				strComentarioParaEjb="//";
+				strComentarioBloqueInicioParaEjb="/*";
+				strComentarioBloqueFinParaEjb="*/";
+			}
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t//ARCHITECTURE";
+			strXmlFuncion+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t"+strComentarioParaEjb+"sXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"s("+strServletResponseParameter+");";
+			strXmlFuncion+="\r\n\t\t\t\t}";	
+			strXmlFuncion+=" else if(Constantes.ISUSAEJBREMOTE) {";
+			strXmlFuncion+="\r\n\t\t\t\t\tsXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"s("+strServletResponseParameter+","+GetNombreClaseObjetoC(TablaBase.ToString())+"s,datosCliente);";
+			strXmlFuncion+="\r\n\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {";
+			strXmlFuncion+="\r\n\t\t\t\t\tsXml = "+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"s("+strServletResponseParameter+","+GetNombreClaseObjetoC(TablaBase.ToString())+"s,datosCliente);";
+			strXmlFuncion+="\r\n\t\t\t\t}";
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\tBoolean isNoExiste=false;";
+			
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			strXmlFuncion+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t"+strComentarioParaEjb+"isNoExiste="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0;";
+			strXmlFuncion+="\r\n\t\t\t\t}";	
+			strXmlFuncion+=" else if(Constantes.ISUSAEJBREMOTE||Constantes.ISUSAEJBHOME) {";
+			strXmlFuncion+="\r\n\t\t\t\t\tisNoExiste="+GetNombreClaseObjetoC(TablaBase.ToString())+"s==null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+"s.size()==0;";
+			strXmlFuncion+="\r\n\t\t\t\t}";
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			/*NOEXISTE
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\t"+strComentarioParaEjb+"if("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0)";		
+			if(ConEjb){
+				strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"s==null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+"s.size()==0) {";
+			} else {//LO MISMO PERO COMENTADO
+				strXmlFuncion+="\r\n\r\n\t\t\t\t\t"+strComentarioParaEjb+"if("+GetNombreClaseObjetoC(TablaBase.ToString())+"s==null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+"s.size()==0) {";
+			}
+			*/
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\tif(isNoExiste) {";
+			strXmlFuncion+=" \r\n\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda("+GetNombreClaseC(TablaBase.ToString())+".class.getSimpleName());\r\n\t\t\t\t}";
+			
+			strXmlFuncion+="\r\n\r\n\t\tif(sgenerarReporte!=\"\"&&sgenerarReporte!=null) {";
+			
+			
+			strXmlFuncion+="\r\n\t\t\tif(isMostrarTodosResultadosReporte) {";
+			strXmlFuncion+="\r\n\r\n\t\t\t\t//ARCHITECTURE";
+			strXmlFuncion+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t"+strComentarioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s();";						
+			strXmlFuncion+="\r\n\t\t\t\t}";	
+			strXmlFuncion+=" else if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"sAux="+GetNombreClaseObjetoC(TablaBase.ToString())+"s;";
+			strXmlFuncion+="\r\n\t\t\t\t}";
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			
+			strXmlFuncion+="\r\n\t\t\t\t\t\t\t\txyzFuncionBusqueda";
+			strXmlFuncion+="\r\n\t\t\t\t\t}";			
+			
+			String strResultados1="";
+			String strResultados2="";
+			
+			//if(!ConEjb){
+				strResultados1=GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()";
+			//} else {
+				strResultados2=GetNombreClaseObjetoC(TablaBase.ToString())+"s";
+			//}
+			
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			strXmlFuncion+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t"+strComentarioParaEjb+"generarReporte"+GetNombreClase(TablaBase.ToString())+"s(httpServletRequest,httpServletResponse,\"xyzTipoBusqueda\","+strResultados1+",isReporteRelaciones,sDetalleReporte, "+strComentarioBloqueInicioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic,"+strComentarioBloqueFinParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable,"+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome,jasperPrint,sgenerarReporte);";
+			strXmlFuncion+="\r\n\t\t\t\t}";
+			strXmlFuncion+=" else if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {";
+			strXmlFuncion+="\r\n\t\t\t\t\tgenerarReporte"+GetNombreClase(TablaBase.ToString())+"s(httpServletRequest,httpServletResponse,\"xyzTipoBusqueda\","+strResultados2+",isReporteRelaciones,sDetalleReporte, "+strComentarioBloqueInicioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic,"+strComentarioBloqueFinParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable,"+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome,jasperPrint,sgenerarReporte);";
+			strXmlFuncion+="\r\n\t\t\t\t}";
+			strXmlFuncion+="\r\n\t\t\t\t//ARCHITECTURE";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\tif(isMostrarTodosResultadosReporte) {";
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\t\t//ARCHITECTURE";
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t\t"+strComentarioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.set"+GetNombreClaseC(TablaBase.ToString())+"s("+GetNombreClaseObjetoC(TablaBase.ToString())+"s);";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t}";	
+			strXmlFuncion+=" else if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"sAux;";
+			strXmlFuncion+="\r\n\t\t\t\t\t\t}";
+			strXmlFuncion+="\r\n\t\t\t\t\t//ARCHITECTURE";
+					
+			strXmlFuncion+="\r\n\t\t\t\t\t}\r\n\t\t}";	
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+			strXmlFuncion+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+			
+			String strXmlFuncionObjeto=string.Empty;
+			
+			
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\t\tBoolean isExiste=false;";
+			
+			strXmlFuncionObjeto+="\r\n\t\t\t\t//ARCHITECTURE";
+			strXmlFuncionObjeto+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t"+strComentarioParaEjb+"isExiste="+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"()!=null&&"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"().get"+strIdGetSet+"()!=0;";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t}";	
+			strXmlFuncionObjeto+=" else if(Constantes.ISUSAEJBREMOTE||Constantes.ISUSAEJBHOME) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\tisExiste="+GetNombreClaseObjetoC(TablaBase.ToString())+"!=null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+".get"+strIdGetSet+"()!=0;";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t}";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t//ARCHITECTURE";
+			/*
+			strXmlFuncionObjeto="\r\n\r\n\t\t\t\t\t"+strComentarioParaEjb+"if("+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"()!=null&&"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"().get"+strIdGetSet+"()!=0) {";
+			if(ConEjb){
+				strXmlFuncionObjeto+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"!=null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+".get"+strIdGetSet+"()!=0) {";
+			} else {//LO MISMO PERO COMENTADO
+				strXmlFuncionObjeto+="\r\n\r\n\t\t\t\t\t"+strComentarioParaEjb+"if("+GetNombreClaseObjetoC(TablaBase.ToString())+"!=null|| "+GetNombreClaseObjetoC(TablaBase.ToString())+".get"+strIdGetSet+"()!=0) {";
+			}
+			*/
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\t\t"+"if(isExiste) {";
+			
+			strXmlFuncionObjeto+="\r\n\r\n\r\n\t\t\t\t\t//ARCHITECTURE";			
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\t"+strComentarioParaEjb+"sXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"("+strServletResponseParameter+");\r\n\t\t\t\t\t";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t}";
+			strXmlFuncionObjeto+=" else if(Constantes.ISUSAEJBREMOTE) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\tsXml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"("+strServletResponseParameter+","+GetNombreClaseObjetoC(TablaBase.ToString())+",datosCliente);";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\tsXml = "+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome.get"+strServletResponse+GetNombreClaseC(TablaBase.ToString())+"("+strServletResponseParameter+","+GetNombreClaseObjetoC(TablaBase.ToString())+",datosCliente);";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t}";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t//ARCHITECTURE";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t}";
+			
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\t\tif(!isExiste) {";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda(\""+ GetNombreClase(TablaBase.ToString())+ "\");\r\n\t\t\t\t}";
+			
+						
+			//strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"()==null&&sXmlMensajeMantenimiento==\"\")";
+			//strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\tsXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName());\r\n\t\t\t\t\t}";
+		
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\t\thttpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);";
+			strXmlFuncionObjeto+="\r\n\t\t\t\thttpServletResponse.getWriter().write(sXml);";
+			
+			if(!ConEjb){
+				//strXmlFuncionObjeto+="\r\n\t\t\t}";
+			}
+			
+						
+			foreach(IndexSchema indexSchema in TablaBase.Indexes)
+			{
+				if(!indexSchema.IsPrimaryKey)
+				{
+					
+					strFuncionBusqueda2="\r\n\t\t\t\t\t"+strComentarioParaEjb+GetNombreClase(TablaBase.ToString())+"ConstantesFunciones.getDetalleIndice"+indexSchema.Name+"(";
+					
+					if(indexSchema.IsUnique)
+					{
+						/*
+						if(GetNoStandardTableFromPropertiesC(TablaBase)) {
+							continue;
+						}
+						*/
+						
+						strFuncionBusqueda="\r\n\t\t\t\t\t"+strComentarioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"WithConnection(";
+						strFuncionBusquedaEjbRemote="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"="+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable.get"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"WithConnection(datosCliente,";
+						strFuncionBusquedaEjbHome="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"="+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome.get"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"WithConnection(datosCliente,";
+						
+						/*
+						strFuncionBusqueda+="\r\n\r\n\r\n\t\t\t\t"+ strFuncionBusquedaEjbInit;
+						strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbMiddle;
+						strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbEnd;
+						*/	
+						strIfFuncion=" else if(sAccionBusqueda.equals(\""+indexSchema.Name+"\")) {";
+					}
+					else
+					{
+						if(indexSchema.Name.Contains("Busqueda")||indexSchema.Name.Contains("FK"))
+						{
+							strFuncionBusqueda="\r\n\t\t\t\t\t"+strComentarioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"sFinalQueryPaginacion,pagination,";
+							strFuncionBusquedaEjbRemote="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"sFinalQueryPaginacion,pagination,datosCliente,";
+							strFuncionBusquedaEjbHome="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"sFinalQueryPaginacion,pagination,datosCliente,";
+							
+							/*
+							strFuncionBusqueda+="\r\n\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbInit;
+							strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbMiddle;
+							strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbEnd;
+							*/
+							
+							strIfFuncion=" else if(sAccionBusqueda.equals(\""+indexSchema.Name+"\")) {";
+							
+						}
+						else
+						{
+							strFuncionBusqueda="\r\n\t\t\t\t\t"+strComentarioParaEjb+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection(";
+							strFuncionBusquedaEjbRemote="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"Implementable.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection(";
+							strFuncionBusquedaEjbHome="\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"s="+GetNombreClaseObjetoC(TablaBase.ToString())+"ImplementableHome.get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"WithConnection(";
+							
+							/*
+							strFuncionBusqueda+="\r\n\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbInit;
+							strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbMiddle;
+							strFuncionBusqueda+="\r\n\r\n\t\t\t\t"+strFuncionBusquedaEjbEnd;
+							*/
+							
+							strIfFuncion=" else if(sAccionBusqueda.equals(\""+indexSchema.Name+"\")) {";	
+						}
+					}
+					
+					int count=1;
+					strDefinicionVariables="";
+					strUsoVariables="";							
+					//strFuncionBusqueda="";
+							foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+							{
+								
+								if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+								{								
+									strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"=null;";
+									
+									strDefinicionVariables+="\r\n\r\n\t\t\t\tif(httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")!=null)";
+									strDefinicionVariables+=" {";
+									strDefinicionVariables+="\r\n\t\t\t\t\t"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+										
+									strDefinicionVariables+="\r\n\t\t\t\t}";
+										
+									
+									if(indexSchema.Name.Contains(strFK+"_"))
+									{
+										strDefinicionVariables+="\r\n\r\n\t\t\t\tif(httpSession.getAttribute(\""+memberColumnSchema.Column.Name+"Actual\")!=null)";
+										strDefinicionVariables+=" {";
+										strDefinicionVariables+="\r\n\t\t\t\t\t"+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"=("+GetTipoColumnaClaseC(memberColumnSchema.Column)+")httpSession.getAttribute(\""+memberColumnSchema.Column.Name+"Actual\");";
+										strDefinicionVariables+="\r\n\t\t\t\t\thttpSession.removeAttribute(\""+memberColumnSchema.Column.Name+"Actual\");";
+										
+										strDefinicionVariables+="\r\n\t\t\t\t}";
+									}
+									
+									strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+									
+									if(!indexSchema.MemberColumns.Count.Equals(count))
+									{
+										strUsoVariables+=",";	
+									}
+								}
+								else
+								{
+									if(!indexSchema.Name.Contains("BusquedaRango"))
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 									
+									}
+									else
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 									
+										
+										strUsoVariables+=",";	
+										
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final="+GetTipoColumnaParse(memberColumnSchema.Column,"httpServletRequest.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 									
+									}
+									
+								
+								}
+								count++;
+							}
+							
+							strFuncionBusqueda2+=strUsoVariables+");\r\n";
+							strFuncionBusqueda+=strUsoVariables+");";
+					
+					//Ejbs
+					strFuncionBusquedaEjbRemote+=strUsoVariables+");";
+					strFuncionBusquedaEjbHome+=strUsoVariables+");";
+					
+					String strAuxDescomentar="";
+					
+					if(strComentarioParaEjb!="") {
+						strAuxDescomentar=strFuncionBusqueda2.Replace(strComentarioParaEjb,"");
+					} else {
+						strAuxDescomentar=strFuncionBusqueda2;
+					}						 
+					
+					strFuncionBusquedaEjb="\r\n\t\t\t\t"+strFuncionBusquedaEjbInit0+strFuncionBusqueda+ strFuncionBusquedaEjbInit+strFuncionBusquedaEjbRemote+strAuxDescomentar+"\r\n\t\t\t\t"+strFuncionBusquedaEjbMiddle+strFuncionBusquedaEjbHome+strAuxDescomentar+/*"\r\n\t\t\t\t"+*/strFuncionBusquedaEjbEnd;
+					
+						
+					String strFuncionBusquedaConEjb="";
+						   strFuncionBusquedaConEjb=strFuncionBusquedaEjb;
+					
+					if(indexSchema.IsUnique)
+					{
+						strInitFuncion+=strIfFuncion+strDefinicionVariables+/*strFuncionBusqueda+*/strFuncionBusqueda2+strFuncionBusquedaEjb+strXmlFuncionObjeto+"\r\n\r\n\t\t\t}";																																		
+					}
+					else
+					{							
+						strInitFuncion+=strIfFuncion+strDefinicionVariables+/*strFuncionBusqueda+*/strFuncionBusqueda2+strFuncionBusquedaEjb;
+						strInitFuncion+=strXmlFuncion.Replace("xyzTipoBusqueda",indexSchema.Name).Replace("xyzFuncionBusqueda",/*strFuncionBusqueda**/strFuncionBusquedaConEjb.Replace("sFinalQueryPaginacion","\"\"").Replace("\r\n\r\n","\r\n\t\t"));
+						strInitFuncion+="\r\n\r\n\t\t\t}";																																		
+					}
+				}
+			}								
+			return  strInitFuncion;
+		}
+		
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClass(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(/*column.Name.Equals(strId)||*/column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormularioNuevo(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);
+	
+	String strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\")== null|| httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)||column.Name.Equals(strId)||column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+ strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\")== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+
+public string GetSetVariablesFormularioContador(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif(httpServletRequest.getParameter(\""+column.Name +GetNombreClaseC(TablaBase.ToString())+"\"+i)== null||httpServletRequest.getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) + "\"+i)==\"\"){";
+	strIfElse+=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	String strReplace="";
+	
+	if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+	{
+		strReplace=".replace(\"/\", \"-\")";
+	}
+	
+	return strIfElse+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"="+GetTipoColumnaParse(column,"httpServletRequest.getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) +"\"+i)"+strReplace)+";}";;
+}
+
+public string GetSetVariablesFormularioContadorParaBorrar(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\")== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString()+\"ParaBorrar\")==\"\"){";
+	strIfElse+=strPrefijo+strColumna+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(!column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\"")+");}";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="httpServletRequest.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+"Logic.get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strTipo+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+";";
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetSetVariablesToObjetoLogicNuevo(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	return  GetNombreClaseObjeto(TablaBase.ToString())+".setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+		return  GetNombreClaseObjeto(TablaBase.ToString())+".set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	if(column.Name.Equals(strVersionRow))
+	{
+		//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+		return  GetNombreClaseObjeto(TablaBase.ToString())+".set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	//return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	return  GetNombreClaseObjeto(TablaBase.ToString())+".setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public String GetVariablesTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			String strEjbComentario="";
+			
+			if(ConEjb){
+				strEjbComentario="//";
+			}
+			ArrayList arrayListRelaciones=new ArrayList();
+			String strNombreAdicional="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				
+				//CON DESORDEN NO FUNCIONA
+				/*
+				if(ExisteTablasClasesYaRelacionadas(arrayListRelaciones,collectionInfo.SecondaryTable)) {
+					//continue;
+					strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				} else {
+					strNombreAdicional="";
+					arrayListRelaciones.Add(collectionInfo.SecondaryTable);
+				}
+				*/
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					if(TablaBase.Name!=collectionInfo.SecondaryTable)
+					{
+					strTablaClaseRelacionada+="\r\n\r\n\t\t "+strEjbComentario+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"Logic "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=null;";
+					//strTablaClaseRelacionada+="\r\n\t"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+";");
+					strTablaClaseRelacionada+="\r\n\t\t "+strTypeCollection+"<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+strNombreAdicional+"s=new "+strTypeNewCollection+"<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">"+strTypeNewCollectionEnd+";";
+					}
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetEjbTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			String strEjbComentario="";
+				strEjbComentario+="";
+			if(ConEjb){
+				strEjbComentario="//";
+			}
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					if(TablaBase.Name!=collectionInfo.SecondaryTable)
+					{
+						strTablaClaseRelacionada+="\r\nimport "+Empresa+"."+Package+"."+Module+strPackageService+"."+strEjb+"."+strEjbInterface+"."+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"Implementable;";
+						strTablaClaseRelacionada+="\r\nimport "+Empresa+"."+Package+"."+Module+strPackageService+"."+strEjb+"."+strEjbInterface+"."+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"ImplementableHome;";
+
+						/*
+						strTablaClaseRelacionada+="\r\n\r\n\t\t "+strEjbComentario+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"Logic "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=null;";
+						//strTablaClaseRelacionada+="\r\n\t"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+";");
+						strTablaClaseRelacionada+="\r\n\t\t "+strTypeCollection+"<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s=new "+strTypeNewCollection+"<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">"+strTypeNewCollectionEnd+";";
+						*/
+					}
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetVariablesNewTablasClasesRelacionadas() 
+		{
+			return  "";
+			/*
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"Logic();";
+					//strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+"")+"=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"();";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s=new "+strTypeNewCollection+"<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">"+strTypeNewCollectionEnd+";";
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+			*/
+		}
+
+public String GetprocesarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="";
+			String strFuncionEnd="(httpServletRequest,httpServletResponse);\r\n\t\t\t\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			TableSchema tablaRelacionada;
+			
+			String strSufijo="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+					strSufijo="";
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+					 strSufijo="s";
+				}
+				else
+				{
+					continue;
+				}
+				
+					strFuncionInit="\r\n\r\n\t\t\t\tif(httpServletRequest.getParameter(\"numeroDe"+GetNombreClaseC(tablaRelacionada.ToString())+"\")!=null) {\r\n\t\t\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+strSufijo+"=procesar";
+					strTablaClaseRelacionada+=strFuncionInit+GetNombreClaseC(tablaRelacionada.ToString())+"Relaciones"+strFuncionEnd;				
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetFuncionesMaintenanceTablasClasesRelacionadas() 
+		{
+			String strLastCode="";
+			String strFuncionBody="";
+			String strFuncionBody2="";
+			TableSchema tablaRelacionada;
+			
+			String strVariables="";
+			String strVariablesDocumento="";
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="\r\n\r\n\tpublic void procesar"+GetNombreClase(TablaBase.ToString())+"Relaciones(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {";
+			String strFuncionEnd="\r\n\t\t}\r\n\t} catch(Exception e) {\r\n\t\tthrow e;\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			String strEjbComentario="";
+			
+			if(ConEjb){
+				strEjbComentario="//";
+			}
+			
+			ArrayList arrayListRelaciones=new ArrayList();
+			String strNombreAdicional="";
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				
+				//CON DESORDEN NO FUNCIONA
+				/*
+				if(ExisteTablasClasesYaRelacionadas(arrayListRelaciones,collectionInfo.SecondaryTable)) {
+					//continue;
+					strNombreAdicional=GetNombreAdicionalClaseRelacionadaFromRelation(collectionInfo);
+				} else {
+					strNombreAdicional="";
+					arrayListRelaciones.Add(collectionInfo.SecondaryTable);
+				}
+				*/
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strFuncionInit="\r\n\r\npublic "+strTypeCollection+"<"+GetNombreClase(tablaRelacionada.ToString())+"> procesar"+GetNombreClase(tablaRelacionada.ToString())+strNombreAdicional+"Relaciones(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)throws Exception {";
+					strFuncionInit+="\r\n\t"+strTypeCollection+"<"+GetNombreClase(tablaRelacionada.ToString())+"> "+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s= new "+strTypeNewCollection+"<"+GetNombreClase(tablaRelacionada.ToString())+">"+strTypeNewCollectionEnd+";";					
+					strFuncionInit+="\r\n\t"+GetNombreClase(tablaRelacionada.ToString())+" "+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"= new "+GetNombreClase(tablaRelacionada.ToString())+"();";										
+					strFuncionInit+="\r\n\ttry {";
+						
+					strFuncionBody="\r\n\r\n\t\tInteger iNumeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"=0;";
+					strFuncionBody+="\r\n\t\tBoolean isNew"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\tBoolean isChanged"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\tBoolean isDeleted"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					
+					//strFuncionBody+="\r\n\t\t"+ GetNombreClase(tablaRelacionada.ToString())+" "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"=null;";
+					strFuncionBody+="\r\n\t\t"+strEjbComentario+GetNombreClase(tablaRelacionada.ToString())+"Logic "+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Logic= new "+GetNombreClase(tablaRelacionada.ToString())+"Logic();";
+					
+					/*
+					strFuncionBody+="\r\n\r\n\t\tHashtable hashtableEnv =null;";
+					strFuncionBody+="\r\n\t\tInitialContext initialContext =null;";					
+			
+					strFuncionBody+="\r\n\t\tif(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {";		
+					strFuncionBody+="\r\n\t\t\thashtableEnv =  Funciones.getHashtableEnv();";		
+					strFuncionBody+="\r\n\t\t\tinitialContext = new InitialContext(hashtableEnv);";	
+					strFuncionBody+="\r\n\t\t}";
+					*/
+					
+					strFuncionBody+="\r\n\t\t"+GetNombreClase(tablaRelacionada.ToString())+"Implementable "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Implementable="+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.get"+GetNombreClase(tablaRelacionada.ToString())+"ImplementableEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);";
+					strFuncionBody+="\r\n\t\t"+GetNombreClase(tablaRelacionada.ToString())+"ImplementableHome "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"ImplementableHome="+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.get"+GetNombreClase(tablaRelacionada.ToString())+"ImplementableHomeEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(TablaBase.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);";
+					
+					
+					
+					/*
+					strFuncionBody+="\r\n\t\tif(Constantes.ISUSAEJBREMOTE) {";
+					strFuncionBody+="\r\n\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Implementable=("+GetNombreClase(tablaRelacionada.ToString())+"Implementable) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);";
+					strFuncionBody+="\r\n\t\t}";
+					strFuncionBody+="\r\n\t\telse if(Constantes.ISUSAEJBHOME) {";
+					strFuncionBody+="\r\n\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"ImplementableHome=("+GetNombreClase(tablaRelacionada.ToString())+"ImplementableHome) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);";
+					strFuncionBody+="\r\n\t\t}";
+					*/
+					
+					/*
+					strFuncionBody+="\r\n\r\n\t\tif(Constantes.ISUSAEJBREMOTE) {";
+					strFuncionBody+="\r\n\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Implementable= ("+GetNombreClase(tablaRelacionada.ToString())+"Implementable) initialContext.lookup(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);";
+					strFuncionBody+="\r\n\t\t} else if(Constantes.ISUSAEJBHOME) {";
+					strFuncionBody+="\r\n\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"ImplementableHome= ("+GetNombreClase(tablaRelacionada.ToString())+"ImplementableHome) initialContext.lookup(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+"+GetNombreClase(tablaRelacionada.ToString())+"ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);";
+					strFuncionBody+="\r\n\t\t}";
+					*/
+			
+					strFuncionBody+="\r\n\r\n\t\tif(httpServletRequest.getParameter(\"numeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"\")!=null) {\r\n\t\t";
+					strFuncionBody+="\tiNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"=Integer.parseInt(httpServletRequest.getParameter(\"numeroDe"+GetNombreClase(tablaRelacionada.ToString())+ "\"));\r\n\t\t}";
+					
+					strVariables=GetNombreVariables(tablaRelacionada);	
+					
+					
+					strFuncionBody2="\r\n\r\n\t\tfor (int i = 0; i < iNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"; i++) {";
+					strFuncionBody2+="\r\n\t\t\tisNew"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\tisChanged"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\tisDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+	
+					strFuncionBody2+="\r\n\r\n\t\t\tisNew"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(httpServletRequest.getParameter(\"isNew"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\tisChanged"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(httpServletRequest.getParameter(\"isChanged"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\tisDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(httpServletRequest.getParameter(\"isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					
+					strFuncionBody2+="\r\n\r\n\t\t\tif(isNew"+GetNombreClase(tablaRelacionada.ToString())+"==false&&isChanged"+GetNombreClase(tablaRelacionada.ToString())+"==false&&isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"==false) {\r\n\t\t\t\tcontinue;\r\n\t\t\t}";
+					//strFuncionBody2+="\r\n\r\n\t\t\t"+GetNombreClase(tablaRelacionada.ToString())+" "+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=null;";
+					
+					strVariablesDocumento=GetSetVariablesFormularioContador(tablaRelacionada,TablaBase.ToString());
+					
+					strLastCode="\r\n\r\n\r\n\t\t\tif(isNew"+GetNombreClase(tablaRelacionada.ToString())+") {\r\n\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"=new "+GetNombreClase(tablaRelacionada.ToString())+"();";
+					strLastCode+=GetSetVariablesToObjetoLogicNuevo(tablaRelacionada);
+					strLastCode+="\r\n\t\t\t} else {\r\n\t\t\t\t";
+					
+					strLastCode+="\r\n\r\n\t\t\t\t//ARCHITECTURE";
+					strLastCode+="\r\n\t\t\t\tif(Constantes.ISUSAEJBLOGICLAYER) {";
+					strLastCode+="\r\n\t\t\t\t\t"+strEjbComentario+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.getEntityWithConnection("+GetNombreIdVariable(tablaRelacionada)+");";
+					strLastCode+="\r\n\t\t\t\t\t"+strEjbComentario+GetNombreClaseObjeto(tablaRelacionada.ToString())+"="+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"();";
+					strLastCode+="\r\n\t\t\t\t}";
+					
+					strLastCode+=" else if(Constantes.ISUSAEJBREMOTE) {";
+					strLastCode+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"="+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Implementable.getEntity("+GetNombreIdVariable(tablaRelacionada)+");";
+					strLastCode+="\r\n\t\t\t\t} else if(Constantes.ISUSAEJBHOME) {";
+					strLastCode+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"="+GetNombreClaseObjeto(tablaRelacionada.ToString())+"ImplementableHome.getEntity("+GetNombreIdVariable(tablaRelacionada)+");";
+					strLastCode+="\r\n\t\t\t\t}";
+					strLastCode+="\r\n\t\t\t\t//ARCHITECTURE";
+					
+					strLastCode+="\r\n\r\n\t\t\t\tif(isChanged"+GetNombreClase(tablaRelacionada.ToString())+") {";
+					strLastCode+=GetSetVariablesToObjetoLogicActualizar(tablaRelacionada); 
+					strLastCode+="\r\n\t\t\t\t} else {\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+".setIsDeleted(true);\r\n\t\t\t\t}\r\n\t\t\t}";
+					strLastCode+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s.add("+GetNombreClaseObjetoC(tablaRelacionada.ToString())+");";
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						strLastCode+="\r\n\r\n\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"="+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"();";
+					}
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						strLastCode+="\r\n\r\n\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"s.add("+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"());";
+					}	
+					
+						
+					strTablaClaseRelacionada+=strFuncionInit+strFuncionBody+strVariables+strFuncionBody2+strVariablesDocumento+strLastCode+strFuncionEnd+"\r\n\r\n\treturn "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s;\r\n}";				
+				}
+				
+												
+					
+
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public string GetNombreIdVariable(TableSchema table)
+{
+	String strNombreIdVariable="NONE";	
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=" "+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(table.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetNombreIdVariable()
+{
+	String strNombreIdVariable="NONE";	
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=" "+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(TableSchema tableSchema)
+{
+	String strVariablesActualizar="\r\n";
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+		
+		if(column.Name.Equals(strId))
+		{
+			//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+".set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		if(column.Name.Equals(strVersionRow))
+		{
+			//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+".set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		
+		//strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+		strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+".setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+	return  strVariablesActualizar;
+}
+
+		public string GetSetVariablesToObjetoLogicNuevo(TableSchema tableSchema)
+{
+	String strVariablesNuevo="\r\n";
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+			continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif(httpServletRequest.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||httpServletRequest.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+
+		//strVariablesNuevo+="\r\n\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+		strVariablesNuevo+="\r\n\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+".setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return  strVariablesNuevo;
+}
+
+public String GetNombreVariables(TableSchema table)
+{
+	
+	String strVariables="\r\n";
+	String strTipo="";
+	String strPrefijo="";
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		strVariables+="\r\n\t\t"+strTipo+strPrefijo+strColumna+GetNombreClaseC(table.ToString())+";";
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	}
+	
+	return strVariables;
+}
+
+public string GetSetVariablesFormularioContador(TableSchema tableSchema,String table)
+{
+	String strVariables="";
+	
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";
+	String strIfElse="";
+	strIfElse="";
+	
+
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\n\r\n\t\t\tif(httpServletRequest.getParameter(\""+column.Name +GetNombreClaseC(tableSchema.ToString())+"\"+i)== null||httpServletRequest.getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) + "\"+i)==\"\"){";
+		strIfElse+=strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"=null;}\r\n\t\t\telse{";	
+		
+		strVariables+=strIfElse+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"="+GetTipoColumnaParse(column,"httpServletRequest.getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) +"\"+i)")+";}";
+	}	
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strVariables;
+}
+</script>
+<%=GetByDanLicence()%>
+package <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackagePresentation%>.<%=strPackageWeb%>.<%=strPackageServlet%><%=GetEsPaqueteReporteC(TablaBase)%>;
+
+import javax.naming.InitialContext;
+import javax.servlet.ServletConfig;
+import javax.servlet.RequestDispatcher;
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
+import javax.servlet.ServletContext;
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.Hashtable;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.File;
+import java.io.PrintWriter;
+//import javax.servlet.ServletOutputStream;
+
+//import org.apache.log4j.Logger;
+
+import org.hibernate.collection.PersistentBag;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JRRuntimeException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.util.JRLoader;
+import net.sf.jasperreports.engine.export.JRHtmlExporter;
+import net.sf.jasperreports.j2ee.servlets.BaseHttpServlet;
+import net.sf.jasperreports.engine.JRExporterParameter;
+import net.sf.jasperreports.engine.data.JRBeanArrayDataSource;
+
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.Classe;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.Mensajes;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.Pagination;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.DatosCliente;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageUtils%>.*;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%= strPackageUtils%>.*;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageEntities%>.*;
+<%if(ConEjb){%>//<%}%>import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageLogic%>.*;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageService%>.<%=strEjb%>.<%=strEjbInterface%>.<%=GetNombreClase(TablaBase.ToString())%>Implementable;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageService%>.<%=strEjb%>.<%=strEjbInterface%>.<%=GetNombreClase(TablaBase.ToString())%>ImplementableHome;
+<%=GetEjbTablasClasesRelacionadas()%> 
+//import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackagePresentation%>.<%=strPackageReporte%>.<%=strPackageSource%>.<%=GetNombreClase(TablaBase.ToString())%>SourceReporte;
+import <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackagePresentation%>.<%=strPackageReporte%>.<%=strPackageSource%>.<%=GetNombreClase(TablaBase.ToString())%><%=strClaseBean%>;
+
+<%if(ConEjb){%>//<%}%><%=strGlobalSeguridadComment%>import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.SistemaLogic;
+<%if(ConEjb){%>//<%}%><%=strGlobalSeguridadComment%>import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.SistemaLogicAdditional;
+<%if(ConEjb){%>//<%}%><%=strGlobalSeguridadComment%>import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.UsuarioLogic;
+<%if(ConEjb){%>//<%}%><%=strGlobalSeguridadComment%>import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusiness%>.<%=strPackageLogic%>.UsuarioLogicAdditional;
+import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageBusinessSeguridad%>.<%=strPackageEntitiesSeguridad%>.Usuario;
+import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageServiceSeguridad%>.<%=strEjbSeguridad%>.<%=strEjbInterfaceSeguridad%>.SistemaAdditionable;
+import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageServiceSeguridad%>.<%=strEjbSeguridad%>.<%=strEjbInterfaceSeguridad%>.SistemaAdditionableHome;
+import <%=strEmpresaSeguridad%>.<%=PackageSeguridad%>.<%=strPackageUtilsSeguridad%>.SistemaConstantesFunciones;
+
+<%if(ContieneImagenesC(TablaBase)){%>
+	<%=GetFuncionesImagenesC(TablaBase)%>
+	<%}%>
+	
+final public class <%=GetNombreClase(TablaBase.ToString())%>Servlet extends javax.servlet.http.HttpServlet {
+	private static final long serialVersionUID = 1L;
+	//static Logger logger = Logger.getLogger(<%=GetNombreClase(TablaBase.ToString())%>Servlet.class);
+	
+	<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>private static SistemaAdditionable sistemaAdditionable= SistemaConstantesFunciones.getSistemaAdditionableEjbReference(SistemaConstantesFunciones.SREMOTEEJBNAMEADDITIONAL);
+	<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>private static SistemaAdditionableHome sistemaAdditionableHome=SistemaConstantesFunciones.getSistemaAdditionableHomeEjbReference(SistemaConstantesFunciones.SLOCALEJBNAMEADDITIONAL);
+						
+	private static <%=GetNombreClase(TablaBase.ToString())%>Implementable <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable=<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.get<%=GetNombreClase(TablaBase.ToString())%>ImplementableEjbReference(<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.SREMOTEEJBNAME);
+	private static <%=GetNombreClase(TablaBase.ToString())%>ImplementableHome <%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome=<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.get<%=GetNombreClase(TablaBase.ToString())%>ImplementableHomeEjbReference(<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.SLOCALEJBNAME);
+	
+	protected void doGet(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+		requestProcess(httpServletRequest,httpServletResponse);	
+	}  		
+	
+	protected void doPost(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+		requestProcess(httpServletRequest,httpServletResponse);
+	}
+	
+	protected void requestProcess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException {
+		httpServletResponse.setHeader(ConstantesServlet.SCACHECONTROL,ConstantesServlet.SNOSTORE); //HTTP 1.1
+		httpServletResponse.setHeader(ConstantesServlet.SPRAGMA,ConstantesServlet.SNOCACHE); //HTTP 1.0
+		httpServletResponse.setDateHeader(ConstantesServlet.SEXPIRES, -1); 
+		
+		String sgenerarReporte="";
+		Boolean isMostrarTodosResultadosReporte=false;
+		String sDetalleReporte="";
+		Boolean isReporteRelaciones=false;
+		<%if(ConEjb){%>//<%}%><%=GetNombreClase(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic=null;
+		<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>=null;			
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		
+							
+		<%=GetVariablesTablasClasesRelacionadas()%> 
+		
+		DatosCliente datosCliente=new DatosCliente();
+		
+		JasperPrint jasperPrint = null;
+		RequestDispatcher requestDispatcher;
+
+		Mensaje mensaje=new Mensaje();
+		String sXml =Mensaje.getMensajeGeneraldefault();
+		HttpSession httpSession = httpServletRequest.getSession();
+		Long iIdUsuarioSesion=0L;	
+		Usuario usuarioActual=null;	
+		Integer iNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=0;
+		sDetalleReporte="";
+		isMostrarTodosResultadosReporte=false;
+		ServletContext servletContext = this.getServletConfig().getServletContext();
+		
+		try {
+				
+			<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic=new <%=GetNombreClase(TablaBase.ToString())%>Logic();
+						
+		
+		
+			if(httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL)!=null) {
+				usuarioActual=(Usuario)httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL);
+				iIdUsuarioSesion=usuarioActual.get<%=strIdGetSetSeguridad%>();
+			} else {
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>mensaje=new Mensaje(Constantes.SMENSAJEVERIFICARPERMISOSCODIGO,Constantes.SMENSAJEVERIFICARPERMISOSTITULO,Mensajes.SSESSIONCADUCADA,Constantes.SFALSE,MensajeGrupo.APLICACION);
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>httpServletResponse.getWriter().write(sXml);
+				
+				<%=GetExtra2ServletComment(TablaBase)%><%=strGlobalSeguridadComment%>return;
+			}
+			
+			<%=GetExtra1Servlet(TablaBase)%>
+										
+			String sAccionMantenimiento="";
+			String sAccionBusqueda="";
+			String sAccionAdicional="";
+			String sUltimaBusqueda="";
+			
+			Boolean isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			Boolean isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			Boolean isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+			<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>			
+			<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+			<%=  GetNombreVariables(TablaBase.Columns[i]) %>	
+			<% } %>
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.SACCIONMANTENIMIENTO)!=null) {
+				sAccionMantenimiento=httpServletRequest.getParameter(ConstantesServlet.SACCIONMANTENIMIENTO);
+			} else {
+				if(httpSession.getAttribute(ConstantesServlet.SACCIONMANTENIMIENTO)!=null) {
+					sAccionMantenimiento=(String)httpSession.getAttribute(ConstantesServlet.SACCIONMANTENIMIENTO);
+					httpSession.removeAttribute(ConstantesServlet.SACCIONMANTENIMIENTO);
+				}
+			}
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.SACCIONBUSQUEDA)!=null) {
+				sAccionBusqueda=httpServletRequest.getParameter(ConstantesServlet.SACCIONBUSQUEDA);
+			}
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.SACCIONADICIONAL)!=null||httpServletRequest.getAttribute(ConstantesServlet.SACCIONADICIONAL)!=null) {
+				
+				if(httpServletRequest.getParameter(ConstantesServlet.SACCIONADICIONAL)!=null) {
+					sAccionAdicional=httpServletRequest.getParameter(ConstantesServlet.SACCIONADICIONAL);
+				} else {
+					sAccionAdicional=httpServletRequest.getAttribute(ConstantesServlet.SACCIONADICIONAL).toString();
+					httpServletRequest.removeAttribute(ConstantesServlet.SACCIONADICIONAL);
+				}
+				
+				<%=GetNombreClase(TablaBase.ToString())%>ServletAdditional <%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional=new <%=GetNombreClase(TablaBase.ToString())%>ServletAdditional(httpServletRequest,httpServletResponse,sAccionAdicional,servletContext);
+				<%=GetNombreClaseObjeto(TablaBase.ToString())%>ServletAdditional.procesar();
+				
+				return;
+			}
+			
+			if(httpSession.getAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+				if(httpSession.getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKey")!=null) {
+					sAccionBusqueda="Por<%=strIdGetSet%>";
+					httpSession.setAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras",(Long)httpSession.getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKey"));
+				}
+				
+				httpSession.setAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras",true);				
+				httpSession.removeAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>");
+				
+			} else if(httpServletRequest.getParameter(ConstantesServlet.SCARGARPAGINA)==null&&httpSession.getAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras")!=null) {
+				if(httpSession.getAttribute("<%=strId%><%=GetNombreClase(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras")!=null) {
+					sAccionBusqueda="Por<%=strIdGetSet%>";					
+				}				
+				
+				httpSession.removeAttribute("BusquedaDesdeForeignKeySesionForeignKey<%=GetNombreClaseC(TablaBase.ToString())%>ParaPosibleAtras");
+			}
+			
+			<%=GetBusquedaFromForeigKeysSession()%>
+			
+			else {
+				if(httpServletRequest.getParameter(ConstantesServlet.SCARGARPAGINA)!=null&&httpSession.getAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					sUltimaBusqueda=(String)httpSession.getAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>");
+					sUltimaBusqueda=sUltimaBusqueda.replace("&", "()");
+					
+					if(!sUltimaBusqueda.contains(ConstantesServlet.SCARGARPAGINA)) {
+						sUltimaBusqueda+="()esCargarPagina=true";	
+					}
+					
+					httpSession.removeAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>");
+					
+					mensaje=new Mensaje(Constantes.SMENSAJEAUXILIAR,Constantes.SMENSAJEULTIMABUSQUEDA,sUltimaBusqueda,MensajeGrupo.NONE);
+					sXml = FuncionesJsp.getJsonMensaje(mensaje);
+	
+					httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+					httpServletResponse.getWriter().write(sXml);
+					
+					return;
+				}
+			}
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.SULTIMABUSQUEDA)!=null) {
+				sUltimaBusqueda=httpServletRequest.getParameter(ConstantesServlet.SULTIMABUSQUEDA);
+				httpSession.setAttribute("ultimaBusqueda<%=GetNombreClaseC(TablaBase.ToString())%>", sUltimaBusqueda);
+			}
+									
+			if(httpServletRequest.getParameter(ConstantesServlet.SGENERARREPORTE)!=null) {
+				if(httpServletRequest.getParameter(ConstantesServlet.SESREPORTERELACIONES)!=null) {
+					isReporteRelaciones=true;
+				}
+				
+				if(httpServletRequest.getParameter(ConstantesServlet.SISMOSTRARTODOSRESULTADOSREPORTE)!=null) {
+					isMostrarTodosResultadosReporte=Boolean.parseBoolean(httpServletRequest.getParameter(ConstantesServlet.SISMOSTRARTODOSRESULTADOSREPORTE));
+				}
+				
+				sgenerarReporte=httpServletRequest.getParameter(ConstantesServlet.SGENERARREPORTE);
+				
+				if(sgenerarReporte.equals(ConstantesServlet.SHTMLGENERAR)) {
+					this.generarReporte<%=GetNombreClaseC(TablaBase.ToString())%>s(httpServletRequest, httpServletResponse, sAccionBusqueda,<%if(ConEjb){%>/*<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s(),<%if(ConEjb){%>*/ <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s, <%}%>isReporteRelaciones,sDetalleReporte, <%if(ConEjb){%>/*<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,jasperPrint,sgenerarReporte);				
+				
+				} else if(sgenerarReporte.equals(ConstantesServlet.SHTML)) {
+					httpSession.setAttribute(ConstantesServlet.SSERVLETGENERARHTMLREPORTE, "<%=GetNombreClaseC(TablaBase.ToString())%>Servlet");
+				}
+			}
+						
+			if(sAccionMantenimiento.equals(ConstantesServlet.SGUARDAR)) {
+				//NO DEBERIA IR
+				//<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();
+				
+				if(httpServletRequest.getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					iNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=Integer.parseInt(httpServletRequest.getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>"));
+				}
+				
+				for (int i = 0; i < iNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>; i++) {
+					isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					
+					isNew<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isNew<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isChanged<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					
+					if(isNew<%=GetNombreClaseC(TablaBase.ToString())%>==false&&isChanged<%=GetNombreClaseC(TablaBase.ToString())%>==false&&isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>==false) {
+						continue;
+					}
+					
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>					
+					<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+					<%=  GetSetVariablesFormularioContador(TablaBase.Columns[i],TablaBase.ToString()) %>	
+					<% } %>
+										
+					if(isNew<%=GetNombreClaseC(TablaBase.ToString())%>) {
+						<%=GetNombreClaseObjeto(TablaBase.ToString())%>=new <%=GetNombreClase(TablaBase.ToString())%>();
+												
+						<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+						<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>					
+						<%= GetSetVariablesToObjetoLogicNuevo(TablaBase.Columns[i]) %>	
+						<% } %>	
+						
+					} else {
+						
+						//ARCHITECTURE
+						if(Constantes.ISUSAEJBLOGICLAYER) {
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.getEntityWithConnection(<%=GetNombreIdVariable()%>);
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.get<%=GetNombreClase(TablaBase.ToString())%>();						
+						} else if(Constantes.ISUSAEJBREMOTE) {
+							<%=strGlobalTablaNoStandardComment%><%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getEntity(<%=GetNombreIdVariable()%>);
+						} else if(Constantes.ISUSAEJBHOME) {
+							<%=strGlobalTablaNoStandardComment%><%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getEntity(<%=GetNombreIdVariable()%>);
+						}
+						//ARCHITECTURE
+						
+						if(isChanged<%=GetNombreClaseC(TablaBase.ToString())%>) {
+							<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+							<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+							<%= GetSetVariablesToObjetoLogicActualizar(TablaBase.Columns[i]) %>	
+							<% } %>
+						} else {
+							<%=GetNombreClaseObjeto(TablaBase.ToString())%>.setIsDeleted(true);
+						}
+					}
+					
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s.add(<%=GetNombreClaseObjeto(TablaBase.ToString())%>);					
+				}								
+				
+				<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.set<%=GetNombreClase(TablaBase.ToString())%>s(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s);
+				
+				datosCliente=new DatosCliente();
+			
+				datosCliente.setIdUsuario(iIdUsuarioSesion);
+				datosCliente.setsUsuarioPC(httpServletRequest.getRemoteUser());
+				datosCliente.setsNamePC(httpServletRequest.getRemoteHost());
+				datosCliente.setsIPPC(httpServletRequest.getRemoteAddr());
+			
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.setDatosCliente(datosCliente);								
+					<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.save<%=GetNombreClase(TablaBase.ToString())%>sWithConnection();				
+				} else if(Constantes.ISUSAEJBREMOTE) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.save<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,datosCliente);
+				} else if(Constantes.ISUSAEJBHOME) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.save<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,datosCliente);
+				}
+				//ARCHITECTURE
+				
+				sXml = Mensaje.getMensajeGeneralActualizar(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName());					
+				
+				httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+				httpServletResponse.getWriter().write(sXml);
+			
+			} <%if(GenerarTipoGeneracionC(strTipoGeneracionMantenimientoClasesRelacionadas,TiposGeneracion)) {%>
+			else if(sAccionMantenimiento.equals("guardarrelaciones")) {
+				//NO DEBERIA IR
+				//<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();
+				
+				if(httpServletRequest.getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					iNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>=Integer.parseInt(httpServletRequest.getParameter("numeroDe<%=GetNombreClaseC(TablaBase.ToString())%>"));
+				}
+				
+				for (int i = 0; i < iNumeroDe<%=GetNombreClaseC(TablaBase.ToString())%>; i++) {
+					isNew<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=false;
+					
+					isNew<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isNew<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					isChanged<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isChanged<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>=Boolean.parseBoolean(httpServletRequest.getParameter("isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>"+i));
+					
+					if(isNew<%=GetNombreClaseC(TablaBase.ToString())%>==false&&isChanged<%=GetNombreClaseC(TablaBase.ToString())%>==false&&isDeleted<%=GetNombreClaseC(TablaBase.ToString())%>==false) {
+						continue;
+					}
+					
+					<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>					
+					<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+					<%=  GetSetVariablesFormularioContador(TablaBase.Columns[i],TablaBase.ToString()) %>	
+					<% } %>
+										
+					if(isNew<%=GetNombreClaseC(TablaBase.ToString())%>) {
+						
+						<%=GetNombreClaseObjeto(TablaBase.ToString())%>=new <%=GetNombreClase(TablaBase.ToString())%>();
+												
+						<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+						<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow){continue; } %>					
+						<%= GetSetVariablesToObjetoLogicNuevo(TablaBase.Columns[i]) %>	
+						<% } %>
+												
+					} else {
+						//ARCHITECTURE
+						if(Constantes.ISUSAEJBLOGICLAYER) {
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.getEntityWithConnection(<%=GetNombreIdVariable()%>);
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.get<%=GetNombreClase(TablaBase.ToString())%>();
+						} else if(Constantes.ISUSAEJBREMOTE) {
+							<%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getEntity(<%=GetNombreIdVariable()%>);
+						} else if(Constantes.ISUSAEJBHOME) {
+							<%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getEntity(<%=GetNombreIdVariable()%>);
+						}
+						//ARCHITECTURE
+						
+						if(isChanged<%=GetNombreClaseC(TablaBase.ToString())%>) {
+							<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+							<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired){continue; } %>
+							<%= GetSetVariablesToObjetoLogicActualizar(TablaBase.Columns[i]) %>	
+							<% } %>
+						} else {
+							<%=GetNombreClaseObjeto(TablaBase.ToString())%>.setIsDeleted(true);
+						}
+					}
+					
+					//ARCHITECTURE
+					if(Constantes.ISUSAEJBLOGICLAYER) {
+						<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.get<%=GetNombreClase(TablaBase.ToString())%>();					
+					} else if(Constantes.ISUSAEJBREMOTE) { //ESTO TALVEZ NO DEBA IR
+						<%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getEntity(<%=GetNombreIdVariable()%>);
+					} else if(Constantes.ISUSAEJBHOME) {
+						<%=GetNombreClaseObjeto(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getEntity(<%=GetNombreIdVariable()%>);
+					}
+					//ARCHITECTURE
+				}
+				
+				datosCliente=new DatosCliente();
+				
+				<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.setDatosCliente(datosCliente);
+				
+				datosCliente.setIdUsuario(iIdUsuarioSesion);
+				datosCliente.setsUsuarioPC(httpServletRequest.getRemoteUser());
+				datosCliente.setsNamePC(httpServletRequest.getRemoteHost());
+				datosCliente.setsIPPC(httpServletRequest.getRemoteAddr());
+				
+				<%=GetprocesarTablasClasesRelacionadas() %>
+				
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.<%=GetMaintenanceTablasClasesRelacionadasRelaciones(false)%>	
+				} else if(Constantes.ISUSAEJBREMOTE) {
+					/*<%=GetNombreClaseObjeto(TablaBase.ToString())%>=*/<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.<%=GetMaintenanceTablasClasesRelacionadasRelaciones(true)%>
+				} else if(Constantes.ISUSAEJBHOME) {
+					/*<%=GetNombreClaseObjeto(TablaBase.ToString())%>=*/<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.<%=GetMaintenanceTablasClasesRelacionadasRelaciones(true)%>
+				}
+				//ARCHITECTURE
+				
+				sXml = Mensaje.getMensajeGeneralActualizar(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName());					
+				
+				httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+				httpServletResponse.getWriter().write(sXml);
+			}
+			<% } %>
+			
+			<%=GetFuncionesAccionesNavegacionTablasClasesRelacionadasC()%>
+			<%=GenerarAccionesImagenServlet()%>
+			
+			else if(sAccionBusqueda!="") {
+				procesarBusqueda(httpServletRequest,httpServletResponse,sAccionBusqueda,isReporteRelaciones,jasperPrint,<%if(ConEjb){%>/*<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,sgenerarReporte,isMostrarTodosResultadosReporte,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>,sDetalleReporte);		
+			}	
+			
+		} catch(Exception e) {
+			mensaje=new Mensaje(Constantes.SMENSAJEEXCEPCIONDEAPLICACION,Constantes.SMENSAJEERRORDEAPLICACION,e.getMessage(),MensajeGrupo.EXCEPTION);
+			sXml = mensaje.toNewJsonJmakiMensaje();
+			httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+			httpServletResponse.getWriter().write(sXml);				
+		}	    		
+	}
+	
+	public void procesarBusqueda(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,String sAccionBusqueda,Boolean isReporteRelaciones,JasperPrint jasperPrint,<%if(ConEjb){%>/*<%}%><%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseC(TablaBase.ToString())%>Implementable <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseC(TablaBase.ToString())%>ImplementableHome <%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,String sgenerarReporte,Boolean isMostrarTodosResultadosReporte,<%=strTypeCollection%><<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>,String sDetalleReporte) throws SQLException,Exception	{		
+		String sXml ="";
+		String sTipoJsonResponse ="";
+		String  sFinalQueryPaginacion="";
+		Integer iInicioPaginacion=-1;
+		Integer iFinPaginacion=-1;
+		HttpSession httpSession = httpServletRequest.getSession();
+		Long iIdUsuarioSesion=0L;	
+		Usuario usuarioActual=null;	
+		DatosCliente datosCliente=new DatosCliente();
+		<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>sAux=new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+		<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Aux=new <%=GetNombreClase(TablaBase.ToString())%>();
+		
+		try {				
+			
+			if(httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL)!=null) {
+				usuarioActual=(Usuario)httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL);
+				iIdUsuarioSesion=usuarioActual.get<%=strIdGetSetSeguridad%>();
+			} 
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.STIPOJSONRESPONSE)!=null) {
+				sTipoJsonResponse = httpServletRequest.getParameter(ConstantesServlet.STIPOJSONRESPONSE);
+			}
+			
+			if(httpServletRequest.getParameter(ConstantesServlet.SINICIO)!=null&&httpServletRequest.getParameter(ConstantesServlet.SFIN)!=null) {
+				iInicioPaginacion=Integer.parseInt(httpServletRequest.getParameter(ConstantesServlet.SINICIO));	
+				iFinPaginacion=Integer.parseInt(httpServletRequest.getParameter(ConstantesServlet.SFIN));							
+				//sFinalQueryPaginacion=" <%=GetFinalQueryTableFromPropertiesC(TablaBase)%> LIMIT "+iInicioPaginacion.toString()+","+iFinPaginacion.toString();
+			}
+			
+			Pagination pagination=new Pagination();
+			pagination.setiFirstResult(iInicioPaginacion);
+			pagination.setiMaxResults(iFinPaginacion);
+			
+			datosCliente=new DatosCliente();
+			
+			datosCliente.setIdUsuario(iIdUsuarioSesion);
+			datosCliente.setsUsuarioPC(httpServletRequest.getRemoteUser());
+			datosCliente.setsNamePC(httpServletRequest.getRemoteHost());
+			datosCliente.setsIPPC(httpServletRequest.getRemoteAddr());
+			
+			<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.setDatosCliente(datosCliente);
+				
+			if(sAccionBusqueda.equals(ConstantesServlet.STODOS)) {	
+				
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.getTodos<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>sFinalQueryPaginacion,pagination);
+					<%if(ConEjb){%>//<%}%>sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>s(<%=strServletResponseParameter%>);
+				} else if(Constantes.ISUSAEJBREMOTE) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getTodos<%=GetNombreClaseC(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>sFinalQueryPaginacion,pagination,datosCliente);
+					sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>s(<%=strServletResponseParameter%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,datosCliente);
+				} else if(Constantes.ISUSAEJBHOME) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getTodos<%=GetNombreClaseC(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>sFinalQueryPaginacion,pagination,datosCliente);
+					sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>s(<%=strServletResponseParameter%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,datosCliente);
+				}
+				//ARCHITECTURE
+				
+				Boolean isNoExiste=false;
+				
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%>isNoExiste=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s()==null|| <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s().size()==0;
+				} else if(Constantes.ISUSAEJBREMOTE||Constantes.ISUSAEJBHOME) {
+					isNoExiste=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s==null|| <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s.size()==0;
+				}
+				//ARCHITECTURE
+				
+				if(isNoExiste) {		
+					sXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName());
+				}
+				
+				if(sgenerarReporte!=""&&sgenerarReporte!=null) {
+					if(isMostrarTodosResultadosReporte) {
+						
+						if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {
+							<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sAux=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s;
+						}
+						
+						//ARCHITECTURE
+						if(Constantes.ISUSAEJBLOGICLAYER) {
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s();						
+							<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.getTodos<%=GetNombreClase(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>"",pagination);						
+						} else if(Constantes.ISUSAEJBREMOTE) {
+							<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getTodos<%=GetNombreClaseC(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>"",pagination,datosCliente);
+						} else if(Constantes.ISUSAEJBHOME) {
+							<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getTodos<%=GetNombreClaseC(TablaBase.ToString())%>sWithConnection(<%=GetNombreOrderColumnFromPropertiesC(TablaBase)%>"",pagination,datosCliente);
+						}
+						//ARCHITECTURE						
+					}
+					
+					//ARCHITECTURE
+					if(Constantes.ISUSAEJBLOGICLAYER) {
+						<%if(ConEjb){%>//<%}%>generarReporte<%=GetNombreClase(TablaBase.ToString())%>s(httpServletRequest,httpServletResponse,ConstantesServlet.STODOS,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s(),isReporteRelaciones,sDetalleReporte, <%if(ConEjb){%>/*<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,jasperPrint,sgenerarReporte);					
+					} else if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {
+						generarReporte<%=GetNombreClase(TablaBase.ToString())%>s(httpServletRequest,httpServletResponse,ConstantesServlet.STODOS,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,isReporteRelaciones,sDetalleReporte, <%if(ConEjb){%>/*<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,jasperPrint,sgenerarReporte);					
+					}
+					//ARCHITECTURE
+					
+					//ARCHITECTURE
+					if(Constantes.ISUSAEJBLOGICLAYER) {
+						<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.set<%=GetNombreClaseC(TablaBase.ToString())%>s(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s);
+					} else if(Constantes.ISUSAEJBREMOTE || Constantes.ISUSAEJBHOME) {
+						<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sAux;
+					}
+					//ARCHITECTURE
+				}
+			
+				httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+				httpServletResponse.getWriter().write(sXml);	
+				
+			} else if(sAccionBusqueda.equals("Por<%=strIdGetSet%>")) {
+				Long <%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=0L;
+				
+				if(httpServletRequest.getParameter("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>")!=null) {
+					<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=Long.parseLong(httpServletRequest.getParameter("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>"));	
+				}
+				
+				if(httpSession.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey")!=null) {
+					<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=(Long)httpSession.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey");	
+				
+					httpSession.removeAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKey");
+					
+				} else if(httpSession.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras")!=null) {
+					<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>=(Long)httpSession.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras");	
+				
+					httpSession.removeAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualForeignKeyParaPosibleAtras");
+				}
+				
+				<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones.getDetalleIndicePor<%=strIdGetSet%>(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);
+
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.getEntityWithConnection(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);				
+					<%if(ConEjb){%>//<%}%>sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>(<%=strServletResponseParameter%>);
+				} else if(Constantes.ISUSAEJBREMOTE) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.getEntity(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);
+					sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>(<%=strServletResponseParameter%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>,datosCliente);
+				} else if(Constantes.ISUSAEJBHOME) {
+					<%=GetNombreClaseObjetoC(TablaBase.ToString())%>=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.getEntity(<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>);
+					sXml = <%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.get<%=strServletResponse%><%=GetNombreClaseC(TablaBase.ToString())%>(<%=strServletResponseParameter%>,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>,datosCliente);
+				}
+				//ARCHITECTURE
+				
+				Boolean isNoExiste=false;
+				
+				//ARCHITECTURE
+				if(Constantes.ISUSAEJBLOGICLAYER) {
+					<%if(ConEjb){%>//<%}%>isNoExiste=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>()==null;
+				} else if(Constantes.ISUSAEJBREMOTE||Constantes.ISUSAEJBHOME) {
+					isNoExiste=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>==null;
+				}
+				//ARCHITECTURE
+				
+				if(isNoExiste) {						
+					sXml =Mensaje.getMensajeJsonGeneralNoExisteBusqueda(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName());
+				}
+				
+				httpServletResponse.setContentType(ConstantesServlet.SCONTENTTYPE);
+				httpServletResponse.getWriter().write(sXml);			
+			}
+		<%=GetXmlBusquedasIndicesTablas()%> 
+		
+		<%if(!ConEjb){%>
+		
+		<%if(GenerarTipoGeneracionC(strTipoGeneracionCompuestos,TiposGeneracion)) {%>
+		<%if(!GetEsReporteFromPropertiesC(TablaBase)){%>
+		<%=GetXmlBusquedasIndicesTablasCompuestos()%> 
+		<%}%>
+		<%}%>
+		
+		<%}%>
+		} catch(JRException e) {
+			throw e;
+		} catch(Exception e) {
+			throw e;
+      	}
+	}	
+	
+	public void generarReporte<%=GetNombreClase(TablaBase.ToString())%>s(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,String sAccionBusqueda,<%=strTypeCollection%><<%=GetNombreClase(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes,Boolean isReporteRelaciones,String sDetalleReporte, <%if(ConEjb){%>/*<%}%><%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,<%if(ConEjb){%>*/<%}%><%=GetNombreClaseC(TablaBase.ToString())%>Implementable <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable,<%=GetNombreClaseC(TablaBase.ToString())%>ImplementableHome <%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome,JasperPrint jasperPrint,String sgenerarReporte) throws SQLException,Exception {
+		HttpSession httpSession = httpServletRequest.getSession();
+		Long iIdUsuarioSesion=0L;	
+		Usuario usuarioActual=null;	
+		
+		ServletContext servletContext = this.getServletConfig().getServletContext();
+		String sPathReportes="";
+		
+		File reportFile;
+		File imageFile;
+		
+		if(httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL)!=null) {
+			usuarioActual=(Usuario)httpSession.getAttribute(Usuario.class.getSimpleName().toLowerCase()+ConstantesServlet.SACTUAL);
+			iIdUsuarioSesion=usuarioActual.get<%=strIdGetSetSeguridad%>();
+		} 
+			
+		imageFile= new File(servletContext.getRealPath(ConstantesServlet.SIMAGENLOGOPATH));
+		
+		if(!isReporteRelaciones) {
+			reportFile = new File(servletContext.getRealPath(Constantes.SREPORTEPATHCARPETA+"<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%>"+<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName()+Constantes.SREPORTESUFIJOREPORTE));
+		} else {
+			reportFile = new File(servletContext.getRealPath(Constantes.SREPORTEPATHCARPETA+"<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%>"+<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName()+Constantes.SREPORTEMASTERRELACIONES+Constantes.SREPORTESUFIJOREPORTE));
+			sPathReportes=reportFile.getPath().replace(<%=GetNombreClaseC(TablaBase.ToString())%>.class.getSimpleName()+Constantes.SREPORTEMASTERRELACIONES+Constantes.SREPORTESUFIJOREPORTE, "");
+		}
+		
+		if (!reportFile.exists()){
+			throw new JRRuntimeException(Mensajes.SREPORTENOENCONTRADO);
+		}
+		
+		String sUsuario="";
+		
+		if(usuarioActual!=null) {
+			sUsuario=usuarioActual.getField_sUserName();
+		}
+		
+		Map<String, String> mapParameters = new HashMap<String, String>();
+		
+		mapParameters.put("usuario", sUsuario);
+		mapParameters.put(ConstantesServlet.SREPORTETITULO, Constantes.SAREADEPARTAMENTO);
+		mapParameters.put(ConstantesServlet.SREPORTESUBTITULO, Constantes.SREPORTETITULO+<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones.SCLASSNAMETITULOREPORTES);
+		mapParameters.put(ConstantesServlet.SREPORTEBUSQUEDAPOR, <%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones.getNombreIndice(sAccionBusqueda)+sDetalleReporte);
+		mapParameters.put(ConstantesServlet.SREPORTEIMAGENPATH, imageFile.getPath());
+		
+		if(isReporteRelaciones) {
+			mapParameters.put(ConstantesServlet.SREPORTESUBREPORTEDIR, sPathReportes);
+		}
+		
+		JasperReport jasperReport = (JasperReport)JRLoader.loadObject(reportFile.getPath());
+		
+		ArrayList<Classe> classes=new ArrayList<Classe>();			
+		
+		if(isReporteRelaciones) {
+	<%=GetClassClasesForeigKeysC(TablaBase)%>
+	<%=GetClassClasesRelacionadasC(TablaBase)%>
+		} else {
+	<%=GetClassClasesForeigKeysC(TablaBase)%>			
+		}
+		
+		DatosCliente datosCliente=new DatosCliente();
+		
+		datosCliente.setIdUsuario(iIdUsuarioSesion);
+		datosCliente.setsUsuarioPC(httpServletRequest.getRemoteUser());
+		datosCliente.setsNamePC(httpServletRequest.getRemoteHost());
+		datosCliente.setsIPPC(httpServletRequest.getRemoteAddr());
+		
+		//ARCHITECTURE
+		if(Constantes.ISUSAEJBLOGICLAYER) {
+			try {
+				<%if(ConEjb){%>/*<%}%>
+				<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.getNewConnexionToDeep();
+				
+				for (<%=GetNombreClase(TablaBase.ToString())%> <%=GetNombreClaseObjeto(TablaBase.ToString())%>:<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes) {
+					<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.deepLoad(<%=GetNombreClaseObjeto(TablaBase.ToString())%>, false, DeepLoadType.INCLUDE, classes);
+				}
+					
+				<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.commitNewConnexionToDeep();				
+				<%if(ConEjb){%>*/<%}%>
+			} catch(Exception e) {
+				throw e;
+				
+			} finally {
+				<%if(ConEjb){%>//<%}%><%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic.closeNewConnexionToDeep();
+			}
+		}else if(Constantes.ISUSAEJBREMOTE) {
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable.deepLoadsWithConnection(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes, false, DeepLoadType.INCLUDE, classes,"", datosCliente);
+		} else if(Constantes.ISUSAEJBHOME) {
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes=<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome.deepLoadsWithConnection(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes, false, DeepLoadType.INCLUDE, classes,"", datosCliente);
+		}
+		//ARCHITECTURE
+		
+		if(!sgenerarReporte.equals(ConstantesServlet.SHTMLGENERAR)) {
+			jasperPrint = JasperFillManager.fillReport(jasperReport,mapParameters, new JRBeanArrayDataSource(<%=GetNombreClase(TablaBase.ToString())%><%=strClaseBean%>.Traer<%=GetNombreClase(TablaBase.ToString())%><%=strClaseBean%>s(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>sParaReportes).toArray()));
+			httpServletRequest.getSession().setAttribute(BaseHttpServlet.DEFAULT_JASPER_PRINT_SESSION_ATTRIBUTE, jasperPrint);
+			
+		} else {
+			PrintWriter printWriter = httpServletResponse.getWriter();
+			JRHtmlExporter jrHtmlExporter = new JRHtmlExporter();
+				
+			jrHtmlExporter.setParameter(JRExporterParameter.JASPER_PRINT, httpServletRequest.getSession().getAttribute(BaseHttpServlet.DEFAULT_JASPER_PRINT_SESSION_ATTRIBUTE));
+			jrHtmlExporter.setParameter(JRExporterParameter.OUTPUT_WRITER, printWriter);
+			
+			jrHtmlExporter.exportReport();
+		}
+	}
+	
+	<%=GetFuncionesMaintenanceTablasClasesRelacionadas()%>
+	
+	public void init() throws ServletException {		
+		try {
+			/*
+			//SE COMENTA TODO YA QUE LAS CONEXIONES SE REALIZAN CON DATASOURCES O EN EL ARCHIVO DE PERSISTENCIA
+			if(Constantes.ISUSAEJBREMOTE) {
+				sistemaAdditionable=  (SistemaAdditionable) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+SistemaConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);
+	 	    } else if(Constantes.ISUSAEJBHOME) {
+				sistemaAdditionableHome=(SistemaAdditionableHome) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+SistemaConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);
+			}
+			
+			if(Constantes.ISUSAEJBREMOTE) {
+				<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Implementable= (<%=GetNombreClase(TablaBase.ToString())%>Implementable) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBREMOTE);
+			} else if(Constantes.ISUSAEJBHOME) {
+				<%=GetNombreClaseObjetoC(TablaBase.ToString())%>ImplementableHome=(<%=GetNombreClase(TablaBase.ToString())%>ImplementableHome) Funciones.getObjectEjbReference(Constantes.SEJBPACKAGE+Constantes.SEJBSEPARATOR+<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.SEJBNAME+Constantes.SEJBSEPARATOR+Constantes.SEJBLOCAL);
+			}
+			*/
+			
+			/*
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>s= new <%=strTypeNewCollection%><<%=GetNombreClase(TablaBase.ToString())%>><%=strTypeNewCollectionEnd%>;
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Logic= new <%=GetNombreClase(TablaBase.ToString())%>Logic();	
+			*/
+			<%=GetVariablesNewTablasClasesRelacionadas()%>
+			
+		/*} catch(ServletException e) {
+			throw e;*/
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void init(ServletConfig config) throws ServletException {
+		try {
+			super.init(config);
+			
+			if(<%=Empresa%>.<%=strPackageFramework%>.<%=Package%>.<%=strPackageUtils%>.Constantes.SCONNEXION!=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONNOMBRE)&&super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONNOMBRE)!=null) {//"Conexion<%=SoloSiEsParaSeguridadC(TablaBase.Database)%>")) {
+				<%=Empresa%>.<%=strPackageFramework%>.<%=Package%>.<%=strPackageUtils%>.Constantes.SCONNEXION=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONNOMBRE);//"Conexion<%=SoloSiEsParaSeguridadC(TablaBase.Database)%>");
+			}
+			/*
+			<%=strGlobalAuditoriaComment%>if(<%=strEmpresaAuditoria%>.<%=strPackageFramework%>.<%=strPackageAuditoria%>.<%=strPackageUtilsAuditoria%>.Constantes.SCONNEXION!=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONAUDITORIANOMBRE)&&super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONAUDITORIANOMBRE)!=null) {
+				<%=strGlobalAuditoriaComment%><%=strEmpresaAuditoria%>.<%=strPackageFramework%>.<%=strPackageAuditoria%>.<%=strPackageUtilsAuditoria%>.Constantes.SCONNEXION=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONAUDITORIANOMBRE);
+			<%=strGlobalAuditoriaComment%>}
+			
+			<%=strGlobalSeguridadComment%>if(<%=strEmpresaSeguridad%>.<%=strPackageFramework%>.<%=PackageSeguridad%>.<%=strPackageUtilsSeguridad%>.Constantes.SCONNEXION!=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONSEGURIDADNOMBRE)&&super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONSEGURIDADNOMBRE)!=null) {
+				<%=strGlobalSeguridadComment%><%=strEmpresaSeguridad%>.<%=strPackageFramework%>.<%=PackageSeguridad%>.<%=strPackageUtilsSeguridad%>.Constantes.SCONNEXION=super.getServletContext().getInitParameter(ConstantesServlet.SCONEXIONSEGURIDADNOMBRE);
+			<%=strGlobalSeguridadComment%>}
+			*/
+		} catch(ServletException e) {
+			throw e;
+		}
+	}
+}

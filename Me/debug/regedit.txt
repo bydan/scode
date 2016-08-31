@@ -1,0 +1,10 @@
+Local Machine/Software/Microsoft/Framework/Debug
+10  ---> 2
+
+
+En Template
+ Debug="True"
+
+
+En Codigo
+Debugger.Break();

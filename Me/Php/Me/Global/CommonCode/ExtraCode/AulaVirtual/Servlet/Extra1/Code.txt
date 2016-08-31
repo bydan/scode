@@ -1,0 +1,4 @@
+\r\n\t\t\tif(session.getAttribute(\"AlumnoActual\")!=null)
+\r\n\t\t\t{
+\r\n\t\t\t\trequest.setAttribute(\"accionAdicional\", \"MOSTRAR_CURSOS_ALUMNOACTUAL\");
+\r\n\t\t\t}

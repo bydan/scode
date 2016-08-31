@@ -1,0 +1,74 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Ch?vez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+
+<script runat="template">
+
+public string GetNombreClase(string strTablaBase)
+{			
+		return GetNombreClaseC(strTablaBase);
+}
+
+	
+public String GetTypeCorrectionTableDefaultValue(TableSchema tableSchema) 
+{
+	String strCorrectionTablaVarChar=string.Empty;
+	string strPrefijoTipo =string.Empty;
+	
+	String strCorrectionIfExist=string.Empty;
+	String strCorrectionDropConstraint=string.Empty;
+	String strCorrectionAux=string.Empty;
+	String strCorrectionTemporal=string.Empty;
+	
+	foreach(ColumnSchema columnSchema in tableSchema.Columns) {
+		
+		System.Windows.Forms.MessageBox.Show(columnSchema.Description);
+		/*
+		strCorrectionTemporal+=columnSchema.Name+":"+columnSchema.DataType.ToString()+":"+columnSchema.Size+"\r\n";
+		
+		foreach(ExtendedProperty extendedProperty in columnSchema.ExtendedProperties)
+		{
+			if(extendedProperty.Name=="CS_Default")
+			{
+				if(((String)extendedProperty.Value)!="") {
+					System.Windows.Forms.MessageBox.Show(((String)extendedProperty.Value));
+				}
+				//isTieneDefaultValue=true;		
+			}
+		}
+		*/
+	}
+	
+	//<%=GetTypeCorrectionTableDefaultValue(TablaBase)%>
+	
+	return strCorrectionTemporal;
+}
+
+</script>
+<%=GetByDanLicence()%>
+
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene todos los Accesos a BDD de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+package <%=Empresa%>.<%= Package%>.<%= Module%><%=strPackageBusiness%>.<%=strPackageInterface%>;
+
+import java.util.ArrayList;
+import <%=Empresa%>.<%=strPackageFramework%>.<%= Package%>.<%=strPackageBusiness%>.<%=strPackageEntities%>.DatoGeneral;
+
+@SuppressWarnings("unused")
+public interface <%=GetNombreClase(TablaBase.ToString())%>Additionable {
+	
+}
+

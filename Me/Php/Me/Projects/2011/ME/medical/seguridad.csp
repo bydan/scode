@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Seguridad;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=Seguridad;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa;&#xD;&#xA;" />
+  </variables>
+  <propertySets>
+    <propertySet name="GenerateDataBase.cs" output="GenerateDataBase.cs" template="C:\Users\bydan\Documents\CodeSmith\Samples\v5.0\Templates\Me\Php\Me\Global\GenerateDataBase.cst">
+      <property name="GeneracionPorTablas">False</property>
+      <property name="TiposGeneracion">GX</property>
+      <property name="Ip">127.0.0.1</property>
+      <property name="Puerto">80</property>
+      <property name="Package">seguridad</property>
+      <property name="NombreProgramador">ByDan</property>
+      <property name="GenerarFilesAdditional">False</property>
+      <property name="GenerarFilesAdditionalCakeEjemplos">False</property>
+      <property name="ConStoreProcedures">False</property>
+      <property name="ConFuncionesSqlNativas">False</property>
+      <property name="ConValidaciones">True</property>
+      <property name="ConJSInclude">False</property>
+      <property name="CodigoEmpresa">ME</property>
+      <property name="NombreEmpresa">ME</property>
+      <property name="Empresa">com/bydan</property>
+      <property name="ConSeguridad">True</property>
+      <property name="ConAuditoria">True</property>
+      <property name="PackageSeguridad">seguridad</property>
+      <property name="ConWebServices">False</property>
+      <property name="ConNamespaces">True</property>
+      <property name="Aplicacion">SISTEMA DE SEGURIDAD</property>
+      <property name="ConFaces">False</property>
+      <property name="ConRichFaces">True</property>
+      <property name="ConSwing">False</property>
+      <property name="ConJQueryCode">False</property>
+      <property name="ConexionIp">127.0.0.1</property>
+      <property name="ConexionPuerto">3306</property>
+      <property name="ConexionUsuario">root</property>
+      <property name="ConexionPassword">root</property>
+      <property name="ConexionSchema">medical</property>
+      <property name="ConexionSeguridadIp">127.0.0.1</property>
+      <property name="ConexionSeguridadPuerto">3306</property>
+      <property name="ConexionSeguridadUsuario">root</property>
+      <property name="ConexionSeguridadPassword">root</property>
+      <property name="ConexionSeguridadSchema">medical</property>
+      <property name="ConexionAuditoriaIp">127.0.0.1</property>
+      <property name="ConexionAuditoriaPuerto">3306</property>
+      <property name="ConexionAuditoriaUsuario">root</property>
+      <property name="ConexionAuditoriaPassword">root</property>
+      <property name="ConexionAuditoriaSchema">medical</property>
+      <property name="PhpVersion">5.2.17</property>
+      <property name="PackageFrameworkGlobal">seguridad</property>
+      <property name="PrefijoDBNombreTablasGlobal">seg_</property>
+      <property name="SourceTablesForGenerate">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Sistema</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+      <property name="ConexionSchemaGlobal">medical</property>
+      <property name="OutputDirectory">C:\o\MePhp\ME\seguridad\</property>
+      <property name="SourceDatabase">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="SourceTablesSimpleMaintenance">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <tableList>
+      <table>
+        <owner>dbo</owner>
+        <name>Accion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Auditoria</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>AuditoriaDetalle</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Campo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Ciudad</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>DatoGeneralUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>HistorialCambioClave</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Opcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Pais</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Perfil</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilAccion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilCampo</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilOpcion</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>PerfilUsuario</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Provincia</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Sistema</name>
+      </table>
+      <table>
+        <owner>dbo</owner>
+        <name>Usuario</name>
+      </table>
+    </tableList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

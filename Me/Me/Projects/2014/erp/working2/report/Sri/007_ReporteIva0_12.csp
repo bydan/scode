@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">True</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">False</property>
+      <property name="GeneracionCreation">False</property>
+      <property name="EsProceso">False</property>
+      <property name="EsProcesoConRetorno">False</property>
+      <property name="A03_ConGroupBy">False</property>
+      <property name="A06_ConReporteGuardarBaseDatos">False</property>
+      <property name="A07_SchemaReporteAuxiliar">NINGUNO</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">False</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="A03_Prefijo">l</property>
+      <property name="B03_Prefijo2" />
+      <property name="A02_TablaColumns1">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>idTipoRetencionFuente1</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetFuente1Porcentaje</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetFuente1Retenido</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>idTipoRetencionFuente2</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetFuente2Porcentaje</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetFuente2Retenido</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>idTipoRetencionIva1</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetIvaBienPorcentaje</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetIvaBienRetenido</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>idTipoRetencionIva2</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetIvaServicioPorcentaje</name>
+      </column>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>RetIvaServicioRetenido</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A01_Esquema">Sri</property>
+      <property name="A02_NombreTabla">SriFacturasProveedoresIva012</property>
+      <property name="A02_TablaPrincipalColumns">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idTipoComprobante</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idCliente</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>Ruc</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>NumeroDocumento</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>FechaEmision</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>FechaRegistroContable</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>NumeroSerie</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>TotalIva</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>TotalSinIva</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idTipoIva</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idTipoRetencionIva</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>TransfeIvaRetenido</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idTipoRetencionIvaPresta</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>PrestaIvaRetenido</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="TablaReporteCreada">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Sris</owner>
+      <name>SriFacturasProveedoresIva012</name>
+    </table>
+      </property>
+      <property name="A03_Prefijo1">f</property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Sris</owner>
+      <name>TransaccionLocal</name>
+    </table>
+      </property>
+      <property name="A01_Tabla1">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Contabilidad</owner>
+      <name>FacturaProveedor</name>
+    </table>
+      </property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Contabilidad</tableOwner>
+        <tableName>FacturaProveedor</tableName>
+        <name>idEmpresa</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>idPeriodoDeclara</name>
+      </column>
+      <column>
+        <tableOwner>Sris</tableOwner>
+        <tableName>TransaccionLocal</tableName>
+        <name>Ruc</name>
+      </column>
+    </columnList>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

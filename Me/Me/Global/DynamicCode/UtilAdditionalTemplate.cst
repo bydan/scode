@@ -1,0 +1,961 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import NameSpace="Me" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+<%@ Property Name="GeneracionTest" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionSobreEscribirAdditional" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCopiarAdditional" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionConfirmar" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCopiarControllerAdditional" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionReportes" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="SourceTablesForGenerate" Type="SchemaExplorer.TableSchemaCollection" Category="0.Tipo Generacion" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="SourceDataBase" Type="SchemaExplorer.DatabaseSchema" Category="0.Tipo Generacion" Description="Database to get the extended properties from." Optional="True"%>
+
+<script runat="template">
+//<%@ Property Name="PathSobreEscribir" Type="System.String" Default="" Category="2.Sobreescribir Additional" Description="Nombre del Programdor" Optional="True"%>
+//<%@ Property Name="ClaveEscribir" Type="System.String" Default="" Category="2.Sobreescribir Additional" Description="Nombre del Programdor" Optional="True"%>
+
+public bool ValidarVariablesIniciales()
+{
+	bool blnValidado=false;
+	int intNumeroTipoEjecusion=0;
+	
+	if(GeneracionCopiarAdditional){
+		intNumeroTipoEjecusion++;
+	}
+	
+	if(GeneracionSobreEscribirAdditional) {
+		intNumeroTipoEjecusion++;
+	}
+	
+	if(GeneracionCopiarControllerAdditional) {
+		intNumeroTipoEjecusion++;
+	}		
+			
+	if(intNumeroTipoEjecusion.Equals(1)) {
+		blnValidado=true;
+		
+	} else {
+		System.Windows.Forms.MessageBox.Show("SOLO DEBE ESTAR SELECCIONADO 1 TIPO DE EJECUSION");
+	}	
+	
+	return blnValidado;
+}
+
+public String GetCopiarAdditional() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	String sReplace="TO_REPLACE";
+	String sReplaceOrigenDestino="TO_REPLACE_ORIGEN_DESTINO";
+	
+	//ESTOS PARAMETROS SE CAMBIA
+	//String sCriterioBusqueda="*Additionable.java";
+	//"*Additional.java";
+	//"*Additionable.java";
+	//"*AdditionableHome.java";
+	//"*Sql.java";
+	//"*Aux.java";
+	
+	String sClaveSobreEscribir="//CONTROL_FUNCION2";
+	
+	String sNombreOrigen="erp";
+	String sNombreDestino="erp_topublic";
+	
+	String sPathBase=@"F:\l\proyectos\2013\source\"+sReplaceOrigenDestino+@"\erp_ejb\src_"+sReplace+@"\";
+	String sPathBase2=@"F:\l\proyectos\2013\source\"+sReplaceOrigenDestino+@"\erp_desktop_all\src_"+sReplace+@"\";
+	
+	//String sPathBaseCapa=@"com\bydan\erp\"+sReplace+@"\presentation\swing\jinternalframes\";
+	//report\
+		//CAMBIAR FUNCION AgregarNuevoCodigo()
+	//ESTOS PARAMETROS SE CAMBIA
+	
+	
+	String sPathBaseActual="";
+	String sPathBaseCapaActual="";
+	String sPathFinal="";
+	String sPathOrigen="";
+	String sPathDestino="";
+	String sPathBaseOrigen="";
+	String sPathBaseDestino="";
+	String sPathFinalDestino="";
+	
+	bool conSobreEscribir=true;
+	
+	ArrayList arrayListCapasFisicas=new ArrayList();
+	arrayListCapasFisicas=GetCapasFisicasAdditionalC(sReplaceOrigenDestino);
+	
+	ArrayList arrayListModulos=new ArrayList();
+	arrayListModulos=GetModulosC();
+	
+	ArrayList arrayListCapas=new ArrayList();
+	arrayListCapas=GetCapasAdditionalC(sReplace,GeneracionReportes);
+	
+	ArrayList arrayCriteriosBusqueda=new ArrayList();
+	arrayCriteriosBusqueda=GetCriteriosBusquedaAdditionalC();
+	
+	foreach(String sCapaFisica in arrayListCapasFisicas) {
+		sPathOrigen=sCapaFisica.Replace(sReplaceOrigenDestino,sNombreOrigen);
+		sPathDestino=sCapaFisica.Replace(sReplaceOrigenDestino,sNombreDestino);
+		
+		foreach(String sModulo in arrayListModulos) {
+			foreach(String sCapa in arrayListCapas) {
+				foreach(String sCriterioBusqueda in arrayCriteriosBusqueda) {
+					
+					sPathBaseOrigen=sPathOrigen+sCapa.Replace(sReplace,sModulo);
+					sPathBaseDestino=sPathDestino+sCapa.Replace(sReplace,sModulo);
+					
+					//sPathFinal=sPathBaseActual+sPathBaseCapaActual;
+					
+					if(Directory.Exists(sPathBaseOrigen) && Directory.Exists(sPathBaseDestino) ) {
+						
+						string[] filePaths = Directory.GetFiles(@sPathBaseOrigen, sCriterioBusqueda);
+						
+						foreach(String filePath in filePaths) {
+							existe=false;
+							stringBuilder=new StringBuilder();
+							
+							Trace.WriteLine("ORIGEN:"+filePath);
+							
+							sPathFinalDestino=filePath.Replace(sPathBaseOrigen,sPathBaseDestino);
+							Trace.WriteLine("DESTINO:"+sPathFinalDestino);
+							
+							if(GeneracionConfirmar) {
+								File.Copy(filePath,sPathFinalDestino,true);
+							}
+													
+						}
+					}
+				}
+			}
+		}
+	}	
+	
+	
+	
+	sUtil="ok";
+	
+	return sUtil;
+	
+}
+
+public String GetFuncionEscribir() {
+	String sUtil="";
+	
+	sUtil+="\r\n\r\npublic void nuevaFuncion() {";
+	sUtil+="\r\n\tint a=0;";
+	sUtil+="\r\n\tint b=0;";
+	sUtil+="\r\n\tint c=0;";
+	sUtil+="\r\n}\r\n\r\n";
+	
+	return sUtil;
+}
+
+public String ValidarGeneralParametros(String sTipoProyecto,PaquetesGenerar paquetesGenerar) {
+	bool validado=true;
+	String strMensaje="";
+	
+	if(paquetesGenerar.Equals(PaquetesGenerar.CONTROLLER) && !sTipoProyecto.Equals("DESKTOP_ALL")) {
+		validado=false;
+		strMensaje="AL GENERAR CONTROLLER SE DEBE SELECCIONAR TIPO PROYECTO=DESKTOP_ALL";
+	}
+		
+	if(!validado) { 
+		Trace.WriteLine(strMensaje);
+	}
+	
+	return strMensaje;
+}
+
+public String GetSobreEscribir() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	bool existe_clave_verificar=false;
+	bool verificar_punto=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	String sReplace="TO_REPLACE";
+	
+	String strNombreClase="";
+	String strArchivoClase="";
+	
+	//ESTOS PARAMETROS SE CAMBIA
+	/*
+	SIGNIFICA: CON TODOS LOS ARCHIVOS QUE TERMINAN EN Additional SE SOBREESCRIBE CLAVE //CONTROL_FUNCION2
+	QUE PERTENECEN A LOS PROYECTOS DE BASE sPathBase EN LA CAPA sPathBaseCapa (jinternalframes)
+	USAR PARA TEST PRIMETO PARA VERIFICAR
+	
+	* SIEMPRE GENERAR TAMBIEN PARA REPORTES
+	* 2 CONFIRMACIONES GeneracionConfirmar=true Y //streamWriterDestino.Write(stringBuilder.ToString());
+	* POR DEFECTO SE COMENTA Y COMO TEST primeroTest=true;
+	* COMO TEST SOLO SE VERIFICA PARA 1 ARCHIVO SI NO EXISTE NO SE TOMA EN CUENTA  continue;
+	*/
+	
+	/* PARAMETROS II PARTE DINAMICO
+	//PARA DINAMICO TAMBIEN
+	//NORMAL 
+	//esIngresoCodigoAntes=true;
+	//esReemplazo=false;	
+	//esClaveVerificarClaseDinamico=false;
+	//esClaveVerificarModuloDinamico=false;
+	
+	//MODULO DINAMICO
+	//esIngresoCodigoAntes=true;
+	//esReemplazo=false; // Puede ser true	
+	//esClaveVerificarClaseDinamico=false;
+	//esClaveVerificarModuloDinamico=true;	
+	//sClaveSobreEscribirBase="*MODULO*";
+	//sClaveVerificarBase="*MODULO*";
+	
+	//CLASE DINAMICO
+	//esIngresoCodigoAntes=true;
+	//esReemplazo=false; // Puede ser true	
+	//esClaveVerificarClaseDinamico=true;
+	//esClaveVerificarModuloDinamico=false;	
+	//sClaveSobreEscribirBase="*CLASSE*";
+	//sClaveVerificarBase="*CLASSE*";
+	*/
+	
+	//PARA TEST
+	String strNombreArchivoTest="AsientoContableCajaChicaLogicAdditional.java";
+	//"BancoLogicAdditional.java";//PerfilAccionLogicAdditional,"TipoValoracionBeanSwingJInternalFrameAdditional";//"TipoVisualBeanSwingJInternalFrameAdditional";//"SistemaBeanSwingJInternalFrameAdditional";
+	bool primeroTest=false;
+	//TRUE SOLAMENTE SI SE VA A DEPURAR Y POR ENDE A UTILIZAR Trace.WriteLine(); Y ESTO GENERA LENTITUD
+	bool primeroTestUnArchivoPorModulo=false;
+	
+	//PARAMETROS
+	bool esParaReportes=false;		
+	bool esIngresoCodigoAntes=true;
+	bool esReemplazo=false;
+	
+	//MODULO DINAMICO
+	bool esClaveVerificarModuloDinamico=false;
+	
+	//CLASE DINAMICO
+	String strFinalArchivoClaseDinamico="LogicAdditional.java";//"LogicAdditional.java";//"BeanAdditional.java";
+	bool esClaveVerificarClaseDinamico=false;
+	
+	
+	String strCodigoDinamico="";
+	String sTipoProyecto="EJB";//DESKTOP_ALL,EJB
+	PaquetesGenerar paquetesGenerar=PaquetesGenerar.LOGIC;//REPORTE,CONTROLLER,LOGIC
+	String sCriterioBusqueda="*Additional.java";//"*Additional.java";	"*Additionable.java";
+		
+	String sClaveSobreEscribir="//CONTROL_INICIO";//"//CONTROL_FUNCION2";//"//CONTROL_INICIO";//"import com.bydan.framework.erp.business.entity.GeneralEntityReturnGeneral;";//"//CONTROL_FUNCION2";//"public class "; "//CONTROL_INICIO"		"//CONTROL_FUNCION2";	"public class "		"public interface "
+								//NONE
+								//"public class CLASSEBeanAdditional {"
+								//"public CLASSEBeanAdditional() {"
+	String sClaveSobreEscribirBase="public class AutoriRetencionLogicAdditional extends CLASSELogic implements AutoriRetencionAdditionable{";
+								//"final public class CLASSELogicAdditional extends CLASSELogic implements CLASSEAdditionable{";
+	String sClaveSobreEscribirFinal="";
+	
+	
+	String sClaveVerificar="public  CLASSELogicAdditional()throws Exception {";//"import com.bydan.framework.erp.business.entity.GeneralEntityParameterGeneral;";//;//"EsProcesoAccionNormal";//"CargaInicialInicio";//"@SuppressWarnings";	private static final long serialVersionUID = 1L;
+							//"import com.bydan.erp.MODULO.business.entity.*;"
+							//"public class CLASSEBeanAdditional extends CLASSE {";-->CLASSE
+							//"public CLASSEBeanAdditional() throws Exception {"
+	String sClaveVerificarBase="public class CLASSELogicAdditional extends CLASSELogic implements CLASSEAdditionable{";
+							//"public class CLASSELogicAdditional extends GeneralEntityLogic implements CLASSEAdditionable{";
+	String sClaveVerificarFinal="";
+	
+	String sPathBase="";
+	String sPathBaseCapa="";
+	long lTamanioMaximoArchivo=15000;//2048;//2kb o 2048 bytes
+	
+	//DINAMICO
+	if(esClaveVerificarModuloDinamico) {// || esClaveVerificarClaseDinamico
+		if(esParaReportes) {
+			//sClaveVerificarBase="import com.bydan.erp.MODULO.business.entity.report.*;";
+		}
+	}
+	
+	//sPathBase=@"F:\l\proyectos\2013\source\erp\erp_desktop_all\src_"+sReplace+@"\";	
+	sPathBase=GetPathProyectoBase(sTipoProyecto,sReplace);
+	
+	//sPathBaseCapa=@"com\bydan\erp\"+sReplace+@"\presentation\swing\jinternalframes\";
+	sPathBaseCapa=GetPathProyectoCapa(paquetesGenerar,sReplace);
+	
+	if(esParaReportes) {
+		sPathBaseCapa=sPathBaseCapa+@"report\";
+	}
+	
+	//report\
+		//CAMBIAR FUNCION AgregarNuevoCodigo()
+	//ESTOS PARAMETROS SE CAMBIA
+	
+	
+	String sPathBaseActual="";
+	String sPathBaseCapaActual="";
+	String sPathFinal="";
+	
+	ArrayList arrayListModulos=new ArrayList();
+	arrayListModulos=GetModulosC();
+	
+	if(!ValidarGeneralParametros(sTipoProyecto,paquetesGenerar).Equals("")) {
+		return "";	
+	}
+	
+	foreach(String sModulo in arrayListModulos) {		
+		//Trace.WriteLine(sModulo);
+		//DINAMICO		
+		if(esClaveVerificarModuloDinamico) {
+			sClaveVerificar="\r\n"+sClaveVerificarBase.Replace("MODULO",sModulo);
+		}
+		
+		sPathBaseActual=sPathBase.Replace(sReplace,sModulo);
+		sPathBaseCapaActual=sPathBaseCapa.Replace(sReplace,sModulo);
+		
+		sPathFinal=sPathBaseActual+sPathBaseCapaActual;
+		
+		//Trace.WriteLine(sPathFinal);
+		
+		if(Directory.Exists(sPathFinal)) {
+			
+			string[] filePaths = Directory.GetFiles(@sPathFinal, sCriterioBusqueda);
+			
+			//Trace.WriteLine("here");
+			
+			foreach(String filePath in filePaths) {
+				strCodigoDinamico="";
+				strNombreClase="";
+				strArchivoClase="";
+				
+				//Trace.WriteLine(filePath);
+				
+				//DINAMICO
+				if(esClaveVerificarClaseDinamico) {		
+					
+					if(filePath.EndsWith(strFinalArchivoClaseDinamico)) {
+						String[] arrPath=filePath.Split('\\');
+						strArchivoClase=arrPath[arrPath.Length-1];
+						strNombreClase=strArchivoClase.Replace(strFinalArchivoClaseDinamico,"");
+						
+						//Trace.WriteLine("ARCHIVO CLASE ES:"+strArchivoClase);
+						//Trace.WriteLine("CLASE ES:"+strNombreClase);
+												
+						sClaveVerificar=sClaveVerificarBase.Replace("CLASSE",strNombreClase);
+						sClaveSobreEscribir=sClaveSobreEscribirBase.Replace("CLASSE",strNombreClase);
+						
+						//sClaveVerificar=sClaveVerificar+" extends "+strNombreClase;
+						
+						//Trace.WriteLine("CLAVE FINAL:"+sClaveVerificar);
+						//Trace.WriteLine("CLAVE SOBREESCRIBIR FINAL:"+sClaveSobreEscribir);
+						
+					}
+				}
+				
+				FileInfo fileInfo = new FileInfo(filePath);
+				
+				long length_file=fileInfo.Length;
+				
+				if(length_file>lTamanioMaximoArchivo) {
+					//Trace.WriteLine(length_file);
+					continue;
+					//Trace.WriteLine(length_file);
+				}
+				
+				existe=false;
+				existe_clave_verificar=false;
+				
+				stringBuilder=new StringBuilder();
+				
+				if(!primeroTest) {
+					Trace.WriteLine(filePath);
+				}
+				
+				if(GeneracionConfirmar) {
+					TextReader textReaderOrigen = new StreamReader(filePath);
+					
+					/*
+					if(!verificar_punto) {
+						System.Windows.Forms.MessageBox.Show(sClaveSobreEscribir);
+						verificar_punto=true;
+					}
+					*/
+					
+					while ((sLinea = textReaderOrigen.ReadLine()) != null) {
+						if(sLinea.Contains(sClaveVerificar)) {
+							existe_clave_verificar=true;
+							break;
+						}
+						
+						sClaveSobreEscribirFinal=sClaveSobreEscribir;
+						
+						if(sLinea.Contains(sClaveSobreEscribirFinal)) {
+							existe=true;
+							
+							/*
+							if(!verificar_punto) {
+								System.Windows.Forms.MessageBox.Show(sClaveSobreEscribir);
+								verificar_punto=true;
+							}
+							*/
+							//ANTERIOR CREO PARA NUEVA FUNCION
+							//sLinea=sLinea.Replace(ClaveEscribir,ClaveEscribir+GetFuncionEscribir());	
+							
+							//REEMPLAZAR:DESCOMENTAR
+							//sLinea=sLinea.Replace(sClaveSobreEscribirFinal,sClaveVerificar);	
+							
+						} else {
+							stringBuilder.Append("\r\n"+sLinea);	
+						}											
+														
+						if(existe) {
+							existe=false;
+							
+							//DINAMICO
+							if(esClaveVerificarModuloDinamico || esClaveVerificarClaseDinamico) {
+								strCodigoDinamico=sClaveVerificar;
+								
+								if(esReemplazo) {
+									strCodigoDinamico="\r\n"+sClaveVerificar;//\t
+								}
+								
+								//Trace.WriteLine("C VERIFI:"+sClaveVerificar);
+							}
+							
+							//REEMPLAZAR:COMENTAR
+							//DINAMICO
+							
+							if(!esReemplazo){
+								if(!esIngresoCodigoAntes) {
+									stringBuilder.Append("\r\n"+sLinea);
+								}
+							}
+							
+							AgregarNuevoCodigo(stringBuilder,strCodigoDinamico);//"",sClaveVerificar
+							
+							if(!esReemplazo) {
+								if(esIngresoCodigoAntes) {
+									stringBuilder.Append("\r\n"+sLinea);
+								}
+							}
+							
+							//stringBuilder.Append("\r\n\r\n"+sLinea);
+						} else {
+							//Trace.WriteLine("NO EXISTE");
+						}
+					}
+					
+					textReaderOrigen.Close();										
+					
+					if(existe_clave_verificar) {
+						continue;	
+					}
+										
+					
+					if(primeroTest && !filePath.Split('\\')[filePath.Split('\\').Length-1].Equals(strNombreArchivoTest)) {
+						/*
+						if(!verificar_punto && filePath.Contains("AsientoContable")) {
+							Trace.WriteLine(filePath);
+							System.Windows.Forms.MessageBox.Show(sClaveSobreEscribir);
+							verificar_punto=true;
+						}
+						*/
+						/*					
+						if(filePath.Contains("AsientoContable")) {
+							Trace.WriteLine(filePath);	
+						}
+						*/
+						continue;	
+					} else {
+						/*
+						if(filePath.Contains("AsientoContable")) {
+							Trace.WriteLine(filePath);	
+						}
+						*/
+					}
+					
+					if(primeroTest) {
+						Trace.WriteLine("PRIMERO TEST:"+filePath);	
+					}
+					
+					
+							
+					//ADVERTENCIA
+					//AQUI SOBREESCRIBE ARCHIVO
+					using (StreamWriter streamWriterDestino = new StreamWriter(filePath)) {
+						if(!stringBuilder.ToString().Equals("")) {
+							//streamWriterDestino.Write(stringBuilder.ToString());
+						}
+					}					
+				}
+				
+				if(primeroTestUnArchivoPorModulo) {
+					break;	
+				}
+			}
+		}
+	}
+		
+	
+	//001
+	/*
+	TextReader textReaderOrigen = new StreamReader("F:\\test_file\\d.txt");
+    
+	while ((sLinea = textReaderOrigen.ReadLine()) != null) {
+		if(sLinea.Contains(ClaveEscribir)) {
+			sLinea=sLinea.Replace(ClaveEscribir,ClaveEscribir+GetFuncionEscribir());	
+		}
+		
+		stringBuilder.Append("\r\n"+sLinea);
+        Console.WriteLine(sLinea);
+    }
+    
+	textReaderOrigen.Close();
+	
+	using (StreamWriter streamWriterDestino = new StreamWriter("F:\\test_file\\d.txt")) {
+		streamWriterDestino.Write(stringBuilder.ToString());
+	}
+	*/
+	
+	
+	
+	
+	
+	//XXX
+	/*
+    using (StreamWriter streamWriterDestino = new StreamWriter("F:\\d.txt")) {
+        TextReader textReaderOrigen = new StreamReader("F:\\o.txt");
+        while ((Linea = textReaderOrigen.ReadLine()) != null) {
+            Console.WriteLine(Linea);
+            streamWriterDestino.WriteLine(Linea);
+        }
+        textReaderOrigen.Close();
+    }
+	*/
+	
+	/*
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {//SourceTablesForGenerate) {
+		existe=false;
+			
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			
+			if(columnSchema.Name.Contains("idEjercicio")) {
+				existe=true;
+				break;
+			}
+			
+			
+		}
+		
+		if(existe) {
+			iCount++;
+			
+			if(!ExisteCampoTabla(tableSchema,"idEmpresa")) {
+			//if(!(ExisteCampoTabla(tableSchema,"idEmpresa") && ExisteCampoTabla(tableSchema,"idEjercicio"))) {
+				//Trace.WriteLine("Falta campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);	
+			} else {
+				//Trace.WriteLine("Si existe campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);
+			}
+		}
+		
+		
+		
+	}
+	
+	sUtil+="\r\n\r\nTOTAL="+iCount;
+	*/
+	
+	sUtil="ok";
+	
+	return sUtil;
+	
+}
+
+public void AgregarNuevoCodigo(StringBuilder stringBuilder,String strCodigoDinamico) {
+	//stringBuilder.Append("\r\nimport com.bydan.framework.erp.business.entity.*;");
+	//EJEMPLO 11
+	
+	stringBuilder.Append("\r\n\r\n\tpublic static void updateRelacionesToSaveAfter(GeneralEntity generalEntity,GeneralEntityLogic generalEntityLogic) {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_21");
+	stringBuilder.Append("\r\n\t}\r\n");
+	
+	/*
+	stringBuilder.Append("\r\n\r\n\tpublic static GeneralEntityReturnGeneral procesarEventosVista(ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,JInternalFrameBase jInternalFrameBase,FuncionTipo funcionTipo,ControlTipo controlTipo,EventoTipo eventoTipo,EventoSubTipo eventoSubTipo,String sTipo,Object object,Object objects,GeneralEntityParameterGeneral generalEntityParameterGeneral,GeneralEntityReturnGeneral generalEntityReturnGeneral)throws Exception {");
+	stringBuilder.Append("\r\n\t\ttry {");
+	stringBuilder.Append("\r\n\t\t\t//CONTROL_7");
+	stringBuilder.Append("\r\n\t\t\tif(controlTipo.equals(ControlTipo.WINDOW)) {");
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.PANEL)) {");
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.FORM)) {");			
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.BUTTON)) {");			
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.COMBOBOX)) {");				
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.TEXTBOX)) {");				
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.CHECKBOX)) {");				
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.TEXTAREA)) {");				
+	stringBuilder.Append("\r\n\r\n\t\t\t} else if(controlTipo.equals(ControlTipo.TREE)) {");				
+	stringBuilder.Append("\r\n\t\t\t}");			
+	stringBuilder.Append("\r\n\r\n\t\t\treturn generalEntityReturnGeneral;");
+	stringBuilder.Append("\r\n\r\n\t\t} catch(Exception e) {");
+	stringBuilder.Append("\r\n\t\t\tthrow e;");
+	stringBuilder.Append("\r\n\t\t} finally {");
+	stringBuilder.Append("\r\n\r\n\t\t}");
+	stringBuilder.Append("\r\n\t}");
+	*/
+	
+	//EJEMPLO 10
+	/*
+	stringBuilder.Append("\r\n\t//PARA EVENTOS GENERALES");
+	stringBuilder.Append("\r\n\tpublic static GeneralEntityReturnGeneral procesarEventos(ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,GeneralEntityLogic generalEntityLogic,ControlTipo controlTipo,EventoTipo eventoTipo,EventoSubTipo eventoSubTipo,String sTipo,Object objects,GeneralEntityParameterGeneral generalEntityParameterGeneral,GeneralEntityReturnGeneral generalEntityReturnGeneral)throws Exception {");
+	stringBuilder.Append("\r\n\t\ttry {");			
+	stringBuilder.Append("\r\n\t\t//CONTROL_19");
+	stringBuilder.Append("\r\n\r\n\r\n\t\t\treturn generalEntityReturnGeneral;");		
+	stringBuilder.Append("\r\n\r\n\t\t} catch(Exception e) {");
+	stringBuilder.Append("\r\n\t\t\tFunciones.manageException(logger,e);");
+	stringBuilder.Append("\r\n\t\t\tthrow e;");		
+    stringBuilder.Append("\r\n\r\n\t\t} finally {");		;
+	stringBuilder.Append("\r\n\r\n\t\t}");
+	stringBuilder.Append("\r\n\t}\r\n");
+	*/
+	
+	//EJEMPLO 9
+	/*
+	if(strCodigoDinamico.Equals("")) {
+		
+		//stringBuilder.Append("\r\n\t"+strCodigoDinamico);
+		//stringBuilder.Append("\r\n\t\tsuper(connexion);\r\n");
+		//stringBuilder.Append("\r\n\t}");
+		
+	} else {
+		//stringBuilder.Append("\r\n"+strCodigoDinamico);
+		stringBuilder.Append(strCodigoDinamico);
+	}
+	*/
+	
+	/*
+	stringBuilder.Append("\r\n\tstatic final long serialVersionUID=0;");
+	stringBuilder.Append("\r\n\t//CONTROL_INICIO\r\n");
+	*/
+	
+	//EJEMPLO 8
+	/*
+	stringBuilder.Append("\r\n\t//PARA ACCIONES NORMALES");
+	stringBuilder.Append("\r\n\tpublic static GeneralEntityReturnGeneral procesarAccions(ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,GeneralEntityLogic generalEntityLogic,String sProceso,Object objects,GeneralEntityParameterGeneral generalEntityParameterGeneral,GeneralEntityReturnGeneral generalEntityReturnGeneral)throws Exception {");
+	stringBuilder.Append("\r\n\t\ttry {");			
+	stringBuilder.Append("\r\n\r\n\t\t\tGeneralEntityReturnGeneral generalEntityReturnGeneral=new GeneralEntityReturnGeneral();");						
+	stringBuilder.Append("\r\n\r\n\r\n\t\t\treturn generalEntityReturnGeneral;");		
+	stringBuilder.Append("\r\n\r\n\t\t} catch(Exception e) {");
+	stringBuilder.Append("\r\n\t\t\tFunciones.manageException(logger,e);");
+	stringBuilder.Append("\r\n\t\t\tthrow e;");		
+    stringBuilder.Append("\r\n\r\n\t\t} finally {");		;
+	stringBuilder.Append("\r\n\r\n\t\t}");
+	stringBuilder.Append("\r\n\t}\r\n");
+	*/
+	
+	//EJEMPLO 7
+	//stringBuilder.Append("\r\nGeneralEntityReturnGeneral procesarAccions(ParametroGeneralUsuario parametroGeneralUsuario,Modulo modulo,Opcion opcion,Usuario usuario,GeneralEntityLogic generalEntityLogic,String sProceso,Object objects,GeneralEntityParameterGeneral generalEntityParameterGeneral)");
+	
+	//stringBuilder.Append("\r\nimport com.bydan.framework.erp.business.entity.GeneralEntityParameterGeneral;");
+	/*
+	stringBuilder.Append("\r\nimport com.bydan.framework.erp.business.entity.GeneralEntity;");
+	stringBuilder.Append("\r\nimport com.bydan.framework.erp.business.entity.GeneralEntityLogic;");
+	stringBuilder.Append("\r\nimport com.bydan.framework.erp.business.entity.GeneralEntityReturnGeneral;");
+	*/				
+	
+	//EJEMPLO 6
+	/*
+	stringBuilder.Append("\r\n\tpublic static Boolean EsProcesoAccionNormal(String sTipoProceso) throws Exception {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_6");
+	stringBuilder.Append("\r\n\t\tBoolean esProcesoAccionNormal=true;");
+	stringBuilder.Append("\r\n\r\n\t\tif(sTipoProceso.equals(\"XYZ\")) {");
+	stringBuilder.Append("\r\n\t\t\t//esProcesoAccionNormal=false;");
+	stringBuilder.Append("\r\n\t\t}");
+	stringBuilder.Append("\r\n\r\n\t\treturn esProcesoAccionNormal;");
+	stringBuilder.Append("\r\n\t}");
+	*/
+	
+	/*
+	stringBuilder.Append("\r\n\tpublic static void CargaInicialInicio(JInternalFrameBase jInternalFrameBase,String sTipo,Object objectGeneral) throws Exception {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_5");
+	stringBuilder.Append("\r\n\t}");
+	*/
+	
+	//EJEMPLO 5
+	/*
+	stringBuilder.Append("\r\n\tpublic static void CargaInicial(JInternalFrameBase jInternalFrameBase,String sTipo,Object objectGeneral) throws Exception {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_4");
+	stringBuilder.Append("\r\n\t}");
+	*/
+	
+	//EJEMPLO1
+	//stringBuilder.Append("\r\nprivate static final long serialVersionUID = 1L;");
+	
+	//EJEMPLO2
+	//stringBuilder.Append("\r\n@SuppressWarnings(\"unused\")");
+	
+	//EJEMPLO3
+	/*
+	stringBuilder.Append("\r\n\tpublic static void	ProcesarAccion(String sProceso,JInternalFrameBase jInternalFrameBase) throws Exception {");	
+	stringBuilder.Append("\r\n\t\t//CONTROL_3");
+	stringBuilder.Append("\r\n\t}");
+	*/
+	
+	//EJEMPLO4
+	/*
+	stringBuilder.Append("\r\n\tpublic static void RecargarVentanaSegunOpcion(JInternalFrameBase jInternalFrameBase,Opcion opcionActual) throws Exception {");
+	stringBuilder.Append("\r\n\t\t//CONTROL_2");
+	stringBuilder.Append("\r\n\t}");
+	*/
+}
+
+public String GetPathProyectoBase(String sTipoProyecto,String sReplace) {
+	String sReturn="";
+	
+	if(sTipoProyecto.Equals("DESKTOP_ALL")) {
+		sReturn=@"F:\l\proyectos\2013\source\erp\erp_desktop_all\src_"+sReplace+@"\";
+	} else {
+		sReturn=@"F:\l\proyectos\2013\source\erp\erp_ejb\src_"+sReplace+@"\";
+	}	
+	
+	return sReturn;
+}
+
+public String GetPathProyectoCapa(PaquetesGenerar paquetesGenerar,String sReplace) {
+	String sReturn="";
+		
+	if(paquetesGenerar.Equals(PaquetesGenerar.CONTROLLER)) {
+		sReturn=@"com\bydan\erp\"+sReplace+@"\presentation\swing\jinternalframes\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.DATA_ACCESS)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\business\dataaccess\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.ENTITIES)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\business\entity\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.INTERFACE)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\business\interfaces\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.LOGIC)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\business\logic\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.EJB_INTERFACE)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\service\ejb\interfaces\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.EJB_SESSION)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\service\ejb\session\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.CONSTANTES_FUNCIONES)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\util\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.REPORTE)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\presentation\report\source\";
+	
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.WEB)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\presentation\swing\jinternalframes\";
+		
+	} else if(paquetesGenerar.Equals(PaquetesGenerar.WEB_SESSION)){
+		sReturn=@"com\bydan\erp\"+sReplace+@"\presentation\web\jsf\sessionbean\";
+	}
+	
+	return sReturn;
+}
+
+public String GetCopiarControllerAdditional() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	StringBuilder stringBuilder=new StringBuilder();
+	
+	string sLinea = "";
+	String sReplace="TO_REPLACE";
+	
+	//ESTOS PARAMETROS SE CAMBIA
+	String sCriterioBusqueda="*Additional.java";
+	String sClaveSobreEscribir="//TO_COMMENT";
+	String sPathBaseOrigen=@"F:\l\proyectos\2013\source\erp\erp_desktop_all\src_"+sReplace+@"\";
+	String sPathBaseDestino=@"F:\l\proyectos\2013\source\erp_topublic\erp_desktop_all\src_"+sReplace+@"\";
+	String sPathBaseCapa=@"com\bydan\erp\"+sReplace+@"\presentation\swing\jinternalframes\";
+	
+	if(GeneracionReportes) {
+		sPathBaseCapa=sPathBaseCapa+@"report\";
+	}
+	
+	//report\
+		//CAMBIAR FUNCION AgregarNuevoCodigo()
+	//ESTOS PARAMETROS SE CAMBIA
+	
+	
+	String sPathBaseActualOrigen="";
+	String sPathBaseActualDestino="";
+	String sPathBaseCapaActual="";
+	String sPathFinalOrigen="";
+	String sPathFinalDestino="";
+	
+	String filePathDestino="";
+	
+	ArrayList arrayListModulos=new ArrayList();
+	arrayListModulos=GetModulosC();
+	
+	foreach(String sModulo in arrayListModulos) {
+		sPathBaseActualOrigen=sPathBaseOrigen.Replace(sReplace,sModulo);
+		sPathBaseActualDestino=sPathBaseDestino.Replace(sReplace,sModulo);
+		
+		sPathBaseCapaActual=sPathBaseCapa.Replace(sReplace,sModulo);
+		
+		sPathFinalOrigen=sPathBaseActualOrigen+sPathBaseCapaActual;
+		sPathFinalDestino=sPathBaseActualDestino+sPathBaseCapaActual;
+		
+		if(Directory.Exists(sPathFinalOrigen)) {
+			
+			string[] filePaths = Directory.GetFiles(@sPathFinalOrigen, sCriterioBusqueda);
+			
+			foreach(String filePath in filePaths) {
+				existe=false;
+				stringBuilder=new StringBuilder();
+				
+				Trace.WriteLine("ORIGEN:"+filePath);
+				
+				if(GeneracionConfirmar) {
+					TextReader textReaderOrigen = new StreamReader(filePath);
+					
+					while ((sLinea = textReaderOrigen.ReadLine()) != null) {			
+						if(sLinea.Contains(sClaveSobreEscribir)||sLinea.Contains(".service.ejb.")) {
+							continue;
+							//stringBuilder.Append("\r\n//"+sLinea);
+							existe=true;
+						} else {
+							stringBuilder.Append("\r\n"+sLinea);	
+						}											
+						
+						/*						
+						if(existe) {
+							existe=false;	
+							AgregarNuevoCodigo(stringBuilder);
+							
+							stringBuilder.Append("\r\n\r\n"+sLinea);
+						}
+						*/
+					}
+					
+					textReaderOrigen.Close();
+					
+					filePathDestino=filePath.Replace(sPathFinalOrigen,sPathFinalDestino);
+					
+					Trace.WriteLine("DESTINO:"+filePathDestino);
+					
+					
+					using (StreamWriter streamWriterDestino = new StreamWriter(filePathDestino)) {
+						streamWriterDestino.Write(stringBuilder.ToString());
+					}
+					
+				}
+			}
+		}
+	}
+	
+	sUtil="ok";
+	
+	return sUtil;
+	
+}
+
+public bool ExisteCampoTabla(TableSchema tableSchema,String strCampo) {
+	bool existe=false;
+	
+	foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+		if(columnSchema.Name.Equals(strCampo)) {
+			existe=true;
+			
+			break;
+		}		
+	}
+	
+	return existe;
+}
+
+public String GetTest() {
+	String sUtil="";
+	int iCount=0;
+	bool existe=false;
+	
+	foreach (TableSchema tableSchema in SourceDataBase.Tables) {//SourceTablesForGenerate) {
+		existe=false;
+			
+		foreach (ColumnSchema columnSchema in tableSchema.Columns) {
+			/*
+			if(!EsDecimalColumn(columnSchema) && !EsBigIntColumn(columnSchema) && !EsIntColumn(columnSchema)
+				&& !EsSmallIntColumn(columnSchema)&& !EsCharColumn(columnSchema) && !EsVarCharColumn(columnSchema)
+				&& !EsDateTimeColumn(columnSchema)&& !EsDateColumn(columnSchema) && !EsBitColumn(columnSchema)) {
+				sUtil+="\r\n"+columnSchema.DataType;
+			}
+			*/
+			/*
+			if(EsBinaryColumn(columnSchema) && !columnSchema.Name.Equals(strVersionRow)) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name+":"+columnSchema.DataType;
+			}
+			*/
+			
+			/*
+			if(columnSchema.Description==null || columnSchema.Description.Equals("")) {
+				sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name+"->"+columnSchema.Name;
+			}
+			*/
+			
+			if(columnSchema.Name.Contains("idEjercicio")) {
+				existe=true;
+				break;
+			}
+			
+			
+		}
+		
+		if(existe) {
+			iCount++;
+			
+			if(!ExisteCampoTabla(tableSchema,"idEmpresa")) {
+			//if(!(ExisteCampoTabla(tableSchema,"idEmpresa") && ExisteCampoTabla(tableSchema,"idEjercicio"))) {
+				//Trace.WriteLine("Falta campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);	
+			} else {
+				//Trace.WriteLine("Si existe campo empresa en tabla:"+tableSchema.Owner+" "+tableSchema.Name);
+			}
+		}
+		
+		
+		/*
+		if(tableSchema.Description==null || tableSchema.Description.Equals("")) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+		
+		/*
+		if(existe) {
+			sUtil+="\r\n"+tableSchema.Owner+"."+tableSchema.Name;
+			iCount++;
+		}
+		*/
+	}
+	
+	sUtil+="\r\n\r\nTOTAL="+iCount;
+	
+	return sUtil;
+}
+</script>
+<%if(ValidarVariablesIniciales()) {%>
+
+<%if(GeneracionSobreEscribirAdditional) {%>
+<%=GetSobreEscribir()%>
+
+<%} else if(GeneracionCopiarAdditional) {%>
+<%=GetCopiarAdditional()%>
+
+<%}else if(GeneracionCopiarControllerAdditional) {%>
+<%=GetCopiarControllerAdditional()%>
+<%}%>
+
+<%if(GeneracionTest) {%>
+<%=GetTest()%>
+<%}%>
+<%}%>

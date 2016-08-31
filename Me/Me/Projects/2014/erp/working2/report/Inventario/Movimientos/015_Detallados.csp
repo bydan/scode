@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">True</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">False</property>
+      <property name="A03_ConGroupBy">False</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">False</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="A02_TablaColumns1">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>idProducto</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>idUnidad</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>Cantidad</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>Iva</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>CostoUnitario</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>CostoTotal</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>DetalleMovimientoInventario</tableName>
+        <name>Ice</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="ColumnsParametrosDesdeHasta">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>FechaEmision</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="TablaReporteCreada">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Inventario</owner>
+      <name>MovimientosResumidos</name>
+    </table>
+      </property>
+      <property name="A03_Prefijo1">d</property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="A01_Esquema">Inventario</property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idEmpresa</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idSucursal</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idCliente</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idTransaccion</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>Producto</tableName>
+        <name>idLinea</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>Producto</tableName>
+        <name>idLineaGrupo</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>Producto</tableName>
+        <name>idLineaCategoria</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>Producto</tableName>
+        <name>idLineaMarca</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A05_TablaFkOtrosColumns1">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>Producto</tableName>
+        <name>Codigo</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A02_NombreTabla">MovimientosDetallados</property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Inventario</owner>
+      <name>MovimientoInventario</name>
+    </table>
+      </property>
+      <property name="A02_TablaPrincipalColumns">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idSucursal</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idCliente</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>idTransaccion</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>NumeroComprobante</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>NumeroFactura</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>NumeroSecuencial</name>
+      </column>
+      <column>
+        <tableOwner>Inventario</tableOwner>
+        <tableName>MovimientoInventario</tableName>
+        <name>FechaEmision</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo">m</property>
+      <property name="B03_Prefijo2" />
+      <property name="A01_Tabla1">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Inventario</owner>
+      <name>DetalleMovimientoInventario</name>
+    </table>
+      </property>
+    </propertySet>
+  </propertySets>
+</codeSmith>

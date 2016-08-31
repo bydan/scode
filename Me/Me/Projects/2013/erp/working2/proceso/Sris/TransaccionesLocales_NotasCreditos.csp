@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<codeSmith xmlns="http://www.codesmithtools.com/schema/csp.xsd">
+  <variables>
+    <add key="ConnectionString1" value="Data Source=localhost;Initial Catalog=ErpProcesoReporte;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+    <add key="ConnectionString2" value="Data Source=localhost;Initial Catalog=Erp;Integrated Security=False;Connect Timeout=30;User=sa;Pwd=sasasa" />
+  </variables>
+  <propertySets>
+    <propertySet name="ReportTemplate.cs" output="ReportTemplate.cs" template="C:\Users\informix\Documents\CodeSmith\Samples\v5.0\Templates\Me\Me\Global\DynamicCode\Reportes\ReportTemplate.cst">
+      <property name="GeneracionSql">False</property>
+      <property name="GeneracionCorreccionCreation">False</property>
+      <property name="GeneracionCorreccionDescription">True</property>
+      <property name="GeneracionCreation">False</property>
+      <property name="EsProceso">False</property>
+      <property name="EsProcesoParametro">False</property>
+      <property name="EsProcesoConRetorno">False</property>
+      <property name="A03_ConGroupBy">True</property>
+      <property name="A06_ConReporteGuardarBaseDatos">False</property>
+      <property name="A07_SchemaReporteAuxiliar">NINGUNO</property>
+      <property name="A06_ExisteWhere">False</property>
+      <property name="A07_NumWheres">0</property>
+      <property name="A08_ConSumCantidad">True</property>
+      <property name="A04_ConSumCantidad">False</property>
+      <property name="B04_ConSumCantidad">False</property>
+      <property name="C04_ConSumCantidad">False</property>
+      <property name="D04_ConSumCantidad">False</property>
+      <property name="E04_ConSumCantidad">False</property>
+      <property name="TablaReporteCreada">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Sris</owner>
+      <name>TransaccionesLocalesNotasCreditos</name>
+    </table>
+      </property>
+      <property name="SourceDataBaseReportes">
+        <connectionString>$(ConnectionString1)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+      </property>
+      <property name="A01_Esquema">Sris</property>
+      <property name="A02_NombreTabla">TransaccionesLocalesNotasCreditos</property>
+      <property name="A01_TablaPrincipal">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <table>
+      <owner>Facturacion</owner>
+      <name>NotaCredito</name>
+    </table>
+      </property>
+      <property name="A02_TablaPrincipalColumns">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>idCliente</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>TotalIva</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>TotalSinIva</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>Iva</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>Total</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A03_Prefijo">n</property>
+      <property name="A09_TablaFkOtrosColumns">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Cartera</tableOwner>
+        <tableName>Cliente</tableName>
+        <name>Ruc</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="ColumnsParametros">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>idEmpresa</name>
+      </column>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>idEjercicio</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="ColumnsParametrosDesdeHasta">
+        <connectionString>$(ConnectionString2)</connectionString>
+        <providerType>SchemaExplorer.SqlSchemaProvider,SchemaExplorer.SqlSchemaProvider</providerType>
+        <columnList>
+      <column>
+        <tableOwner>Facturacion</tableOwner>
+        <tableName>NotaCredito</tableName>
+        <name>Fecha</name>
+      </column>
+    </columnList>
+      </property>
+      <property name="A05_TablaFkOtrosColumns1" />
+    </propertySet>
+  </propertySets>
+</codeSmith>

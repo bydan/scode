@@ -1,0 +1,371 @@
+﻿<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace=" System.Collections" %>
+
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="ByDan" Category="Options" Description="Nombre de la Empresa" %>
+
+<script runat="template">
+
+public string GetNombreClase(string strTablaBase)
+{
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+
+public  string GetLibreriasForeignKeysColumnsForCombos()
+	{
+		
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	ArrayList listaColumnas=new ArrayList();
+	
+	
+	SchemaExplorer.ColumnSchemaCollection columns=new SchemaExplorer.ColumnSchemaCollection();
+	
+	columns.AddRange(TablaBase.Columns);
+	
+	System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+	TableSchema tablaRelacionadaObjetivo=null;
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo)||collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					continue;
+				}
+				
+				columns.AddRange(tablaRelacionadaObjetivo.Columns);
+			}
+	
+	bool encontrado=false;
+	bool encontradoEnTablaRelacionada=false;
+	
+	foreach(ColumnSchema column in columns)
+	{
+		
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember)
+		{
+			encontrado=false;
+			
+			foreach(String nombreColumna in listaColumnas)
+			{
+				if(nombreColumna.Equals(GetNombreClaseRelacionadaFromColumn(column)))
+				{
+					encontrado=true;
+					continue;
+				}
+			}
+			
+			if(encontrado||GetNombreClaseRelacionadaFromColumn(column).Equals(GetNombreClaseC(TablaBase.ToString())))
+			{
+				continue;
+			}
+			else
+			{
+				encontradoEnTablaRelacionada=false;
+				
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+					
+					if(GetNombreClaseRelacionadaFromColumn(column).Equals(GetNombreClaseC(tablaRelacionadaObjetivo.ToString())))
+					{
+						encontradoEnTablaRelacionada=true;
+						continue;
+					}					
+				}
+				
+				if(encontradoEnTablaRelacionada)
+				{
+					continue;
+				}	
+			}
+			
+			strNameLibrary="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js')\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js')\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js')\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js')\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js')\r\n";
+			strNameLibrary+="funcionGeneral.Import('JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js')\r\n";
+			
+			strNameLibraries+=strNameLibrary+"\r\n";
+			
+			listaColumnas.Add(GetNombreClaseRelacionadaFromColumn(column));
+		}
+		
+		
+	}
+		
+	return strNameLibraries;
+}
+
+public String GetLoadJavaScriptMaintenanceTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";	
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			String strCompuesto="";
+			TableSchema tablaRelacionadaObjetivo;
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+					strCompuesto=GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+strClaseAuxiliar;
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					strCompuesto="";
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+				{
+					continue;
+				}
+				
+				
+				strTablaClaseRelacionada+="\r\n\r\n/* Arquitectura "+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"*/";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"DataAccessAdditional.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Entities/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"Entity.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Entities/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+"Entity.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"DataAccess.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/WebPageInteraction/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"WebPageInteraction.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Services/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"Services.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Logic/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"Logic.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/LayerCommunication/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"LayerCommunication.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"GeneralFunctions.js');";
+				strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClase(tablaRelacionadaObjetivo.ToString())+strCompuesto+"Constants.js');";										
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n/* Arquitectura "+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"*/";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccessAdditional.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Entities/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"Entity.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/DataAccess/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"DataAccess.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/WebPageInteraction/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"WebPageInteraction.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Services/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"Services.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/Logic/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"Logic.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/LayerCommunication/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"LayerCommunication.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"GeneralFunctions.js');";
+					strTablaClaseRelacionada+="\r\nfuncionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/"+GetNombreClase(collectionInfo.SecondaryTableSchema.ToString())+"Constants.js');";										
+				
+				}
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="\tfuncionGeneral.Import('JavaScript/Library/Validacion/";
+	String strNameFin="');";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;yaValidacionOtros=false;
+	
+	SchemaExplorer.ColumnSchemaCollection columns=new SchemaExplorer.ColumnSchemaCollection();
+	
+	columns.AddRange(TablaBase.Columns);
+	
+	System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+	TableSchema tablaRelacionadaObjetivo;
+			
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionadaObjetivo=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo)||collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					continue;
+				}
+				
+				columns.AddRange(tablaRelacionadaObjetivo.Columns);
+			}
+	
+	foreach(ColumnSchema column in columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="Text.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				continue;
+				//strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				continue;
+				//strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				continue;
+				//strNameArchivoValidacion="Num.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="Date.js";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+</script>
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene la definicion de variable entidad de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+
+var funcionGeneral=new FuncionGeneral();
+
+/* General */
+funcionGeneral.Import('JavaScript/Library/Ajax/Ajax.js');
+funcionGeneral.Import('JavaScript/Library/Ajax/AjaxFuncionGeneral.js');
+
+<%=GetLoadJavaScriptMaintenanceTablasClasesRelacionadas()%>
+
+/* Arquitectura <%=GetNombreClase(TablaBase.ToString())%>*/
+funcionGeneral.Import('JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional.js');
+funcionGeneral.Import('JavaScript/Entities/<%=GetNombreClase(TablaBase.ToString())%>Entity.js');
+funcionGeneral.Import('JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccess.js');
+funcionGeneral.Import('JavaScript/WebPageInteraction/<%=GetNombreClase(TablaBase.ToString())%>WebPageInteraction.js');
+funcionGeneral.Import('JavaScript/WebPageInteraction/<%=GetNombreClase(TablaBase.ToString())%>WebPageInteractionRelaciones.js');
+funcionGeneral.Import('JavaScript/Services/<%=GetNombreClase(TablaBase.ToString())%>Services.js');
+funcionGeneral.Import('JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>Logic.js');
+funcionGeneral.Import('JavaScript/LayerCommunication/<%=GetNombreClase(TablaBase.ToString())%>LayerCommunication.js');
+funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>GeneralFunctions.js');
+funcionGeneral.Import('JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>Constants.js');
+
+/* Validacion */
+funcionGeneral.Import('JavaScript/Library/Validacion/Validacion.js');
+
+/* Foreign Keys */
+<%=GetLibreriasForeignKeysColumnsForCombos()%>

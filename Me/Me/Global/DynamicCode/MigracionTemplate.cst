@@ -1,0 +1,180 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+
+<%@ Property Name="GeneracionConReferencia" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionConCommitRollBack" Type="System.Boolean" Default="false" Category="0.Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="TablaBaseOrigen" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="TablaBaseReferencia" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+
+
+<script runat="template">
+
+</script>
+
+public static void <%=GetNombreClaseC(TablaBase.ToString())%>(Boolean esHibernate) throws SQLException, Exception{
+	<%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic=new <%=GetNombreClaseC(TablaBase.ToString())%>Logic();
+	
+	<%if(GeneracionConCommitRollBack) {%>
+	<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.getNewConnexionToDeep();
+	<%}%>
+	
+	try {
+		int iTotal=0;
+		long time_start = System.currentTimeMillis();
+		
+		if(esHibernate) {
+			com.bydan.framework.jh.business.entity.Constantes.CONNEXIONTYPE=com.bydan.framework.jh.business.entity.ConnexionType.HIBERNATE;
+			com.bydan.framework.jh.business.entity.Constantes.PARAMETERDBTYPE=com.bydan.framework.jh.business.entity.ParameterDbType.INFORMIX;
+		} else {
+			com.bydan.framework.jh.business.entity.Constantes.CONNEXIONTYPE=com.bydan.framework.jh.business.entity.ConnexionType.JDBC32;
+			com.bydan.framework.jh.business.entity.Constantes.PARAMETERDBTYPE=com.bydan.framework.jh.business.entity.ParameterDbType.INFORMIX;
+		}
+					
+		<%=GetNombreClaseC(TablaBaseOrigen.ToString())%> <%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>=new <%=GetNombreClaseC(TablaBaseOrigen.ToString())%>();
+		
+		long time_persistence = System.currentTimeMillis();
+		
+		String sFinalQuery=GetFinal<%=GetNombreClaseC(TablaBase.ToString())%>();
+
+		
+		List<<%=GetNombreClaseC(TablaBaseOrigen.ToString())%>> <%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>s = new  ArrayList<<%=GetNombreClaseC(TablaBaseOrigen.ToString())%>>();				
+		
+		<%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>s=<%=GetNombreClaseC(TablaBaseOrigen.ToString())%>.getEntitiesWithConnection(sFinalQuery);
+		
+		long time_query = System.currentTimeMillis();
+				
+		
+		iTotal=<%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>s.size();
+		
+		
+		<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>= new <%=GetNombreClaseC(TablaBase.ToString())%>();
+		
+		<%if(GeneracionConReferencia){%>
+		<%=GetNombreClaseC(TablaBaseReferencia.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>Logic=new <%=GetNombreClaseC(TablaBaseReferencia.ToString())%>Logic();
+		<%=GetNombreClaseC(TablaBaseReferencia.ToString())%> <%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>= new <%=GetNombreClaseC(TablaBaseReferencia.ToString())%>();		
+		<%}%>
+		
+		Long idManual=0L;
+		String nombre="";
+		String codigo="";
+		Long lcodigo=1L;
+		Long idModulo=0L;
+		Boolean isTrueFalse=false;
+		
+		int countNoExiste=0;
+		StringBuilder stringBuilderNoExiste=new StringBuilder();
+		
+		for(<%=GetNombreClaseC(TablaBaseOrigen.ToString())%> <%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>2:<%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>s) {
+			idManual++;
+			
+			//nombre=GetFormatoNombre<%=GetNombreClaseC(TablaBase.ToString())%>(<%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>2.getcact_nom_cact());
+			//lcodigo=GetFormatoCodigo<%=GetNombreClaseC(TablaBase.ToString())%>(<%=GetNombreClaseObjetoC(TablaBaseOrigen.ToString())%>2.getcact_cod_cact());
+					
+			System.out.println(nombre);
+			
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>= new <%=GetNombreClaseC(TablaBase.ToString())%>();
+			
+			/*
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setId(lcodigo);
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setnombre(nombre);
+			
+			if(saecact2.getcact_cod_cact()!=null) {
+				tipoLineaFlujoCaja.setcodigo_sri(saecact2.getcact_cod_cact().trim());
+			}
+			*/
+			
+			/*
+			<%if(GeneracionConReferencia){%>
+			<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>Logic.get<%=GetNombreClaseC(TablaBaseReferencia.ToString())%>PorNombreWithConnection(nombre);
+			<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>=<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>Logic.get<%=GetNombreClaseC(TablaBaseReferencia.ToString())%>();
+			
+			
+			if(<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>!=null && <%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>.getId()>0) {
+				<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.setid_<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>(<%=GetNombreClaseObjetoC(TablaBaseReferencia.ToString())%>.getId());	 	
+			} else {
+				countNoExiste++;
+				stringBuilderNoExiste.append(","+nombre);
+				
+				continue;
+			}
+			<%}%>
+			*/
+			
+			<% for (int i = 0; i < TablaBase.Columns.Count; i++){ %>
+			<%if(TablaBase.Columns[i].Name==strIsActive||TablaBase.Columns[i].Name==strIsExpired||TablaBase.Columns[i].Name==strId||TablaBase.Columns[i].Name==strVersionRow|| GetEsReporteParametroFromPropertiesC(TablaBase.Columns[i])){continue; } %>
+ 			<%= GetValueDefaultParameterClaseC(TablaBase.Columns[i],"").Replace("this.",GetNombreClaseObjetoC(TablaBase.ToString())+".set").Replace("=","(").Replace(";",");") %>
+			<% } %>
+		
+			<%if(GeneracionConCommitRollBack) {%>
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.set<%=GetNombreClaseC(TablaBase.ToString())%>(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);
+ 			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.save<%=GetNombreClaseC(TablaBase.ToString())%>();
+			<%}%>
+			
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>s().add(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>);
+		}
+		
+		if(stringBuilderNoExiste.length() >0) {						
+			System.out.println("NO EXISTE("+countNoExiste+"):"+stringBuilderNoExiste.toString());
+		}
+		
+		<%if(GeneracionConCommitRollBack) {%>
+		//<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.commitNewConnexionToDeep();
+		<%}%>
+	
+		//<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.save<%=GetNombreClaseC(TablaBase.ToString())%>sWithConnection();
+		
+		
+		System.out.println("");
+		System.out.println("");
+		System.out.println("");
+		System.out.println("TIEMPO DEMORADO CARGAR PERSISTENCIA(ms): " + ((double)time_persistence - time_start));  		
+		System.out.println("TIEMPO DEMORADO EJECUTAR QUERY(ms): " + ((double)time_query - time_persistence)); 		
+	    System.out.println("TIEMPO TOTAL DEMORADO (ms): " + ((double)time_query - time_start));   
+	    
+	    System.out.println("TOTAL No ITEMS : " + iTotal);
+	} catch(Exception e) {
+		<%if(GeneracionConCommitRollBack) {%>
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.rollbackNewConnexionToDeep();
+		<%}%>
+		
+		throw e;
+			
+	} finally {
+		<%if(GeneracionConCommitRollBack) {%>
+		<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.closeNewConnexionToDeep();
+		<%}%>
+	}
+}
+
+public static String GetFinal<%=GetNombreClaseC(TablaBase.ToString())%>() throws SQLException, Exception{
+	String sFinal=" ";		
+	return sFinal;
+}
+
+public static String GetFormatoNombre<%=GetNombreClaseC(TablaBase.ToString())%>(String sNombreTipoDocumentoOrig) throws SQLException, Exception{
+	String sNombreTipoDocumento="";
+		
+	sNombreTipoDocumento=sNombreTipoDocumentoOrig.trim();
+		
+	return sNombreTipoDocumento;
+}
+
+public static Boolean Existe<%=GetNombreClaseC(TablaBase.ToString())%>(String nombre,List<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) throws SQLException, Exception{
+	Boolean existe=false;
+		
+	for(<%=GetNombreClaseC(TablaBase.ToString())%> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>: <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s) {
+		if(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>.getnombre().equals(nombre)) {
+			existe=true;
+			break;
+		}
+	}
+		
+	return existe;
+}

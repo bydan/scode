@@ -1,0 +1,942 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII" %>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ColumnaImagen" Type="ColumnSchema" Category="Context"%>
+
+<script runat="template">
+
+public String GetClassClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			
+			TableSchema tablaRelacionadaObjetivo;
+				
+			
+				foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+				{
+								
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+					}	
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						
+						tablaRelacionadaObjetivo=collectionInfo.SecondaryTableSchema;
+						
+						if(!VerificarTablaRelacionFromPropertiesC(collectionInfo.JunctionTableSchema))
+						{
+							continue;
+						}
+					}
+					else
+					{
+						continue;
+					}
+						
+					if(!VerificarTablaRelacionFromPropertiesC(tablaRelacionadaObjetivo))
+					{
+						continue;
+					}
+					
+					strTablaClaseRelacionada+="\t\tclasses.add("+GetNombreClaseC(tablaRelacionadaObjetivo.ToString())+ ".class);\r\n";
+					
+				}
+				
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetClassClasesForeigKeys() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsForeignKeyMember)
+				{
+					strTablaClaseRelacionada+="\t\tclasses.add("+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+ ".class);\r\n";
+				
+				}
+			}
+			
+			
+				
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public String GetMaintenanceTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " TR_"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\tArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> TR_"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetMaintenanceTablasClasesRelacionadasRelaciones() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="Save"+GetNombreClase(TablaBase.ToString())+"Relaciones(intIdUsuarioSesion,"+GetNombreClaseObjetoC(TablaBase.ToString());
+			String strFuncionEnd=");";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable);
+				}
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+=","+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+				}
+			}
+			
+			strTablaClaseRelacionada=strFuncionInit+strTablaClaseRelacionada+strFuncionEnd;
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetXmlBusquedasIndicesTablas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="";
+			
+			
+			String strIfFuncion=string.Empty;
+			strIfFuncion="\r\n\telse if(strAccionBusqueda==\"{0}\")\r\n{";
+			
+			String strFuncionBusqueda="";
+			String strFuncionBusqueda2="";
+			
+			String strDefinicionVariables="";
+			String strUsoVariables="";
+			
+			String strXmlFuncion=string.Empty;
+			
+			
+			
+			
+			strXmlFuncion="\r\n\t\t\t\txml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.toXml"+GetNombreClaseC(TablaBase.ToString())+"s();";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s()==null||"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClaseC(TablaBase.ToString())+"s().size()==0)";
+			strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\t\txml =Mensaje.getMensajeGeneralNoExisteBusqueda(\""+GetNombreClaseC(TablaBase.ToString())+"\");\r\n\t\t\t\t\t}";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\t\tif(strGenerarReporte!=\"\"&&strGenerarReporte!=null)\r\n\t\t\t\t{";
+			strXmlFuncion+="\r\n\t\t\t\t\tGenerarReporte"+GetNombreClase(TablaBase.ToString())+"s(request,response,\"xyzTipoBusqueda\");\r\n\t\t\t\t}";
+			
+			strXmlFuncion+="\r\n\r\n\t\t\tresponse.setContentType(\"text/xml\");";
+			strXmlFuncion+="\r\n\t\t\tresponse.getWriter().write(xml);";
+			
+			String strXmlFuncionObjeto=string.Empty;
+			
+			strXmlFuncionObjeto="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"()!=null&&"+GetNombreClaseObjetoC(TablaBase.ToString())+ "Logic.get"+GetNombreClase(TablaBase.ToString())+"().get"+strIdGetSet+"()!=0)\r\n\t\t\t\t\t{";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\txml ="+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.toXml"+GetNombreClaseC(TablaBase.ToString())+"();\r\n\t\t\t\t\t}\r\n\t\t\t\t\telse\r\n\t\t\t\t\t{";
+			strXmlFuncionObjeto+="\r\n\t\t\t\t\t\txml =Mensaje.getMensajeGeneralNoExisteBusqueda(\""+ GetNombreClase(TablaBase.ToString())+ "\");\r\n\t\t\t\t\t}";
+			
+			
+			//strXmlFuncion+="\r\n\r\n\t\t\t\t\tif("+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.get"+GetNombreClaseC(TablaBase.ToString())+"()==null&&xmlMensajeMantenimiento==\"\")";
+			//strXmlFuncion+="\r\n\t\t\t\t\t{\r\n\t\t\t\t\txml =Mensaje.getMensajeGeneralNoExisteBusqueda(\""+GetNombreClaseC(TablaBase.ToString())+"\");\r\n\t\t\t\t\t}";
+		
+			strXmlFuncionObjeto+="\r\n\r\n\t\t\tresponse.setContentType(\"text/xml\");";
+			strXmlFuncionObjeto+="\r\n\t\t\tresponse.getWriter().write(xml);";
+				
+						
+			foreach(IndexSchema indexSchema in TablaBase.Indexes)
+			{
+				if(!indexSchema.IsPrimaryKey)
+				{
+					
+					strFuncionBusqueda2="\r\n\t\t\t\tstrDetalleReporte="+GetNombreClase(TablaBase.ToString())+"LogicAdditional.getDetalleIndice"+indexSchema.Name+"(";
+					
+					if(indexSchema.IsUnique)
+					{
+						
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.Get"+GetNombreClaseC(TablaBase.ToString())+indexSchema.Name+"(";
+						strIfFuncion="\r\n\t\t\telse if(strAccionBusqueda.equals(\""+indexSchema.Name+"\"))\r\n\t\t\t{";
+					}
+					else
+					{
+						if(indexSchema.Name.Contains("Busqueda")|indexSchema.Name.Contains("FK"))
+						{
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.Get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"("+GetNombreOrderColumnFromPropertiesC(TablaBase)+"finalQueryPaginacion,";
+						strIfFuncion="\r\n\t\t\telse if(strAccionBusqueda.equals(\""+indexSchema.Name+"\"))\r\n\t\t\t{";
+						
+						}
+						else
+						{
+						strFuncionBusqueda="\r\n\r\n\t\t\t\t"+GetNombreClaseObjetoC(TablaBase.ToString())+"Logic.Get"+GetNombreClaseC(TablaBase.ToString())+"s"+indexSchema.Name+"(";
+						strIfFuncion="\r\n\t\t\telse if(strAccionBusqueda.equals(\""+indexSchema.Name+"\"))\r\n\t\t\t{";	
+						}
+					}
+					
+					int count=1;
+					strDefinicionVariables="";
+					strUsoVariables="";							
+					//strFuncionBusqueda="";
+							foreach(MemberColumnSchema memberColumnSchema in indexSchema.MemberColumns)
+							{
+																				
+							if(!(indexSchema.Name.Contains("BusquedaMayor")||indexSchema.Name.Contains("BusquedaMayorIgual")||indexSchema.Name.Contains("BusquedaMenor")||indexSchema.Name.Contains("BusquedaMenorIgual")||indexSchema.Name.Contains("BusquedaRango")||indexSchema.Name.Contains("BusquedaRangoIgual")))
+								{								
+									strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"request.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+									strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 
+									
+									if(!indexSchema.MemberColumns.Count.Equals(count))
+									{
+										strUsoVariables+=",";	
+									}
+								}
+								else
+								{
+									if(!indexSchema.Name.Contains("BusquedaRango"))
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"="+GetTipoColumnaParse(memberColumnSchema.Column,"request.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name)+"\")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column); 									
+									}
+									else
+									{
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial="+GetTipoColumnaParse(memberColumnSchema.Column,"request.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Inicial\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Inicial"; 									
+										
+										strUsoVariables+=",";	
+										
+										strDefinicionVariables+="\r\n\t\t\t\t"+GetTipoColumnaClaseC(memberColumnSchema.Column)+" "+GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final="+GetTipoColumnaParse(memberColumnSchema.Column,"request.getParameter(\""+GetNameControlHtmlBusqueda(memberColumnSchema.Column,indexSchema.Name).Replace(memberColumnSchema.Column.Name+indexSchema.Name+"",memberColumnSchema.Column.Name+indexSchema.Name+"Final\"")+")")+";";
+										strUsoVariables+=GetPrefijoTipoC(memberColumnSchema.Column)+GetNombreColumnaClaseC(memberColumnSchema.Column)+"Final"; 									
+									}								
+								}
+								count++;
+							}
+							strFuncionBusqueda2+=strUsoVariables+");\r\n";
+							strFuncionBusqueda+=strUsoVariables+");";
+							
+					if(indexSchema.IsUnique)
+					{
+							strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strFuncionBusqueda2+strXmlFuncionObjeto+"\r\n\r\n\t\t\t}";																																		
+					}
+					else
+					{
+							strInitFuncion+=strIfFuncion+strDefinicionVariables+strFuncionBusqueda+strFuncionBusqueda2+strXmlFuncion.Replace("xyzTipoBusqueda",indexSchema.Name)+"\r\n\r\n\t\t\t}";																																		
+					}
+				}
+			}								
+			return  strInitFuncion;
+		}
+		
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClass(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(/*column.Name.Equals(strId)||*/column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormularioNuevo(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);
+	
+	String strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\")== null|| request.getParameter(\""+GetNameControlHtml(column) +"\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)||column.Name.Equals(strId)||column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+ strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"request.getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\")== null||request.getParameter(\""+GetNameControlHtml(column) + "\")==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"request.getParameter(\""+GetNameControlHtml(column) +"\"")+");\r\n}";
+}
+
+public string GetSetVariablesFormularioContador(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif(request.getParameter(\""+column.Name +GetNombreClaseC(TablaBase.ToString())+"\"+i)== null||request.getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) + "\"+i)==\"\"){";
+	strIfElse+=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+"="+GetTipoColumnaParse(column,"request.getParameter(\""+column.Name+GetNombreClaseC(TablaBase.ToString()) +"\"+i)")+";}";
+}
+
+public string GetSetVariablesFormularioContadorParaBorrar(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\n\t\t\t\t\tif(request.getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\")== null||request.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString()+\"ParaBorrar\")==\"\"){";
+	strIfElse+=strPrefijo+strColumna+"=null;}\r\n\t\t\t\t\telse{";	
+	
+	if(!column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strIfElse+strPrefijo+strColumna+"="+GetTipoColumnaParse(column,"request.getParameter(\""+GetNameControlHtml(column) +"\"+i.toString()+\"ParaBorrar\"")+");}";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="request.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+"Logic.get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strTipo+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+";";
+}
+
+
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetSetVariablesToObjetoLogicNuevo(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||request.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId))
+	{
+			return string.Empty;
+	}
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	String strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||request.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+	strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	if(column.Name.Equals(strVersionRow))
+	{
+		return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+	}
+	return  GetNombreClaseObjeto(TablaBase.ToString())+"Logic.get"+GetNombreClase(TablaBase.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString())+");";
+}
+
+public String GetVariablesTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n\tprivate "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"Logic "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=null;";
+					strTablaClaseRelacionada+="\r\n\t"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+";");
+					strTablaClaseRelacionada+="\r\n\tArrayList<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+		
+public String GetVariablesNewTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.OneToMany)
+				{
+					strTablaClaseRelacionada+="\r\n\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"Logic();";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable+"")+"=new "+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"();";
+					strTablaClaseRelacionada+="\r\n\t\t\t"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s=new ArrayList<"+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+">();";
+				}
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetProcesarTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="";
+			String strFuncionEnd="(request,response);\r\n\t\t\t\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			TableSchema tablaRelacionada;
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionada=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+					strFuncionInit="\r\n\r\n\t\t\t\tif(request.getParameter(\"numeroDe"+GetNombreClaseC(tablaRelacionada.ToString())+"\")!=null)\r\n\t\t\t\t{\r\n\t\t\t\t\tProcesar";
+					strTablaClaseRelacionada+=strFuncionInit+GetNombreClaseC(tablaRelacionada.ToString())+"Relaciones"+strFuncionEnd;
+				
+			}
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetFuncionesMaintenanceTablasClasesRelacionadas() 
+		{
+			String strLastCode="";
+			String strFuncionBody="";
+			String strFuncionBody2="";
+			TableSchema tablaRelacionada;
+			
+			String strVariables="";
+			String strVariablesDocumento="";
+			String strTablaClaseRelacionada="";
+			String strFuncionInit="\r\n\r\n\tpublic void Procesar"+GetNombreClase(TablaBase.ToString())+"Relaciones(HttpServletRequest request, HttpServletResponse response)\r\n\t{";
+			String strFuncionEnd="\r\n\t\t}\r\n\t}\r\n\tcatch(Exception ex)\r\n\t{\r\n\tthrow ex;\r\n\t}\r\n}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					tablaRelacionada=collectionInfo.SecondaryTableSchema;
+				}	
+				else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					
+					tablaRelacionada=collectionInfo.JunctionTableSchema;
+				}
+				else
+				{
+					continue;
+				}
+				
+				//System.Windows.Forms.MessageBox.Show(tablaRelacionada.Name);
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne||collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+				{
+					strFuncionInit="\r\n\r\npublic void Procesar"+GetNombreClase(tablaRelacionada.ToString())+"Relaciones(HttpServletRequest request, HttpServletResponse response)throws Exception\r\n{\r\n\ttry\r\n\t{";
+					strFuncionBody="\r\n\r\n\t\tInteger intNumeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"=0;";
+					strFuncionBody+="\r\n\t\tBoolean isNew"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\tBoolean isChanged"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody+="\r\n\t\tBoolean isDeleted"+ GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					
+					strFuncionBody+="\r\n\t\t"+ GetNombreClase(tablaRelacionada.ToString())+" "+GetNombreClaseObjetoC(tablaRelacionada.ToString())+"=null;";
+					strFuncionBody+="\r\n\t\t"+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"Logic= new "+GetNombreClase(tablaRelacionada.ToString())+"Logic();";
+					strFuncionBody+="\r\n\t\t"+ GetNombreClaseObjetoC(tablaRelacionada.ToString())+"s= new ArrayList<"+GetNombreClase(tablaRelacionada.ToString())+">();";
+					strFuncionBody+="\r\n\r\n\t\tif(request.getParameter(\"numeroDe"+ GetNombreClase(tablaRelacionada.ToString())+"\")!=null)\r\n\t\t{\r\n\t\t";
+					strFuncionBody+="\tintNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"=Integer.parseInt(request.getParameter(\"numeroDe"+GetNombreClase(tablaRelacionada.ToString())+ "\"));\r\n\t\t}";
+					
+					strVariables=GetNombreVariables(tablaRelacionada);	
+					
+					
+					strFuncionBody2="\r\n\r\n\t\tfor (int i = 0; i < intNumeroDe"+GetNombreClase(tablaRelacionada.ToString())+"; i++)\r\n\t\t{";
+					strFuncionBody2+="\r\n\t\t\tisNew"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\tisChanged"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+					strFuncionBody2+="\r\n\t\t\tisDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=false;";
+	
+					strFuncionBody2+="\r\n\r\n\t\t\tisNew"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(request.getParameter(\"isNew"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\tisChanged"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(request.getParameter(\"isChanged"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					strFuncionBody2+="\r\n\t\t\tisDeleted"+GetNombreClase(tablaRelacionada.ToString())+"=Boolean.parseBoolean(request.getParameter(\"isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"\"+i));";
+					
+					strFuncionBody2+="\r\n\r\n\t\t\tif(isNew"+GetNombreClase(tablaRelacionada.ToString())+"==false&&isChanged"+GetNombreClase(tablaRelacionada.ToString())+"==false&&isDeleted"+GetNombreClase(tablaRelacionada.ToString())+"==false)\r\n\t\t\t{\r\n\t\t\t\tcontinue;\r\n\t\t\t}";
+					strFuncionBody2+="\r\n\r\n\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.set"+GetNombreClase(tablaRelacionada.ToString())+"(null);";
+					
+					strVariablesDocumento=GetSetVariablesFormularioContador(tablaRelacionada,TablaBase.ToString());
+					
+					strLastCode="\r\n\r\n\r\n\t\t\tif(isNew"+GetNombreClase(tablaRelacionada.ToString())+")\r\n\t\t\t{\r\n\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.set"+GetNombreClase(tablaRelacionada.ToString())+"(new "+GetNombreClase(tablaRelacionada.ToString())+"());";
+					strLastCode+=GetSetVariablesToObjetoLogicNuevo(tablaRelacionada);
+					strLastCode+="\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.GetEntity("+GetNombreIdVariable(tablaRelacionada)+");\r\n\r\n\t\t\t\tif(isChanged"+GetNombreClase(tablaRelacionada.ToString())+")\r\n\t\t\t\t{";
+					strLastCode+=GetSetVariablesToObjetoLogicActualizar(tablaRelacionada); 
+					strLastCode+="\r\n\t\t\t\t}\r\n\t\t\t\telse\r\n\t\t\t\t{\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"().setIsDeleted(true);\r\n\t\t\t\t}\r\n\t\t\t}";
+						
+					
+					if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+					{
+						strLastCode+="\r\n\r\n\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"="+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"();";
+					}
+					else if(collectionInfo.CollectionRelationshipType==RelationshipType.ManyToMany)
+					{
+						strLastCode+="\r\n\r\n\t\t\t"+GetNombreClaseObjeto(tablaRelacionada.ToString())+"s.add("+GetNombreClaseObjeto(tablaRelacionada.ToString())+"Logic.get"+GetNombreClase(tablaRelacionada.ToString())+"());";
+					}	
+					
+						
+					strTablaClaseRelacionada+=strFuncionInit+strFuncionBody+strVariables+strFuncionBody2+strVariablesDocumento+strLastCode+strFuncionEnd;				
+				}
+				
+												
+					
+
+			}
+			
+			
+			return strTablaClaseRelacionada; 
+		}
+
+public string GetNombreIdVariable(TableSchema table)
+{
+	String strNombreIdVariable="NONE";	
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=" "+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(table.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetNombreIdVariable()
+{
+	String strNombreIdVariable="NONE";	
+	String strPrefijo="";	
+	String strColumna="";
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+		if(column.IsPrimaryKeyMember)
+		{
+			strPrefijo=" "+GetPrefijoTipoC(column);	
+			strColumna=GetNombreColumnaClaseC(column);
+			strNombreIdVariable=strPrefijo+strColumna+GetNombreClaseC(TablaBase.ToString());
+		}
+	}
+			
+	return strNombreIdVariable;
+}
+
+public string GetSetVariablesToObjetoLogicActualizar(TableSchema tableSchema)
+{
+	String strVariablesActualizar="\r\n";
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||request.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+		
+		if(column.Name.Equals(strId))
+		{
+			strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strIdGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		if(column.Name.Equals(strVersionRow))
+		{
+			strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().set"+strVersionRowGetSet+"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+			continue;
+		}
+		
+		strVariablesActualizar+="\r\n\t\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+	return  strVariablesActualizar;
+}
+
+public string GetSetVariablesToObjetoLogicNuevo(TableSchema tableSchema)
+{
+	String strVariablesNuevo="\r\n";
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";		
+	String strIfElse="";	
+	
+	
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+			continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\nif(request.getParameter(\""+GetNameControlHtml(column) +"\"+i.tToString())== null||request.getParameter(\""+GetNameControlHtml(column) + "\"+i.toString())==\"\")\r\n{\r\n";
+		strIfElse+=strPrefijo+strColumna+"=null;\r\n}\r\nelse\r\n{\r\n";	
+
+		strVariablesNuevo+="\r\n\t\t\t\t"+GetNombreClaseObjeto(tableSchema.ToString())+"Logic.get"+GetNombreClase(tableSchema.ToString())+"().setField_"+strPrefijo+ strColumna +"("+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+");";
+	}
+	
+		
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return  strVariablesNuevo;
+}
+
+public String GetNombreVariables(TableSchema table)
+{
+	
+	String strVariables="\r\n";
+	String strTipo="";
+	String strPrefijo="";
+	String strColumna="";
+	
+	foreach(ColumnSchema column in table.Columns)
+	{
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		strVariables+="\r\n\t\t"+strTipo+strPrefijo+strColumna+GetNombreClaseC(table.ToString())+";";
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	}
+	
+	return strVariables;
+}
+
+public string GetSetVariablesFormularioContador(TableSchema tableSchema,String table)
+{
+	String strVariables="";
+	
+	String strTipo="";	
+	String strPrefijo="";	
+	String strColumna="";
+	String strIfElse="";
+	strIfElse="";
+	
+
+	foreach(ColumnSchema column in tableSchema.Columns)
+	{
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired))
+		{
+				continue;
+		}
+		
+		strTipo=GetTipoColumnaClaseC(column);	
+		strPrefijo=" "+GetPrefijoTipoC(column);	
+		strColumna=GetNombreColumnaClaseC(column);	
+		strIfElse="\r\n\r\n\t\t\tif(request.getParameter(\""+column.Name +GetNombreClaseC(tableSchema.ToString())+"\"+i)== null||request.getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) + "\"+i)==\"\"){";
+		strIfElse+=strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"=null;}\r\n\t\t\telse{";	
+		
+		strVariables+=strIfElse+strPrefijo+strColumna+GetNombreClaseC(tableSchema.ToString())+"="+GetTipoColumnaParse(column,"request.getParameter(\""+column.Name+GetNombreClaseC(tableSchema.ToString()) +"\"+i)")+";}";
+	}	
+	/*if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}*/
+	
+	return strVariables;
+}
+</script>
+<%=GetByDanLicence()%>
+
+/*Empresa: <%=Empresa%>
+ *Programador: <%=NombreProgramador%>
+ *Descripcion: Clase que contiene todos los Accesos a BDD de tabla <%=TablaBase.ToString().Split('.')[1]%>
+ * Fecha Creacion: <%= DateTime.Now.ToLongDateString() %>
+ **CAMBIOS***** 
+ * Motivo Cambio:
+ * Nombre Programador:
+ * Fecha Cambio:
+ **************
+ */
+
+package <%=Empresa%>.<%= Package%>.<%= strPackagePresentation%>.<%= strPackageWeb%>.<%= strPackageServlet%>;
+
+import ByDan.<%= strPackageFramework%>.<%= Package%>.<%= strPackageUtils%>.*;
+import <%=Empresa%>.<%= Package%>.<%= strPackageBusiness%>.<%= strPackageLogic%>.<%=GetNombreClase(TablaBase.ToString())%>Logic;
+import <%=Empresa%>.<%= Package%>.<%= strPackageBusiness%>.<%= strPackageEntities%>.*;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.SingleThreadModel;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import com.sun.image.codec.jpeg.JPEGCodec;
+import com.sun.image.codec.jpeg.JPEGImageEncoder;
+import java.sql.SQLException;
+
+
+public class <%=GetNombreClase(TablaBase.ToString())%><%=GetNombreColumnaClaseC(ColumnaImagen)%>ImagenServlet extends javax.servlet.http.HttpServlet implements javax.servlet.Servlet,SingleThreadModel 
+{
+	static final long serialVersionUID = 1L;
+   
+  	public <%=GetNombreClaseC(TablaBase.ToString())%><%=GetNombreColumnaClaseC(ColumnaImagen)%>ImagenServlet() 
+	{
+		super();
+	}   	
+	
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
+	{
+		
+		response.setHeader("Cache-Control","no-store"); //HTTP 1.1
+		response.setHeader("Pragma","no-cache"); //HTTP 1.0
+		response.setDateHeader("Expires", -1); 
+		
+		HttpSession session = request.getSession();
+		
+		response.setContentType("image/jpeg");
+
+		try
+		{
+			<%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic=new <%=GetNombreClaseC(TablaBase.ToString())%>Logic();
+			
+			Long lng<%=strIdGetSet%><%=GetNombreClaseC(TablaBase.ToString())%>Sesion=0L;
+			
+			if(session.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualMostrarImagen")!=null)
+			{
+				lng<%=strIdGetSet%><%=GetNombreClaseC(TablaBase.ToString())%>Sesion=Long.parseLong((String)session.getAttribute("<%=strId%><%=GetNombreClaseC(TablaBase.ToString())%>ActualMostrarImagen"));
+			}
+			else
+			{
+				return;
+			}
+			
+			<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.GetEntity(lng<%=strIdGetSet%><%=GetNombreClaseC(TablaBase.ToString())%>Sesion);
+			
+			if(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>()!=null&&<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>().get<%=strIdGetSet%>()!=0)
+			{
+								
+				ByteArrayInputStream byteArrayInputStream<%=GetNombreClaseC(TablaBase.ToString())%> = new ByteArrayInputStream(<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic.get<%=GetNombreClaseC(TablaBase.ToString())%>().get<%=GetPrefijoTablaC()%><%=GetPrefijoTipoC(ColumnaImagen)%><%=GetNombreColumnaClaseC(ColumnaImagen)%>());                
+				BufferedImage bufferedImage<%=GetNombreClaseC(TablaBase.ToString())%> = ImageIO.read(byteArrayInputStream<%=GetNombreClaseC(TablaBase.ToString())%>);
+				
+		        ServletOutputStream servletOutputStream = response.getOutputStream();
+				
+		        JPEGImageEncoder jPEGImageEncoder = JPEGCodec.createJPEGEncoder(servletOutputStream);        
+				
+		        jPEGImageEncoder.encode(bufferedImage<%=GetNombreClaseC(TablaBase.ToString())%>);
+			}
+		}
+		catch(ServletException ex)
+		{
+			throw ex;
+		}
+		catch(IOException ex)
+		{
+			throw ex;
+		}
+		catch(Exception ex)
+		{
+			//throw e;
+		}
+	}  	
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
+	{
+		
+	}   	  	    
+}

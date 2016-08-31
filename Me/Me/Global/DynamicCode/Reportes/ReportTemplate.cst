@@ -1,0 +1,1179 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII"%>    	
+<%@ CodeTemplate Src="..\..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import NameSpace="System.Collections" %>
+<%@ Import NameSpace="System.IO" %>
+<%@ Import NameSpace="System.Text" %>
+<%@ Register Name="GenerateDataBaseCreation" Template="../../GenerateDataBaseCreation.cst" %>
+<%@ Register Name="GenerateDescriptionsDataBase" Template="../../GenerateDescriptionsDataBase.cst" %>
+
+<%@ Property Name="GeneracionSql" Type="System.Boolean" Default="true" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCorreccionCreation" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCorreccionDescription" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="GeneracionCreation" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsProceso" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsProcesoParametro" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+<%@ Property Name="EsProcesoConRetorno" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Indica si el proceso retorna datos como reporte" %>
+<%@ Property Name="EsVista" Type="System.Boolean" Default="false" Category="00_Tipo Generacion" Description="Nombre del Programdor" %>
+
+<%@ Property Name="TablaReporteCreada" Type="SchemaExplorer.TableSchema" EXCLUDED="true" Category="00_Tipo Generacion" Optional="True"%>
+<%@ Property Name="SourceDataBaseReportes" Type="SchemaExplorer.DatabaseSchema" Category="00_Tipo Generacion" Description="Database to get the extended properties from." Optional="True"%>
+
+
+<%@ Property Name="A01_Esquema" Type="System.String" Default="" Category="01_General" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A02_NombreTabla" Type="System.String" Default="" Category="01_General" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A03_ConGroupBy" Type="System.Boolean" Default="false" Category="01_General" Description="Nombre del Programdor" %>
+<%@ Property Name="A04_CamposTotalAux" Type="System.String" Default="" Category="01_General" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A05_CamposStringAux" Type="System.String" Default="" Category="01_General" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A06_ConReporteGuardarBaseDatos" Type="System.Boolean" Default="false" Category="01_General" Description="Nombre del Programdor" %>
+<%@ Property Name="A07_SchemaReporteAuxiliar" Type="System.String" Default="NINGUNO" Category="01_General" Description="Nombre de la Entidad" Optional="true"%>
+
+<%@ Property Name="A01_TablaPrincipal" Type="SchemaExplorer.TableSchema" EXCLUDED="true" Category="02_Principal"%>
+<%@ Property Name="A02_TablaPrincipalColumns" Type="SchemaExplorer.ColumnSchemaCollection" Category="02_Principal" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="A03_Prefijo" Type="System.String" Default="" Category="02_Principal" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A04_TablasMax" Type="SchemaExplorer.TableSchemaCollection" Category="02_Principal" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="A05_TablasResume" Type="SchemaExplorer.TableSchemaCollection" Category="02_Principal" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="A06_ExisteWhere" Type="System.Boolean" Default="false" Category="02_Principal" Description="Nombre del Programdor" %>
+<%@ Property Name="A07_NumWheres" Type="System.Int32" Default="0" Category="02_Principal" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A08_ConSumCantidad" Type="System.Boolean" Default="false" Category="02_Principal" Description="Nombre del Programdor" %>
+<%@ Property Name="A09_TablaFkOtrosColumns" Type="SchemaExplorer.ColumnSchemaCollection" Category="02_Principal" Description="Select a set of tables." Optional="true"%>
+
+
+<%@ Property Name="ColumnsParametros" Type="SchemaExplorer.ColumnSchemaCollection" Category="03_Parametros" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="ColumnsParametrosDesdeHasta" Type="SchemaExplorer.ColumnSchemaCollection" Category="03_Parametros" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="ColumnsParametrosDesde" Type="SchemaExplorer.ColumnSchemaCollection" Category="03_Parametros" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="ColumnsParametrosHasta" Type="SchemaExplorer.ColumnSchemaCollection" Category="03_Parametros" Description="Select a set of tables." Optional="true"%>
+
+
+<%@ Property Name="A01_Tabla1" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="04_Secuendarias" Optional="true"%>
+<%@ Property Name="A02_TablaColumns1" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="A03_Prefijo1" Type="System.String" Default="" Category="04_Secuendarias" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="A04_ConSumCantidad" Type="System.Boolean" Default="false" Category="04_Secuendarias" Description="Nombre del Programdor" %>
+<%@ Property Name="A05_TablaFkOtrosColumns1" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="B01_Tabla2" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="04_Secuendarias" Optional="true"%>
+<%@ Property Name="B02_TablaColumns2" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="B03_Prefijo2" Type="System.String" Default="" Category="04_Secuendarias" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="B04_ConSumCantidad" Type="System.Boolean" Default="false" Category="04_Secuendarias" Description="Nombre del Programdor" %>
+<%@ Property Name="B05_TablaFkOtrosColumns2" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="C01_Tabla3" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="04_Secuendarias" Optional="true"%>
+<%@ Property Name="C02_TablaColumns3" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="C03_Prefijo3" Type="System.String" Default="" Category="04_Secuendarias" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="C04_ConSumCantidad" Type="System.Boolean" Default="false" Category="04_Secuendarias" Description="Nombre del Programdor" %>
+<%@ Property Name="C05_TablaFkOtrosColumns3" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="D01_Tabla4" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="04_Secuendarias" Optional="true"%>
+<%@ Property Name="D02_TablaColumns4" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="D03_Prefijo4" Type="System.String" Default="" Category="04_Secuendarias" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="D04_ConSumCantidad" Type="System.Boolean" Default="false" Category="04_Secuendarias" Description="Nombre del Programdor" %>
+<%@ Property Name="D05_TablaFkOtrosColumns4" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+
+<%@ Property Name="E01_Tabla5" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="04_Secuendarias" Optional="true"%>
+<%@ Property Name="E02_TablaColumns5" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+<%@ Property Name="E03_Prefijo5" Type="System.String" Default="" Category="04_Secuendarias" Description="Nombre de la Entidad" Optional="true"%>
+<%@ Property Name="E04_ConSumCantidad" Type="System.Boolean" Default="false" Category="04_Secuendarias" Description="Nombre del Programdor" %>
+<%@ Property Name="E05_TablaFkOtrosColumns5" Type="SchemaExplorer.ColumnSchemaCollection" Category="04_Secuendarias" Description="Select a set of tables." Optional="true"%>
+
+<script runat="template">
+ArrayList arrayListColumsTotal=new ArrayList();
+String strGroupBy="";
+
+public String GetCorreccionDescription() {
+	ArrayList arrayTablasRelacionadasParametros=new ArrayList();
+	arrayTablasRelacionadasParametros=GetArrayTablasRelacionadasParametrosC(TablaReporteCreada,false);
+				
+	String sCorreccionCreation="";
+	bool blnConReporteGuardarBaseDatos=false;
+	
+	TableSchemaCollection tableSchemaCollection=new TableSchemaCollection();
+	tableSchemaCollection.Add(TablaReporteCreada);
+	
+	GenerateDescriptionsDataBase generateDescriptionsDataBase=new GenerateDescriptionsDataBase();
+	
+	//BASICO PARA REPORTES
+	generateDescriptionsDataBase.GeneracionPorTablas=true;
+	generateDescriptionsDataBase.GeneracionReportes=false;
+	generateDescriptionsDataBase.SourceDataBase=SourceDataBaseReportes;
+	generateDescriptionsDataBase.SourceTablesForGenerate=tableSchemaCollection;
+	generateDescriptionsDataBase.EsGeneracionDescripcion=true;
+	generateDescriptionsDataBase.EsGeneracionDescripcionReportes=true;
+	generateDescriptionsDataBase.PrefijoSqlPrincipal=A03_Prefijo;
+	generateDescriptionsDataBase.ExisteWhere=A06_ExisteWhere;
+	generateDescriptionsDataBase.NumWheres=A07_NumWheres;
+	
+	
+	blnConReporteGuardarBaseDatos=A06_ConReporteGuardarBaseDatos;
+	
+	generateDescriptionsDataBase.EsGeneracionDescripcionProcesos=false;
+	generateDescriptionsDataBase.EsGeneracionDescripcionProcesosConRetorno=false;
+	generateDescriptionsDataBase.EsGeneracionDescripcionProcesosParametros=false;
+	
+	if(EsProceso || EsProcesoConRetorno) {
+		Trace.WriteLine("SE VA A GENERAR TABLA PROCESO");
+		
+		if(EsProceso) {
+			generateDescriptionsDataBase.EsGeneracionDescripcionProcesos=true;
+		}
+		
+		if(EsProcesoConRetorno) {
+			generateDescriptionsDataBase.EsGeneracionDescripcionProcesosConRetorno=true;	
+		}
+		
+		blnConReporteGuardarBaseDatos=false;
+	
+	} else if(EsProcesoParametro){
+		Trace.WriteLine("SE VA A GENERAR TABLA PROCESO PARAMETROS");
+		
+		blnConReporteGuardarBaseDatos=false;
+		generateDescriptionsDataBase.EsGeneracionDescripcionReportes=false;
+		
+		generateDescriptionsDataBase.EsGeneracionDescripcionProcesosParametros=true;
+	
+	} else if(EsVista) {
+		Trace.WriteLine("SE VA A GENERAR TABLA VISTA");
+		
+		generateDescriptionsDataBase.EsGeneracionDescripcionVistas=true;
+	}
+	
+	
+	generateDescriptionsDataBase.ConReporteGuardarBaseDatos=blnConReporteGuardarBaseDatos;
+	generateDescriptionsDataBase.SchemaReporteAuxiliar=A07_SchemaReporteAuxiliar;
+	
+	if(generateDescriptionsDataBase.ConReporteGuardarBaseDatos) {
+		Trace.WriteLine("SE VA A GENERAR FUNCIONES GUARDAR EN TABLA TEMPORAL");
+	}
+	
+	//GENERAL
+	generateDescriptionsDataBase.GeneracionTodos=false;
+	generateDescriptionsDataBase.GeneracionPorModulo=false;
+	generateDescriptionsDataBase.GeneracionPorEsquema=false;
+	generateDescriptionsDataBase.GeneracionReportes=false;
+	generateDescriptionsDataBase.EsGeneracionInicializarSession=false;
+	generateDescriptionsDataBase.EsGeneracionInicializarSwingJInternalFrame=false;
+	generateDescriptionsDataBase.EsGeneracionDescripcionActualizarMasivo=false;
+	generateDescriptionsDataBase.EsGeneracionDescripcionCorreccion=false;
+	generateDescriptionsDataBase.EsGeneracionCorrecionDiseno=false;
+	generateDescriptionsDataBase.EsGeneracionCorrecionBaseDatos=false;
+	
+	sCorreccionCreation=generateDescriptionsDataBase.RenderToString();
+	
+	return sCorreccionCreation;
+}
+
+public String GetCorreccionCreation() {
+	String sCorreccionCreation="";
+	TableSchemaCollection tableSchemaCollection=new TableSchemaCollection();
+	tableSchemaCollection.Add(TablaReporteCreada);
+	
+	GenerateDataBaseCreation generateDataBaseCreation=new GenerateDataBaseCreation();
+	
+	//BASICO PARA REPORTES
+	generateDataBaseCreation.GeneracionPorTablas=true;
+	generateDataBaseCreation.EsCorreccion=true;
+	generateDataBaseCreation.GeneracionReportes=false;
+	generateDataBaseCreation.SourceDataBase=SourceDataBaseReportes;
+	generateDataBaseCreation.SourceTablesForGenerate=tableSchemaCollection;
+	
+	//GENERAL
+	generateDataBaseCreation.GeneracionTodos=false;
+	generateDataBaseCreation.GeneracionPorModulo=false;
+	generateDataBaseCreation.GeneracionPorEsquema=false;
+	
+	generateDataBaseCreation.EsCreateTable=false;	
+	generateDataBaseCreation.EsMSSql=false;
+	generateDataBaseCreation.EsMySql=false;
+	generateDataBaseCreation.EsPostgres=false;
+	generateDataBaseCreation.EsDb2=false;
+	generateDataBaseCreation.EsDb2Windows=false;
+	
+	sCorreccionCreation=generateDataBaseCreation.RenderToString();
+	
+	return sCorreccionCreation;
+}
+
+public String GetCreation() {
+	String sCorreccionCreation="";
+	TableSchemaCollection tableSchemaCollection=new TableSchemaCollection();
+	tableSchemaCollection.Add(TablaReporteCreada);
+	
+	GenerateDataBaseCreation generateDataBaseCreation=new GenerateDataBaseCreation();
+	
+	//BASICO PARA REPORTES
+	generateDataBaseCreation.GeneracionPorTablas=true;
+	generateDataBaseCreation.GeneracionReportes=true;
+	generateDataBaseCreation.SourceDataBase=SourceDataBaseReportes;
+	generateDataBaseCreation.SourceTablesForGenerate=tableSchemaCollection;
+	generateDataBaseCreation.Schema="zauxiliar";
+	//generateDataBaseCreation.EsCorreccion=true;
+	
+	//GENERAL
+	generateDataBaseCreation.GeneracionTodos=false;
+	generateDataBaseCreation.GeneracionPorModulo=false;
+	generateDataBaseCreation.GeneracionPorEsquema=false;
+	
+	generateDataBaseCreation.EsCreateTable=true;	
+	generateDataBaseCreation.EsPostgres=true;
+	generateDataBaseCreation.EsMSSql=false;
+	generateDataBaseCreation.EsMySql=false;	
+	generateDataBaseCreation.EsDb2=false;
+	generateDataBaseCreation.EsDb2Windows=false;
+	
+	sCorreccionCreation=generateDataBaseCreation.RenderToString();
+	
+	return sCorreccionCreation;
+}
+
+public bool ValidarVariablesInicialesTipo() {
+	bool blnValidado=false;
+	int intNumeroTipoEjecusion=0;
+	
+	if(GeneracionSql){ intNumeroTipoEjecusion++; }
+	
+	if(GeneracionCorreccionCreation){ intNumeroTipoEjecusion++;	}
+	
+	if(GeneracionCorreccionDescription) { intNumeroTipoEjecusion++;	}
+				
+	if(GeneracionCreation){ intNumeroTipoEjecusion++;	}
+	
+	if(!((EsProceso && EsProcesoParametro) || (EsProcesoConRetorno && EsProcesoParametro))) {
+		if(intNumeroTipoEjecusion.Equals(1)) { blnValidado=true;} 
+		else { System.Windows.Forms.MessageBox.Show("SOLO DEBE ESTAR SELECCIONADO 1 TIPO DE EJECUSION(TODO,TABLAS,MODULO)");}	
+	
+	} else {
+		 System.Windows.Forms.MessageBox.Show("NO PUEDE ESTAR SELECCIONADO ES PROCESO Y ES PROCESO PARAMETRO AL MISMO TIEMPO");
+	}
+	return blnValidado;
+}
+
+public String GetCreateSqlMSSqlBusqueda() {
+	String sSql="";
+	String sSufijoTabla="";
+	bool esPrimerParametro=true;
+	arrayListColumsTotal=new ArrayList();
+		
+	GenerateDataBaseCreation generateDataBaseCreation=new GenerateDataBaseCreation();
+	generateDataBaseCreation.EsCreateTable=true;
+	generateDataBaseCreation.GeneracionPorTablas=true;
+	generateDataBaseCreation.EsMSSql=true;
+	generateDataBaseCreation.EsMySql=false;
+	generateDataBaseCreation.EsPostgres=false;
+	generateDataBaseCreation.EsDb2=false;
+	generateDataBaseCreation.EsDb2Windows=false;
+	
+	sSql="\r\nCREATE TABLE ["+A01_Esquema+"].["+A02_NombreTabla+"](";
+	sSql+="\r\n\tid bigint IDENTITY(1,1) NOT NULL,";
+	sSql+="\r\n\tversionRow timestamp NOT NULL,";		
+	
+	if(ColumnsParametros!=null) {
+		foreach(ColumnSchema columnSchema in ColumnsParametros) {
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema);
+		}
+	}
+	
+	if(ColumnsParametrosDesdeHasta!=null) {
+		foreach(ColumnSchema columnSchema in ColumnsParametrosDesdeHasta) {
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema,"Desde");
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema,"Hasta");
+		}
+	}
+	
+	if(ColumnsParametrosDesde!=null) {
+		foreach(ColumnSchema columnSchema in ColumnsParametrosDesde) {
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema,"Desde");
+		}
+	}
+	
+	if(ColumnsParametrosHasta!=null) {
+		foreach(ColumnSchema columnSchema in ColumnsParametrosHasta) {
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema,"Hasta");
+		}
+	}
+	
+	if(A01_TablaPrincipal!=null) {
+		if(A02_TablaPrincipalColumns!=null) {
+			sSql+=GetCreateSqlColumns(A01_TablaPrincipal,A02_TablaPrincipalColumns,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(A01_TablaPrincipal,A09_TablaFkOtrosColumns,false,generateDataBaseCreation);
+			
+			AddColumnsTotal(A02_TablaPrincipalColumns);
+		}
+	}
+	
+	if(A01_Tabla1!=null) {
+		if(A02_TablaColumns1!=null) {
+			sSql+=GetCreateSqlColumns(A01_Tabla1,A02_TablaColumns1,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(A01_Tabla1,A05_TablaFkOtrosColumns1,true,generateDataBaseCreation);
+			
+			AddColumnsTotal(A02_TablaColumns1);
+		}
+	}
+	
+	if(B01_Tabla2!=null) {
+		if(B02_TablaColumns2!=null) {
+			sSql+=GetCreateSqlColumns(B01_Tabla2,B02_TablaColumns2,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(B01_Tabla2,B05_TablaFkOtrosColumns2,true,generateDataBaseCreation);
+			
+			AddColumnsTotal(B02_TablaColumns2);
+		}
+	}
+	
+	if(C01_Tabla3!=null) {
+		if(C02_TablaColumns3!=null) {
+			sSql+=GetCreateSqlColumns(C01_Tabla3,C02_TablaColumns3,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(C01_Tabla3,C05_TablaFkOtrosColumns3,true,generateDataBaseCreation);
+			
+			AddColumnsTotal(C02_TablaColumns3);
+		}
+	}
+	
+	if(D01_Tabla4!=null) {
+		if(D02_TablaColumns4!=null) {
+			sSql+=GetCreateSqlColumns(D01_Tabla4,D02_TablaColumns4,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(D01_Tabla4,D05_TablaFkOtrosColumns4,true,generateDataBaseCreation);
+			
+			AddColumnsTotal(D02_TablaColumns4);
+		}
+	}
+	
+	if(E01_Tabla5!=null) {
+		if(E02_TablaColumns5!=null) {
+			sSql+=GetCreateSqlColumns(E01_Tabla5,E02_TablaColumns5,false,generateDataBaseCreation);
+			sSql+=GetCreateFkSqlOtrosColumns(E01_Tabla5,E05_TablaFkOtrosColumns5,true,generateDataBaseCreation);
+			
+			AddColumnsTotal(E02_TablaColumns5);
+		}
+	}
+	
+	if(A04_TablasMax!=null) {
+		sSql+=GetCreateSqlTablesResumes(A01_TablaPrincipal,A04_TablasMax,false,true,generateDataBaseCreation);			
+	}
+	
+	if(A05_TablasResume!=null) {
+		sSql+=GetCreateSqlTablesResumes(A01_TablaPrincipal,A05_TablasResume,false,false,generateDataBaseCreation);			
+	}
+	
+	if(A04_CamposTotalAux!=null && !A04_CamposTotalAux.Equals(String.Empty)) {
+		sSql+=GetCreateSqlColumnsTotalAux(A04_CamposTotalAux,true);
+	}
+	
+	if(A05_CamposStringAux!=null && !A05_CamposStringAux.Trim().Equals(String.Empty)) {
+		sSql+=GetCreateSqlColumnsTotalAux(A05_CamposStringAux,false);
+	}
+	
+	
+	sSql+="\r\n\r\n\tCONSTRAINT [PK_"+A02_NombreTabla+"] PRIMARY KEY CLUSTERED (";
+	sSql+="\r\n\t\t[id] ASC";
+	sSql+="\r\n\t)WITH (IGNORE_DUP_KEY = OFF) ON [PRIMARY]";
+	sSql+="\r\n) ON [PRIMARY]";
+	sSql+="\r\nGO";
+	
+	sSql+="\r\n\r\nCREATE NONCLUSTERED INDEX Busqueda"+A02_NombreTabla+" ON "+A01_Esquema+"."+A02_NombreTabla+" (";
+	
+	if((ColumnsParametros!=null && !ContieneSoloColumnaEmpresaSucursal(ColumnsParametros)) || 
+		(ColumnsParametrosDesdeHasta!=null && !ContieneSoloColumnaEmpresaSucursal(ColumnsParametrosDesdeHasta))|| 
+		(ColumnsParametrosDesde!=null && !ContieneSoloColumnaEmpresaSucursal(ColumnsParametrosDesde)) || 
+		(ColumnsParametrosHasta!=null && !ContieneSoloColumnaEmpresaSucursal(ColumnsParametrosHasta))) {		
+		
+		if(ColumnsParametros!=null) {
+			foreach(ColumnSchema columnSchema in ColumnsParametros) {
+				if(columnSchema.Name.Equals(strIdEmpresa) || columnSchema.Name.Equals(strIdSucursal)) {
+					continue;
+				}
+					
+				if(!esPrimerParametro) {
+					sSql+=",";
+				} else {
+					esPrimerParametro=false;
+				}
+				sSql+="\r\n\t"+columnSchema.Name+" ASC";
+			}
+		}
+		
+		if(ColumnsParametrosDesdeHasta!=null) {
+			foreach(ColumnSchema columnSchema in ColumnsParametrosDesdeHasta) {
+				if(!esPrimerParametro) {
+					sSql+=",";
+				} else {
+					esPrimerParametro=false;
+				}
+				
+				sSql+="\r\n\t"+columnSchema.Name+"Desde ASC,";
+				sSql+="\r\n\t"+columnSchema.Name+"Hasta ASC";
+			}
+		}
+		
+		if(ColumnsParametrosDesde!=null) {
+			foreach(ColumnSchema columnSchema in ColumnsParametrosDesde) {
+				if(!esPrimerParametro) {
+					sSql+=",";
+				} else {
+					esPrimerParametro=false;
+				}
+				
+				sSql+="\r\n\t"+columnSchema.Name+"Desde ASC";
+			}
+		}
+		
+		if(ColumnsParametrosHasta!=null) {
+			foreach(ColumnSchema columnSchema in ColumnsParametrosHasta) {
+				if(!esPrimerParametro) {
+					sSql+=",";
+				} else {
+					esPrimerParametro=false;
+				}
+				
+				sSql+="\r\n\t"+columnSchema.Name+"Hasta ASC";
+			}
+		}
+	} else {
+		sSql+="\r\n\tid ASC";
+	}
+	
+	sSql+="\r\n)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]";
+	sSql+="\r\nGO";
+
+	return sSql;
+}
+
+public bool ContieneSoloColumnaEmpresaSucursal(ColumnSchemaCollection columnSchemaCollection) {
+	bool blContiene=true;
+			
+	foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+		if(!(columnSchema.Name.Equals(strIdEmpresa) || columnSchema.Name.Equals(strIdSucursal))) {
+			blContiene=false;
+			
+			break;
+		}
+	}
+			
+	return blContiene;
+}
+		
+public String GetCreateSqlColumns(TableSchema tableSchemaPadre,ColumnSchemaCollection columnSchemaCollection,bool conComaInicial,GenerateDataBaseCreation generateDataBaseCreation) {
+	String sSql="";
+	String sSufijoTabla="";
+	bool esPrimero=true;	
+	TableSchema tableSchemaFK=null;
+	ColumnSchema columnSchemaFK=null;
+	String sNombreExtra="";
+	String sNombreReemplazoExtra="";
+	
+	foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+		sSufijoTabla="";
+		
+		if(!tableSchemaPadre.Name.Equals(columnSchema.Table.Name)) {
+			throw new Exception("Columnas no coinciden con Tabla Principal");
+		}
+		
+		//EN FUNCION PONE LAS COMAS
+		
+		if(!esPrimero) {
+			//sSql+=",";
+		} else {
+			esPrimero=false;
+			
+			if(conComaInicial) {
+				//sSql+=",";
+			}
+		}
+		
+		
+		if(!columnSchema.IsForeignKeyMember) {
+			if(ExisteColumnaEnSelect(columnSchema)) {
+				sSufijoTabla=columnSchema.Table.Name;
+			} else if(ExisteColumnaEnParametros(columnSchema)) {
+				sSufijoTabla="Dato";
+			}
+			
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchema,sSufijoTabla);
+			
+		} else {
+			tableSchemaFK=GetTableSchemaFromColumnForeignKey(columnSchema);
+			columnSchemaFK=GetColumnSchemaComboColumnFromProperties(tableSchemaFK);
+	
+			sSufijoTabla=tableSchemaFK.Name;
+			
+			//SI TIENE NOMBRE EXTRA
+			sNombreReemplazoExtra=strId+tableSchemaFK.Name;
+	
+			if(columnSchema.Name.Contains(sNombreReemplazoExtra)) {
+				sNombreExtra=columnSchema.Name.Replace(sNombreReemplazoExtra,"");
+			}
+	
+			//Trace.WriteLine(columnSchemaFK.Name+sSufijoTabla+sNombreExtra);
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchemaFK,sSufijoTabla+sNombreExtra);
+		}					
+	}
+		
+	return sSql;
+}
+
+public String GetCreateFkSqlOtrosColumns(TableSchema tableSchemaPadre,ColumnSchemaCollection columnSchemaCollection,bool conComaInicial,GenerateDataBaseCreation generateDataBaseCreation) {
+	String sSql="";
+	String sSufijoTabla="";
+	bool esPrimero=true;	
+	TableSchema tableSchemaFK=null;
+	ColumnSchema columnSchemaFK=null;
+	
+	if(columnSchemaCollection!=null) {
+		foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+			sSufijoTabla="";
+			
+			/*
+			if(!tableSchemaPadre.Name.Equals(columnSchema.Table.Name)) {
+				throw new Exception("Columnas no coinciden con Tabla Principal");
+			}
+			*/
+			
+			//EN FUNCION PONE LAS COMAS
+			
+			if(!esPrimero) {
+				//sSql+=",";
+			} else {
+				esPrimero=false;
+				
+				if(conComaInicial) {
+					//sSql+=",";
+				}
+			}
+			
+			
+			tableSchemaFK=columnSchema.Table;//GetTableSchemaFromColumnForeignKey(columnSchema);
+			columnSchemaFK=columnSchema;//GetColumnSchemaComboColumnFromProperties(tableSchemaFK);
+		
+			sSufijoTabla=tableSchemaFK.Name;
+				
+			sSql+=generateDataBaseCreation.GetCreateColumn(columnSchemaFK,sSufijoTabla);				
+		}
+	}
+	
+	return sSql;
+}
+
+public String GetCreateSqlTablesResumes(TableSchema tableSchemaPadre,TableSchemaCollection tableSchemaCollection,bool conComaInicial,bool esMax,GenerateDataBaseCreation generateDataBaseCreation) {
+	String sSql="";
+	String sSufijoTabla="";
+	bool esPrimero=true;	
+	TableSchema tableSchemaFK=null;
+	ColumnSchema columnSchemaFK=null;
+	int iTamanioFinal=0;
+	
+	String sSqlFuncionIni="";
+	String sSqlFuncionFin="";
+	
+	if(esMax) {
+		sSqlFuncionIni="max(";
+		sSqlFuncionFin=")";
+	} else {
+		sSqlFuncionIni="string_agg(";
+		sSqlFuncionFin=",',')";
+	}
+	
+	ColumnSchema columnSchemaCombo=null;
+	ColumnSchema columnSchemaRel=null;
+	
+	if(!esMax) {
+		//CUANDO ES TABLA RESUMEN 
+		iTamanioFinal=200;	
+	}
+	bool existe_relacion=false;
+	
+	foreach(TableSchema tableSchemaRel in tableSchemaCollection) {
+		sSufijoTabla="";
+		existe_relacion=false;
+		
+		columnSchemaCombo=GetColumnSchemaComboColumnFromProperties(tableSchemaRel);
+		columnSchemaRel=GetColumnaHijoRelacionadaPadre(tableSchemaPadre,tableSchemaRel,ref existe_relacion);
+	
+	
+		/*
+		if(!tableSchemaPadre.Name.Equals(columnSchema.Table.Name)) {
+			throw new Exception("Columnas no coinciden con Tabla Principal");
+		}
+		*/
+		
+		//EN FUNCION PONE LAS COMAS
+		
+		if(!esPrimero) {
+			//sSql+=",";
+		} else {
+			esPrimero=false;
+			
+			if(conComaInicial) {
+				//sSql+=",";
+			}
+		}
+		
+		
+		//tableSchemaFK=GetTableSchemaFromColumnForeignKey(columnSchema);
+		//columnSchemaFK=GetColumnSchemaComboColumnFromProperties(tableSchemaFK);
+	
+		sSufijoTabla=tableSchemaRel.Name;
+			
+		sSql+=generateDataBaseCreation.GetCreateColumn(columnSchemaCombo,sSufijoTabla,iTamanioFinal);
+		
+					
+	}
+		
+	return sSql;
+}
+
+public String GetCreateSqlColumnsTotalAux(String sTotalAuxColumns,bool esTotal) {
+	String sTotalAux="";
+	
+	String[] arrTotalAuxColumn=sTotalAuxColumns.Split(',');
+	bool esPrimero=true;
+	
+	foreach(String sTotalAuxColumn in arrTotalAuxColumn) {
+		if(!esPrimero) {
+			sTotalAux+=",";
+		} else {
+			esPrimero=false;
+		}
+		
+		sTotalAux+="\r\n\t"+sTotalAuxColumn+" ";
+		
+		if(esTotal) {
+			sTotalAux+="decimal(18,2)";
+		} else {
+			sTotalAux+="varchar(150)";
+		}
+		
+		sTotalAux+=" NOT NULL";
+	}
+	
+	sTotalAux+=",";
+	
+	return sTotalAux;
+}
+
+public String GetSelectSqlColumnsTotalAux(String sTotalAuxColumns,bool esTotal) {
+	String sTotalAux="";
+	
+	String[] arrTotalAuxColumn=sTotalAuxColumns.Split(',');
+	bool esPrimero=true;
+	
+	foreach(String sTotalAuxColumn in arrTotalAuxColumn) {
+		if(!esPrimero) {
+			sTotalAux+=",";
+		} else {
+			esPrimero=false;
+			
+			if(A04_CamposTotalAux!=null /*&& !esTotal*/) {
+				sTotalAux+=",";
+			}
+		}
+		
+		sTotalAux+="\r\n\t";
+		
+		if(esTotal) {
+			sTotalAux+="0.0";
+		} else {
+			sTotalAux+="'1'";
+		}
+		
+		sTotalAux+=" as "+GetNombreConSeparacionC(sTotalAuxColumn).ToLower()+"";
+	}
+	
+	//sTotalAux+=",";
+	
+	return sTotalAux;
+}
+
+public String GetSelectSqlPostgresBusqueda() {
+	String sPrefijoPrincipal=A03_Prefijo;
+	String sPrefijo1=A03_Prefijo1;
+	String sPrefijo2=B03_Prefijo2;
+	String sPrefijo3=C03_Prefijo3;
+	String sPrefijo4=D03_Prefijo4;
+	String sPrefijo5=E03_Prefijo5;
+	
+	arrayListColumsTotal=new ArrayList();
+	
+	String sSql="select ";		
+	bool conComaInicial=false;
+	
+	if(A01_TablaPrincipal!=null) {
+		if(A02_TablaPrincipalColumns!=null) {
+			if(A03_ConGroupBy) {
+				if(!A08_ConSumCantidad) {
+					A08_ConSumCantidad=true;
+				}
+			}
+			
+			sSql+=GetSelectSqlColumns(A01_TablaPrincipal,A02_TablaPrincipalColumns,sPrefijoPrincipal,A08_ConSumCantidad,conComaInicial);
+			
+			if(A02_TablaPrincipalColumns.Count>0) {
+				conComaInicial=true;	
+			}
+			
+			sSql+=GetSelectFkSqlOtrosColumns(A01_TablaPrincipal,A09_TablaFkOtrosColumns,sPrefijoPrincipal,conComaInicial);
+			
+			AddColumnsTotal(A02_TablaPrincipalColumns);
+		} else {
+			conComaInicial=false;
+		}
+	}
+		
+	if(A01_Tabla1!=null) {
+		if(A02_TablaColumns1!=null) {
+			sSql+=GetSelectSqlColumns(A01_Tabla1,A02_TablaColumns1,sPrefijo1,A04_ConSumCantidad,conComaInicial);
+			sSql+=GetSelectFkSqlOtrosColumns(A01_Tabla1,A05_TablaFkOtrosColumns1,sPrefijo1,true);
+			
+			AddColumnsTotal(A02_TablaColumns1);
+		}
+	}
+	
+	if(B01_Tabla2!=null) {
+		if(B02_TablaColumns2!=null) {
+			sSql+=GetSelectSqlColumns(B01_Tabla2,B02_TablaColumns2,sPrefijo2,B04_ConSumCantidad,true);
+			sSql+=GetSelectFkSqlOtrosColumns(B01_Tabla2,B05_TablaFkOtrosColumns2,sPrefijo2,true);
+			
+			AddColumnsTotal(B02_TablaColumns2);
+		}
+	}
+	
+	if(C01_Tabla3!=null) {
+		if(C02_TablaColumns3!=null) {
+			sSql+=GetSelectSqlColumns(C01_Tabla3,C02_TablaColumns3,sPrefijo3,C04_ConSumCantidad,true);
+			sSql+=GetSelectFkSqlOtrosColumns(C01_Tabla3,C05_TablaFkOtrosColumns3,sPrefijo3,true);
+			
+			AddColumnsTotal(C02_TablaColumns3);
+		}
+	}
+	
+	if(D01_Tabla4!=null) {
+		if(D02_TablaColumns4!=null) {
+			sSql+=GetSelectSqlColumns(D01_Tabla4,D02_TablaColumns4,sPrefijo4,D04_ConSumCantidad,true);
+			sSql+=GetSelectFkSqlOtrosColumns(D01_Tabla4,D05_TablaFkOtrosColumns4,sPrefijo4,true);
+			
+			AddColumnsTotal(D02_TablaColumns4);
+		}
+	}
+	
+	if(E01_Tabla5!=null) {
+		if(E02_TablaColumns5!=null) {
+			sSql+=GetSelectSqlColumns(E01_Tabla5,E02_TablaColumns5,sPrefijo5,E04_ConSumCantidad,true);
+			sSql+=GetSelectFkSqlOtrosColumns(E01_Tabla5,E05_TablaFkOtrosColumns5,sPrefijo5,true);
+			
+			AddColumnsTotal(E02_TablaColumns5);
+		}
+	}
+	
+	if(A04_TablasMax!=null) {
+		sSql+=GetSelectSqlTablesResumes(A01_TablaPrincipal,A04_TablasMax,sPrefijoPrincipal,"",true,true);			
+	}
+	
+	if(A05_TablasResume!=null) {
+		sSql+=GetSelectSqlTablesResumes(A01_TablaPrincipal,A05_TablasResume,sPrefijoPrincipal,"",true,false);			
+	}
+	
+	if(A04_CamposTotalAux!=null && !A04_CamposTotalAux.Equals(String.Empty)) {		
+		sSql+=GetSelectSqlColumnsTotalAux(A04_CamposTotalAux,true);			
+	}
+	
+	if(A05_CamposStringAux!=null && !A05_CamposStringAux.Equals(String.Empty)) {		
+		sSql+=GetSelectSqlColumnsTotalAux(A05_CamposStringAux,false);			
+	}
+	
+	sSql+="\r\nfrom "+GetSchemaTableFromProperties(A01_TablaPrincipal,A01_TablaPrincipal.Owner.ToLower())+"."+GetNombreTablaC(A01_TablaPrincipal)+" "+A03_Prefijo;
+	
+	if(A01_Tabla1!=null) {
+		sSql+=GetInnerJoinSql(A01_TablaPrincipal,sPrefijoPrincipal,A01_Tabla1,sPrefijo1);
+	}
+	
+	if(B01_Tabla2!=null) {
+		sSql+=GetInnerJoinSql(A01_Tabla1,sPrefijo1,B01_Tabla2,sPrefijo2);
+	}
+	
+	if(C01_Tabla3!=null) {
+		sSql+=GetInnerJoinSql(B01_Tabla2,sPrefijo2,C01_Tabla3,sPrefijo3);
+	}
+	
+	if(D01_Tabla4!=null) {
+		sSql+=GetInnerJoinSql(C01_Tabla3,sPrefijo3,D01_Tabla4,sPrefijo4);
+	}
+	
+	if(E01_Tabla5!=null) {
+		sSql+=GetInnerJoinSql(D01_Tabla4,sPrefijo4,E01_Tabla5,sPrefijo5);
+	}
+	
+	sSql+="\r\n--where";
+	
+	if(A03_ConGroupBy) {
+		sSql+="\r\n group by "+strGroupBy;		
+	}
+	
+	return sSql;
+}
+
+public void AddColumnsTotal(ColumnSchemaCollection columnSchemaCollection) {
+	foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+		arrayListColumsTotal.Add(columnSchema);
+	}
+}
+
+public String GetInnerJoinSql(TableSchema tableSchemaPadre,String sPrefijoPadre,TableSchema tableSchemaHijo,String sPrefijoHijo) {
+	String sSql="";
+	bool existe_relacion=false;
+	
+	//TableSchema tableSchemaPadreAux=tableSchemaPadre;
+	//TableSchema tableSchemaHijoAux=tableSchemaHijo;
+	
+	String sPrefijoHijoAux=sPrefijoHijo;
+	String sPrefijoPadreAux=sPrefijoPadre;
+	
+	ColumnSchema columnSchemaRelacionada=GetColumnaHijoRelacionadaPadre(tableSchemaPadre,tableSchemaHijo,ref existe_relacion);
+	
+	if(!existe_relacion) {
+		//tableSchemaPadreAux=tableSchemaHijo;
+		//tableSchemaHijoAux=tableSchemaPadre;
+		
+		sPrefijoHijoAux=sPrefijoPadre;
+		sPrefijoPadreAux=sPrefijoHijo;	
+	
+		columnSchemaRelacionada=GetColumnaHijoRelacionadaPadre(tableSchemaHijo,tableSchemaPadre,ref existe_relacion);
+	}
+	
+	sSql+="\r\ninner join "+GetSchemaTableFromProperties(tableSchemaHijo,tableSchemaHijo.Owner.ToLower())+"."+GetNombreTablaC(tableSchemaHijo)+" "+sPrefijoHijo;
+	sSql+=" on "+sPrefijoHijoAux+"."+GetNombreColumnFromPropertiesC(columnSchemaRelacionada,true)+"="+sPrefijoPadreAux+"."+strId;
+	
+	return sSql;
+}
+
+public ColumnSchema GetColumnaHijoRelacionadaPadre(TableSchema tableSchemaPadre,TableSchema tableSchemaHijo,ref bool existe) {
+	String sSql="";
+	
+	ColumnSchema columnSchemaEncontrada=GetColumnaHijoRelacionadaPadreC(tableSchemaPadre,tableSchemaHijo,ref existe);
+
+	return columnSchemaEncontrada;
+}
+
+public String GetSelectSqlTablesResumes(TableSchema tableSchemaPadre,TableSchemaCollection tableSchemaCollection,String sPrefijoPadre,String sPrefijo,bool conComaInicial,bool esMax) {
+	String sSql="";
+	
+	String sSufijoColumna="";
+	bool esPrimero=true;	
+	bool existe_relacion=false;
+	TableSchema tableSchemaPadreFinal=null;
+	String sPrefijoPadreFinal="";
+	
+	foreach(TableSchema tableSchema in tableSchemaCollection) {
+		existe_relacion=false;		
+		sSufijoColumna="";
+		
+		if(!esPrimero) {
+			sSql+=",";
+		} else {
+			esPrimero=false;
+			
+			if(conComaInicial) {
+				sSql+=",";
+			}
+		}
+		
+		
+		tableSchemaPadreFinal=tableSchemaPadre;
+		sPrefijoPadreFinal=sPrefijoPadre;
+		
+		GetColumnaHijoRelacionadaPadreC(tableSchemaPadre,tableSchema,ref existe_relacion);
+		
+		if(existe_relacion) {
+			tableSchemaPadreFinal=tableSchemaPadre;
+		} else {
+			if(A01_Tabla1!=null) {
+				GetColumnaHijoRelacionadaPadreC(A01_Tabla1,tableSchema,ref existe_relacion);
+				
+				if(existe_relacion) {
+					tableSchemaPadreFinal=A01_Tabla1;
+					sPrefijoPadreFinal=A03_Prefijo1;
+				}
+				
+			} else if(B01_Tabla2!=null) {
+				GetColumnaHijoRelacionadaPadreC(B01_Tabla2,tableSchema,ref existe_relacion);
+				
+				if(existe_relacion) {
+					tableSchemaPadreFinal=B01_Tabla2;
+					sPrefijoPadreFinal=B03_Prefijo2;
+				}
+			}
+		}
+		
+		sSql+="\r\n\t"+GetSelectSqlTable(tableSchemaPadreFinal,tableSchema,sPrefijoPadreFinal,sPrefijo,esMax);
+	}
+	
+	return sSql;
+}
+
+public String GetSelectSqlTable(TableSchema tableSchemaPadre,TableSchema tableSchemaRel,String sPrefijoPadre,String sPrefijo,bool esMax) {
+	String sSql="";
+	String sSqlFuncionIni="";
+	String sSqlFuncionFin="";
+	bool existe=false;
+	
+	if(esMax) {
+		sSqlFuncionIni="max(";
+		sSqlFuncionFin=")";
+	} else {
+		sSqlFuncionIni="string_agg(";
+		sSqlFuncionFin=",',')";
+	}
+	
+	ColumnSchema columnSchemaCombo=GetColumnSchemaComboColumnFromProperties(tableSchemaRel);
+	//Trace.WriteLine(tableSchemaPadre.Name);
+	//Trace.WriteLine(tableSchemaRel.Name);
+	ColumnSchema columnSchemaRel=GetColumnaHijoRelacionadaPadre(tableSchemaPadre,tableSchemaRel,ref existe);
+	//Trace.WriteLine(columnSchemaRel.Name);
+	
+	sSql="(";
+	sSql+="select "+sSqlFuncionIni+GetNombreColumnFromPropertiesC(columnSchemaCombo,true)+sSqlFuncionFin+" ";
+	sSql+="from "+GetSchemaTableFromProperties(tableSchemaRel,tableSchemaRel.Owner.ToLower())+"."+GetNombreTablaC(tableSchemaRel);
+	sSql+=" where "+GetNombreColumnFromPropertiesC(columnSchemaRel,true)+"="+sPrefijoPadre+"."+strId;//GetNombreColumnFromPropertiesC(columnSchemaCombo,true);
+	sSql+=") as "+GetNombreColumnFromPropertiesC(columnSchemaCombo,true)+"_"+GetNombreTablaC(tableSchemaRel);
+	return sSql;
+}
+
+public String GetSelectSqlColumns(TableSchema tableSchemaPadre,ColumnSchemaCollection columnSchemaCollection,String sPrefijo,bool conSumCantidad,bool conComaInicial) {
+	String sSql="";
+	String sSufijoColumna="";
+	bool esPrimero=true;	
+	bool conSumColumna=false;
+	
+	String sSqlSumInicial="";
+	String sSqlSumFinal="";
+	String sNombreColumna="";
+	
+	//Trace.WriteLine(tableSchemaPadre.Name+"-"+conSumCantidad);
+	
+	foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+		sSufijoColumna="";		
+		sSqlSumInicial="";
+		sSqlSumFinal="";
+		//conSumColumna=false;
+		
+		
+		if(A03_ConGroupBy && EsTipoColumnaNumeroParaClaseC(columnSchema)) {
+			conSumColumna=true;
+			
+			if(!conSumCantidad) {
+				conSumCantidad=true;	
+			}
+			//Trace.WriteLine(conSumCantidad+"-"+columnSchema.Name);	
+		}
+		
+		
+		//if(conSumCantidad)Trace.WriteLine(conSumCantidad+columnSchema.Name);
+		
+		if(conSumCantidad && EsTipoColumnaNumeroParaClaseC(columnSchema) && !columnSchema.IsForeignKeyMember) {			
+			sSqlSumInicial="sum(";
+			sSqlSumFinal=")";
+			conSumColumna=true;
+		} else if(conSumCantidad && EsTiempoColumn(columnSchema)) {
+			sSqlSumInicial="max(";
+			sSqlSumFinal=")";
+			conSumColumna=true;
+		} else {
+			//Trace.WriteLine(conSumCantidad+"-"+columnSchema.Name);	
+		}
+		
+		
+		if(!tableSchemaPadre.Name.Equals(columnSchema.Table.Name)) {
+			throw new Exception("Columnas no coinciden con Tabla Principal");
+		}
+		
+		if(!esPrimero) {
+			sSql+=",";
+						
+		} else {
+			esPrimero=false;
+			
+			if(conComaInicial) {
+				sSql+=",";
+								
+			}
+		}
+		
+		if(!columnSchema.IsForeignKeyMember) {			
+			if(ExisteColumnaEnSelect(columnSchema)) {
+				sSufijoColumna=" as "+GetNombreColumnFromPropertiesC(columnSchema,true)+"_"+GetNombreTablaC(columnSchema.Table);
+			
+			} else if(ExisteColumnaEnParametros(columnSchema)) {
+				sSufijoColumna=" as "+GetNombreColumnFromPropertiesC(columnSchema,true)+"_dato";
+			}
+			
+			if(conSumColumna) {
+				sSufijoColumna=" as "+GetNombreColumnFromPropertiesC(columnSchema,true);
+			}
+			
+			sNombreColumna=sPrefijo+"."+GetNombreColumnFromPropertiesC(columnSchema,true)/*+sSufijoColumna*/;
+			
+			sSql+="\r\n\t"+sSqlSumInicial+sNombreColumna+sSqlSumFinal+sSufijoColumna;
+			
+			if(EsGroupByColumn(columnSchema)) {								
+				if(!strGroupBy.Contains(sNombreColumna)) {
+					if(!strGroupBy.Equals(String.Empty)) {
+						strGroupBy+=",";
+					}
+				
+					strGroupBy+="\r\n\t\t"+sNombreColumna;
+				}
+			}
+			
+		} else {
+			sSql+="\r\n\t"+GetSelectSqlFkColumn(columnSchema,sPrefijo,false,null);
+		}
+	}
+	//arrayListColumsTotal
+	//sSql+="\r\nfrom "+GetSchemaTableFromProperties(A01_TablaPrincipal,A01_TablaPrincipal.Owner.ToLower())+"."+GetNombreTablaC(A01_TablaPrincipal);
+	
+	return sSql;
+}
+
+public bool ExisteColumnaEnSelect(ColumnSchema columnSchemaBuscar) {
+	bool existe=false;
+	
+	foreach(ColumnSchema columnSchema in arrayListColumsTotal) {
+		if(GetNombreColumnFromPropertiesC(columnSchema,true).Equals(GetNombreColumnFromPropertiesC(columnSchemaBuscar,true))) {			
+			existe=true;
+			break;
+		}
+	}
+	
+	return existe;
+}
+
+public bool ExisteColumnaEnParametros(ColumnSchema columnSchemaBuscar) {
+	bool existe=false;
+	
+	if(ColumnsParametros!=null) {
+		foreach(ColumnSchema columnSchema in ColumnsParametros) {
+			if(GetNombreColumnFromPropertiesC(columnSchema,true).Equals(GetNombreColumnFromPropertiesC(columnSchemaBuscar,true))) {			
+				existe=true;
+				break;
+			}
+		}
+	}
+	
+	return existe;
+}
+
+public String GetSelectFkSqlOtrosColumns(TableSchema tableSchemaPadre,ColumnSchemaCollection columnSchemaCollection,String sPrefijo,bool conComaInicial) {
+	String sSql="";
+	String sSufijoColumna="";
+	bool esPrimero=true;	
+	
+	String sSqlSumInicial="";
+	String sSqlSumFinal="";
+	String sNombreColumna="";
+	ColumnSchema columnSchemaRel=null;
+	bool existe_relacion=false;
+	
+	if(columnSchemaCollection!=null) {
+		foreach(ColumnSchema columnSchema in columnSchemaCollection) {
+			sSufijoColumna="";		
+			sSqlSumInicial="";
+			sSqlSumFinal="";
+			existe_relacion=false;
+			
+			/*
+			if(!tableSchemaPadre.Name.Equals(columnSchema.Table.Name)) {
+				throw new Exception("Columnas no coinciden con Tabla Principal");
+			}
+			*/
+			
+			if(!esPrimero) {
+				sSql+=",";
+							
+			} else {
+				esPrimero=false;
+				
+				if(conComaInicial) {
+					sSql+=",";								
+				}
+			}
+					
+			columnSchemaRel=GetColumnaHijoRelacionadaPadre(columnSchema.Table,tableSchemaPadre,ref existe_relacion);
+					
+			sSql+="\r\n\t"+GetSelectSqlFkColumn(columnSchemaRel,sPrefijo,true,columnSchema);			
+		}
+	}
+	
+	return sSql;
+}
+
+public String GetSelectSqlFkColumn(ColumnSchema columnSchemaFk,String sPrefijo,bool conColumnaDescripcion,ColumnSchema columnDescripcionSchemaFk) {
+	String sSql="";
+	String sNombreColumna=sPrefijo+"."+GetNombreColumnFromPropertiesC(columnSchemaFk,true);
+	String sNombreExtra="";
+	String sNombreReemplazoExtra="";
+	
+	TableSchema tableSchemaPK=GetTableSchemaFromColumnForeignKey(columnSchemaFk);
+	ColumnSchema columnSchema=null;
+	
+	if(!conColumnaDescripcion) {
+		columnSchema=GetColumnSchemaComboColumnFromProperties(tableSchemaPK);
+	} else {
+		columnSchema=columnDescripcionSchemaFk;
+	}
+	
+	//Trace.WriteLine(sNombreColumna);
+	//Trace.WriteLine(sPrefijo+"."+strId+"_"+GetNombreTablaC(tableSchemaPK)+"_");
+	
+	sNombreReemplazoExtra=sPrefijo+"."+strId+"_"+GetNombreTablaC(tableSchemaPK);
+	
+	if(sNombreColumna.Contains(sNombreReemplazoExtra)) {
+		sNombreExtra=sNombreColumna.Replace(sNombreReemplazoExtra,"");
+		//Trace.WriteLine(sNombreExtra);
+	}
+	
+	
+	
+	sSql="(";
+	sSql+="select "+GetNombreColumnFromPropertiesC(columnSchema,true)+" ";
+	sSql+="from "+GetSchemaTableFromProperties(tableSchemaPK,tableSchemaPK.Owner.ToLower())+"."+GetNombreTablaC(tableSchemaPK);
+	sSql+=" where id="+sNombreColumna;
+	sSql+=") as "+GetNombreColumnFromPropertiesC(columnSchema,true)+"_"+GetNombreTablaC(tableSchemaPK)+sNombreExtra;
+		
+				
+	if(EsGroupByColumn(columnSchema)) {
+		if(!strGroupBy.Contains(sNombreColumna)) {
+			if(!strGroupBy.Equals(String.Empty)) {
+				strGroupBy+=",";
+			}
+	
+			strGroupBy+="\r\n\t\t"+sNombreColumna;
+		}
+	}
+	
+	return sSql;
+}
+
+public bool EsGroupByColumn(ColumnSchema columnSchema) {
+	bool esEsGroupByColumn=false;
+	
+	if(!EsTipoColumnaNumeroParaClaseC(columnSchema) && !columnSchema.IsForeignKeyMember) {
+		esEsGroupByColumn=true;	
+	}
+	
+	return esEsGroupByColumn;
+}
+
+</script>
+<% if(ValidarVariablesInicialesTipo()) {%>
+<%if(GeneracionSql) {%>
+<%=GetSelectSqlPostgresBusqueda()%>
+
+<%=GetCreateSqlMSSqlBusqueda()%>
+
+<%} else if(GeneracionCorreccionCreation) {%>
+<%=GetCorreccionCreation()%>
+
+<%} else if(GeneracionCorreccionDescription) {%>
+<%=GetCorreccionDescription()%>
+
+<%} else if(GeneracionCreation) {%>
+<%=GetCreation()%>
+
+<%}%>
+<%}%>

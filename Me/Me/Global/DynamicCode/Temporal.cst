@@ -1,0 +1,80 @@
+<%-- 
+Name:
+Author: 
+Description: 
+--%>
+<%@ CodeTemplate Language="C#" TargetLanguage="Text" Src="" Inherits="" Debug="False" Description="Template description here." %>
+<%@ CodeTemplate Src="..\CommonCode\CommonCodeProyecto.cs" Inherits="Me.CommonCodeProyecto" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="SampleStringProperty" Type="System.String" Default="SomeValue" Optional="True" Category="Strings" Description="This is a sample string property." %>
+<%@ Property Name="SampleBooleanProperty" Type="System.Boolean" Default="True" Optional="False" Category="Booleans" Description="This is a sample boolean property." %>
+<%@ Assembly Name="System.Data" %>
+<%@ Import Namespace="System.Data" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+
+<script runat="template">
+	public string SampleMethod() {
+		return "Method output.";
+	}
+
+public String ReadTextFile() {
+	String strReturn="";
+	String strNombreTabla="";
+	String strNombreMenu="";
+	String strRelaciones="";
+	TableSchema tableSchema=null;
+	
+	int counter = 0;
+	string line;
+	System.Text.StringBuilder stringBuilder=new System.Text.StringBuilder();
+	
+	System.IO.StreamReader file = new System.IO.StreamReader("C:\\Users\\bydanf\\Documents\\0\\a.txt");
+	
+	while((line = file.ReadLine()) != null) {
+		//Trace.WriteLine(line);	
+		
+		strNombreTabla=line.Split(',')[1];
+		strNombreMenu=line.Split(',')[0];
+		//Trace.WriteLine(strNombreTabla);	
+		
+		//stringBuilder.AppendLine(line);
+		
+		
+		
+		tableSchema=GetTablaFromNombreC(strNombreTabla,TablaBase,TablaBase.Database,true);
+		
+		System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(tableSchema,false);
+		
+		strRelaciones="";
+		
+		if(tablasRelacionadas.Values.Count<=8) {
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values) {
+				//strRelaciones+="-";
+				
+				strRelaciones+="["+collectionInfo.SecondaryTableSchema.Name+"]";
+			}
+		}		
+		
+		if(tableSchema!=null && !tableSchema.Name.Equals(TablaBase.Name)) {
+			
+			stringBuilder.AppendLine(line+","+strRelaciones);
+			
+		} else {			
+			//stringBuilder.AppendLine("NN");
+			Trace.WriteLine(strNombreTabla+"->NO EXISTE"+"->Menu="+strNombreMenu);
+			continue;			
+		}
+		
+		counter++;
+	}
+	
+	file.Close();
+	
+	return stringBuilder.ToString();
+}
+
+</script>
+
+<%=ReadTextFile()%>

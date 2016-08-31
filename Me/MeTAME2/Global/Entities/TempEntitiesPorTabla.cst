@@ -1,0 +1,607 @@
+<%@ Template Language="C#" TargetLanguage="C#" Description="Template de la capa de Acceso a Datos" ResponseEncoding="ASCII" %>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="ASCII" %>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="Schema" Type="System.String" Default="Tame" Category="Options" Description="Schema" %>
+<%@ Property Name="ConStoreProcedures" Type="System.Boolean" Default="false" Category="1. General" Description="Nombre del Programdor" %>
+
+<script runat="template">
+
+public String GetTablasClasesRelacionadasParametrosFunciones() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\tprivate "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " "+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"";
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\t,"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"Logic "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic,ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+					strTablaClaseRelacionada+="\r\n\t,"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"Logic,"+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s";
+				}
+				
+				strTablaClaseRelacionada+="\r\n\r\n";
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+public static bool ComprobarComlumnaEsTablaTame(ColumnSchema column,int intContador)
+{
+	bool nombreTabla=true;
+	
+	if(column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired|| column.Name==strVersionRow)
+	{
+		if(GetEsTablaTameTableFromPropertiesC(column.Table))
+		{
+			nombreTabla=false;
+		}
+	}
+	else
+	{
+		//Fuerza que la validacion sea falsa cuando la tabla es de tame y el contador es penultimo, caso contrario
+		//devuelve una , al final del select
+		
+		if(GetEsTablaTameTableFromPropertiesC(column.Table))
+		{
+			if(intContador == column.Table.Columns.Count - 2)
+			{
+				nombreTabla=false;
+			}
+		}
+	}
+	
+	return nombreTabla;
+}
+	
+public String GetNombreTabla() 
+		{
+			String strNombreTabla=string.Empty;
+										 			
+			strNombreTabla=GetNombreTableFromProperties(TablaBase);
+								
+			return strNombreTabla; 
+		}
+		
+public String GetNombreColumnaId() 
+		{
+			String strNombreColumnaId=string.Empty;
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+					
+				if(columnSchema.IsPrimaryKeyMember)
+				{
+					strNombreColumnaId=GetNombreColumnFromProperties(columnSchema);
+				}
+			}
+								
+			return strNombreColumnaId; 
+		}
+		
+public String GetTablasClasesRelacionadasForeigKeys() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+					
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					strTablaClaseRelacionada+="\r\n\tprivate "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";";
+					
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetTablasClasesRelacionadasForeigKeysInicializar() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+					
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+					if(GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))==GetNombreClaseObjetoC(TablaBase.ToString()))
+					{
+						continue;
+					}
+					
+					strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"=new "+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"();";
+					
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+public String GetFuncionesTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\r\n\tpublic  void  set"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t}\r\n\t\tcatch(Exception ex)\r\n\t\t{\r\n\t\t\t;\r\n\t\t}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+ "("+GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" "+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+")\r\n\t{\r\n\t\ttry\r\n\t\t{\r\n";
+					strTablaClaseRelacionada+="\t\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"="+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";";
+					strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n\r\n";
+			
+				}
+				
+			}
+								
+			return strFuncion; 
+		}
+
+public String GetFuncionesGetTablasClasesRelacionadasForeigKeys() 
+		{
+			String strFuncion="";
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\tpublic ";// void  getTR_";
+			
+			String strEndFuncion="\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				
+				
+				if(columnSchema.IsForeignKeyMember)
+				{
+					if(ExisteTablaEnTablasRelacionadasC(TablaBase,GetNombreClaseRelacionadaFromColumn(columnSchema)))
+					{
+					continue;
+					}
+					
+						strInitFuncion="\r\n\tpublic ";
+					
+					
+						strInitFuncion+=GetNombreClaseC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+" get"+GetPrefijoRelacionC()+GetNombreClase("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+"()\r\n\t{\r\n";
+						strTablaClaseRelacionada="\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+GetNombreClaseRelacionadaFromColumn(columnSchema))+";\r\n";
+					
+			    		strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+				}
+			}
+								
+			return strFuncion; 
+		}
+
+public String GetFuncionesGetTablasClasesRelacionadas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="public ";// void  getTR_";
+			
+			String strEndFuncion="\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				strInitFuncion="\r\n\tpublic ";
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strInitFuncion+=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+" get"+GetPrefijoRelacionC()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\r\n\t{";
+					strTablaClaseRelacionada="\r\n\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";\r\n";
+				}
+				else
+				{
+					strInitFuncion+="ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> get"+GetPrefijoRelacionC()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s()\r\n\t{";
+					strTablaClaseRelacionada="\r\n\t\treturn "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;\r\n";
+				}
+				
+			strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strFuncion=string.Empty;
+			String strTablaClaseRelacionada=string.Empty;
+			String strInitFuncion="\r\n\tpublic  void  set"+GetPrefijoRelacionC();
+			
+			String strEndFuncion="\r\n\t\t}\r\n\t\tcatch(Exception ex)\r\n\t\t{\r\n\t\t\t;\r\n\t\t}\r\n\t}";
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ "("+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+")\r\n\t{\r\n\ttry\r\n{\r\n";
+					strTablaClaseRelacionada+="\t\t\tthis."+GetPrefijoRelacionC().ToLower()+GetNombreClase("dbo."+collectionInfo.SecondaryTable)+"="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else
+				{
+					strTablaClaseRelacionada=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"("+"ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">"+" "+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s)\r\n\t{\r\n\t\ttry\r\n\t\t{\r\n";
+					strTablaClaseRelacionada+="\t\t\tthis."+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s="+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+"s;";
+			
+				}
+				
+			strFuncion+=strInitFuncion+	strTablaClaseRelacionada+strEndFuncion+"\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+public String GetTablasClasesRelacionadas() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTablaClaseRelacionada+="\r\n\tprivate "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+ " "+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+";";
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\tprivate ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"> "+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s;";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+
+public String GetTablasClasesRelacionadasInicializar() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					continue;
+					//strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"=new "+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"();";
+				}
+				else
+				{
+					strTablaClaseRelacionada+="\r\n\t\t"+GetPrefijoRelacionC().ToLower()+GetNombreClaseObjetoC("dbo."+collectionInfo.SecondaryTable)+ "s=new ArrayList<"+GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+">();";
+				}
+			}
+								
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public string GetParameterNoLastIndex(TableSchema table)
+{		
+	string strNombre =String.Empty; 
+	int count=0;	
+		
+    for (int i = 0; i < table.Columns.Count; i++){ 	
+    strNombre=table.Columns[i].Name;
+	switch (strNombre)
+	{
+		case strVersionRow:
+		{
+			break;
+		}
+		
+		default:
+		{
+			count++;
+			break;
+		}
+
+	}
+		 } 
+		
+	return count.ToString();
+}
+
+public string GetParameterLastIndex(TableSchema table)
+{		
+	string strNombre =String.Empty; 
+	int count=0;	
+		
+    for (int i = 0; i < table.Columns.Count; i++){ 	
+   
+			count++;
+			
+
+		 } 
+		
+	return count.ToString();
+}
+
+
+
+public string GetNombreCampoTabla(ColumnSchema column)
+{
+	string strPrefijo = "\r\n\tpublic static String getColumnName"+column.Name+"()";
+	strPrefijo += "\r\n\t{\r\n\t\treturn \""+ GetNombreColumnFromProperties(column)+"\";\r\n\t}";
+	
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strIsExpired:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strIsActive:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}	
+		case strId:
+		{
+			strPrefijo=String.Empty;
+			break;
+		}
+	}
+	
+	return strPrefijo;
+}
+
+
+
+
+
+public string GetSqlParameterInsertColumns(ColumnSchema column)
+{
+	
+	String param=GetNombreColumnFromProperties(column)/*+"=?"*/;
+
+	switch (column.Name)
+	{
+		/*
+		case strVersionRow:
+		{
+			param=GetNombreColumnFromProperties(column)+"=CURRENT_TIMESTAMP";
+			break;
+		}	
+		case "isActive":
+		{
+			param+="=true";
+			break;
+		}	
+		case "isExpired":
+		{
+			param+="=false";
+			break;
+		}	
+		*/
+		case strId:
+		{
+			param="";
+			break;
+		}
+		
+	}
+	
+	return param;
+}
+
+public string GetSqlParameterInsertValues(ColumnSchema column)
+{
+	
+	String param=/*GetNombreColumnFromProperties(column)+*/"?";
+
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			param=/*GetNombreColumnFromProperties(column)+*/"now()";
+			break;
+		}	
+		/*case "isActive":
+		{
+			param+="=true";
+			break;
+		}	
+		case "isExpired":
+		{
+			param+="=false";
+			break;
+		}	
+		*/
+		case strId:
+		{
+			param="";
+			break;
+		}
+		
+	}
+	
+	return param;
+}
+
+public string GetSqlStoreProcedureParameterInsert(ColumnSchema column)
+{
+	
+	String param="";//GetNombreColumnFromProperties(column);	
+	
+	param+="?";
+	
+	switch (column.Name)
+	{
+		/*
+		case strVersionRow:
+		{
+			param="CURRENT_TIMESTAMP";GetNombreColumnFromProperties(column);
+			//param+="=CURRENT_TIMESTAMP";
+			break;
+		}
+		*/
+		/*case "isActive":
+		{
+			param+="=true";
+			break;
+		}	
+		case "isExpired":
+		{
+			param+="=false";
+			break;
+		}	
+		*/
+		case strId:case strVersionRow:
+		{
+			param="";
+			break;
+		}
+		
+	}
+	
+	return param;
+}
+
+public string GetSqlStoreProcedureParameterUpdate(ColumnSchema column)
+{
+	
+	String param="";// GetNombreColumnFromProperties(column);
+	
+	param+="?";
+	
+	switch (column.Name)
+	{
+		/*
+		case strVersionRow:
+		{
+			param="CURRENT_TIMESTAMP";// GetNombreColumnFromProperties(column);
+			//param+="=CURRENT_TIMESTAMP";
+			break;
+		}	
+		*/
+		case strId:case strVersionRow:
+		{
+			param=String.Empty;
+			break;
+		}
+	}
+	
+	return param;
+}
+
+public string GetSqlParameterUpdate(ColumnSchema column)
+{
+	
+	String param=GetNombreColumnFromProperties(column)+"=?";
+
+	switch (column.Name)
+	{
+		case strVersionRow:
+		{
+			param=String.Empty;
+			break;
+		}	
+		case strId:
+		{
+			param=String.Empty;
+			break;
+		}
+	}
+	
+	return param;
+}
+
+public string GetSqlParameterSelect(ColumnSchema column)
+{
+	
+	String param="\"+"+GetNombreClase(TablaBase.ToString())+".getStrSchema()+\".\"+\""+GetNombreTabla()+"."+GetNombreColumnFromProperties(column);
+	
+	if(column.Name==strId||column.Name==strIsActive||column.Name==strIsExpired|| column.Name==strVersionRow)
+	{
+		if(!GetEsTablaTameTableFromPropertiesC(TablaBase))
+		{
+			param=Schema+"."+GetNombreTabla()+"."+GetNombreColumnFromProperties(column);
+		}
+		else
+		{
+			param="";
+		}
+	}
+	
+	return param;
+}
+
+public string GetNombreClase(string strTablaBase)
+{	
+		return GetNombreClaseC(strTablaBase);
+}
+
+public string GetCampoTabla(ColumnSchema column)
+{
+	string strPrefijo = column.Name;
+	return strPrefijo;
+	}
+
+public static string GetNombreColumnaClase(ColumnSchema column)
+{
+	return GetNombreColumnaClaseC(column);
+}
+
+public static string GetTipoColumnaClase(ColumnSchema column)
+	{
+		return GetTipoColumnaClaseC(column);
+	}
+	
+public static string GetTipoColumnaClaseEnum(ColumnSchema column)
+	{
+		return GetTipoColumnaClaseEnumC(column);
+	}
+	
+public static string GetNombreCompletoColumnaClase(ColumnSchema column)
+{
+	return GetNombreCompletoColumnaClaseC(column);
+	}
+</script>
+
+//EN GenerarReporte<%=GetNombreClaseC(TablaBase.ToString())%>s
+
+,Boolean blnEsReporteRelaciones,String strDetalleReporte, <%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,JasperPrint jasperPrint,String strGenerarReporte   
+,blnEsReporteRelaciones,strDetalleReporte, <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,jasperPrint,strGenerarReporte	
+
+
+// EB En ProcesarBusqueda
+
+,Boolean blnEsReporteRelaciones,JasperPrint jasperPrint,<%=GetNombreClaseC(TablaBase.ToString())%>Logic <%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,String strGenerarReporte,Boolean blnMostrarTodosResultadosReporte,ArrayList<<%=GetNombreClaseC(TablaBase.ToString())%>> <%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,String strDetalleReporte
+,blnEsReporteRelaciones,jasperPrint,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Logic,strGenerarReporte,blnMostrarTodosResultadosReporte,<%=GetNombreClaseObjetoC(TablaBase.ToString())%>s,strDetalleReporte
+
+
+// EN En ProcesarBusqueda
+<%=GetTablasClasesRelacionadasParametrosFunciones() %>

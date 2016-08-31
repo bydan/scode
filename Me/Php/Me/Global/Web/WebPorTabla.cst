@@ -1,0 +1,1475 @@
+﻿<%@ Template Language="C#" TargetLanguage="html" Description="Template de la capa de Acceso a Datos" ResponseEncoding="UTF-8"%>    	
+<%@ CodeTemplate Src="..\CommonCode\CommonCode.cs" Inherits="Me.CommonCode" Language="C#" TargetLanguage="C#" Description="A base class for the entities." ResponseEncoding="UTF-8"%>
+<%@ Assembly Name="SchemaExplorer" %>
+<%@ Import Namespace="SchemaExplorer" %>
+<%@ Import Namespace="System.Collections" %>
+<%@ Property Name="NombreProgramador" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="Package" Type="System.String" Default="Indefinido" Category="Options" Description="Nombre de la Entidad" %>
+<%@ Property Name="TablaBase" Type="SchemaExplorer.TableSchema" EXCLUDED="true"	Category="Context"%>
+<%@ Property Name="Empresa" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="GenerarParaImagen" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ColumnaImagen" Type="ColumnSchema" Category="Options" Optional="true"%>
+<%@ Property Name="ConFaces" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="ConRichFaces" Type="System.Boolean" Default="false" Category="5. Presentation" Description="Nombre del Programdor" %>
+<%@ Property Name="Aplicacion" Type="System.String" Default="Byron Chavez" Category="Options" Description="Nombre de la Empresa" %>
+<%@ Property Name="ConJavaScriptInclude" Type="System.Boolean" Default="false" Category="Options" Description="Nombre del Programdor" %>
+<%@ Property Name="EsParaCakePhp" Type="System.Boolean" Default="true" Category="4. Service Architecture" Description="Nombre del Programdor" %>
+<%@ Property Name="EsParaBusquedaRapida" Type="System.Boolean" Default="false" Category="4. Service Architecture" Description="Nombre del Programdor" %>
+<%@ Property Name="JQueryUIVersion" Type="System.String" Default="1.8.16" Category="1.1 PHP VERSION" Description="5.2.17,5.3" %>
+
+<script runat="template">
+bool conStyleOriginal=false;
+
+//AL INICIO
+//<%=GetRelativePathC(TablaBase)%>
+/*
+<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccessAdditional.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/Entities/<%=GetNombreClase(TablaBase.ToString())%>Entity.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/DataAccess/<%=GetNombreClase(TablaBase.ToString())%>DataAccess.js'<%=strIncludeEnd%>
+		
+		}
+<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccionAdditional.js'<%=strIncludeEnd%>								
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/Services/<%=GetNombreClase(TablaBase.ToString())%>Services.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>Logic.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/Logic/<%=GetNombreClase(TablaBase.ToString())%>LogicAdditional.js'<%=strIncludeEnd%>
+		
+		<%}%>
+*/		
+/*
+<%if(!ConFaces&&!ConRichFaces){%>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.ConstantesJsp" %>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.ConstantesServlet" %>
+<%=strStartPageInclude%> page import="com.bydan.framework.enviomail.util.Constantes" %>
+<%=strStartPageInclude%> page contentType="text/html; charset=UTF-8" %>
+<%=strStartPageInclude%> taglib prefix="a" uri="http://jmaki/v1.0/jsp" %>
+<%}%>
+*/
+//<h:commandButton value="MAPA 2" onclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW')"/>
+/*
+<rich:column>
+						<f:facet name="header">
+						<h:outputText value="MAPA2"/>
+						</f:facet>
+
+						<h:inputText value="#{funcionesBeanFace.intZoom}" size="4" ondblclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW')"/>
+					</rich:column>
+*/
+
+/*
+<rich:column>
+						<f:facet name="header">
+						<h:outputText value="MAPA2"/>
+						</f:facet>						
+						<h:selectBooleanCheckbox   id="cbTipo" value="true" />
+						<h:commandButton value="MAPA 2" onclick="funcionGeneral.ejecutarGrugeMapas2Consola('ID','#{radar.field_sLatitud}','#{radar.field_sLongitud}','WW',document.getElementById('frmTablaDatosRadar:richDataTableRadar:#{rowkey}:cbTipo'))"/>
+					</rich:column>
+*/
+
+String strIncludeInitJavaScript=String.Empty;
+String strIncludeEndJavaScript=String.Empty;
+
+//String strIncludeInit=String.Empty;
+//String strIncludeEnd=String.Empty;
+
+public String GetVersionJQueryExtra(String strTipo) {
+	String strTipoVersion="";
+	
+	if(strTipo.Equals("JQUERY")) {
+		if(JQueryUIVersion.Equals("1.8.16")) {
+			strTipoVersion="1.6.2";
+			
+		} else if(JQueryUIVersion.Equals("1.10.4")) {
+			strTipoVersion="1.10.2";
+		}
+	}
+	
+	return strTipoVersion;
+}
+
+public  void GetJavaScriptIncludeInitEnd()
+{
+	
+	//strIncludeInit=/*strStartPageInclude+*/"<jsp:include page=";
+	//strIncludeEnd="/>";//strFinishPageInclude;
+	
+	//strIncludeInitJavaScript="<script type=\"text/javascript\" language=\"javascript\">";
+	//strIncludeEndJavaScript=strEndScript;
+	
+	if(ConJavaScriptInclude)
+	{
+		//strIncludeInitJavaScript=String.Empty;
+		//strIncludeEndJavaScript=String.Empty;
+	
+		//strIncludeInit="<script type=\"text/javascript\" src=";
+		//strIncludeEnd=">"+strEndScript;
+	}
+	
+	//return strIncludeInit;
+}
+
+public  string GetLibreriasImportFromColumn(ColumnSchema column)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	strNameLibrary+="\r\n"+strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strIncludeEnd+"\r\n";	
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionEventsAdditional.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"LogicAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constante.js'" +strIncludeEnd+"\r\n";
+				
+	strNameLibraries+=strNameLibrary+"\r\n";
+	
+	
+	return strNameLibraries;
+}
+
+public  string GetLibreriasImportFromColumnConBusqueda(ColumnSchema column,String strRelativePathNavegacion)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	strNameLibrary+="\r\n\t\t"+strIncludeInit+"'"+/*GetRelativePathC(tableSchemaFK)+*/"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+strRelativePathNavegacion+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strIncludeEnd+"\r\n";	
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js'" +strIncludeEnd+"\r\n";
+	strNameLibrary+="\t\t"+strIncludeInit+"'"+/*GetRelativePathC(tableSchemaFK)+*/"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+strRelativePathNavegacion+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/PaginaWebInteraccion/"+GetNombreClaseRelacionadaFromColumn(column)+"PaginaWebInteraccionEventsAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"LogicAdditional.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js'" +strIncludeEnd+"\r\n";
+	//strNameLibrary+=strIncludeInit+"'"+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constante.js'" +strIncludeEnd+"\r\n";
+				
+	strNameLibraries+=strNameLibrary+"\r\n";
+	
+	
+	return strNameLibraries;
+}
+
+public  string GetLibreriasImportFromColumn(ColumnSchema column,bool esImportJavaScript)
+{
+	String strNameLibrary="";
+	String strNameLibraries="";
+	TableSchema tableSchemaFK=TablaBase;//GetNombreTablaRelacionadaFromColumn(column);
+	
+	if(!esImportJavaScript)
+	{
+		strNameLibrary="\r\n"+strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneralAdditional.js'" +strFinishPageInclude+"\r\n";
+		strNameLibrary+=strStartPageInclude+"include file=\""+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constante.js'" +strFinishPageInclude+"\r\n";
+				
+		strNameLibraries+=strNameLibrary+"\r\n";
+	}
+	else
+	{
+		strNameLibrary="\r\nfuncionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccessAdditional.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/Entities/"+GetNombreClaseRelacionadaFromColumn(column)+"Entity.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/DataAccess/"+GetNombreClaseRelacionadaFromColumn(column)+"DataAccess.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/Services/"+GetNombreClaseRelacionadaFromColumn(column)+"Services.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/Logic/"+GetNombreClaseRelacionadaFromColumn(column)+"Logic.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/LayerCommunication/"+GetNombreClaseRelacionadaFromColumn(column)+"LayerCommunication.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/"+ Package+"/"+ Module+"/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneral.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"FuncionGeneralAdditional.js');\r\n";
+		strNameLibrary+="funcionGeneral.Import('"+GetRelativePathC(tableSchemaFK)+"JavaScript/GeneralFunctionsAndConstants/"+GetNombreClaseRelacionadaFromColumn(column)+"Constante.js');\r\n";
+				
+		strNameLibraries+=strNameLibrary+"\r\n";
+	}
+	
+	return strNameLibraries;
+}
+
+
+public  string GetLibreriasForeignKeysColumnsForCombos()
+	{
+		
+	String strNameLibrary="";
+		 strNameLibrary+="";
+	String strNameLibraries="";
+	
+	TableSchema tableSchemaForeignKey;
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+		{
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember)
+		{
+			
+			strNameLibraries+=GetLibreriasImportFromColumn(column);
+			
+			
+			if(ConBusquedaAnterior && GetBusquedaForeignKeyColumnFromPropertiesC(column))
+			{
+				
+				tableSchemaForeignKey=GetNombreTablaRelacionadaFromColumn(column);
+				
+				if(TablaBase.Name!=tableSchemaForeignKey.Name)
+				{
+					foreach(ColumnSchema columnForeignKey in tableSchemaForeignKey.Columns)
+					{
+					
+						if(columnForeignKey.Name.Equals(strIsActive)|| columnForeignKey.Name.Equals(strIsExpired)|| columnForeignKey.Name.Equals(strId)|| columnForeignKey.Name.Equals(strVersionRow))
+						{
+								continue;
+						}
+						
+						if(columnForeignKey.IsForeignKeyMember)
+						{
+							strNameLibraries+="\r\n\r\n"+GetLibreriasImportFromColumn(columnForeignKey);
+						}
+					}
+				}
+			}
+		}
+		
+		
+	}
+		
+	return strNameLibraries;
+}
+		
+public  string GetLibreriasForeignKeysColumnsForCombosConBusqueda() {
+		
+	String strNameLibrary="";
+		strNameLibrary+="";
+	String strNameLibraries="";
+	String strRelativePathNavegacion="";
+	
+	TableSchema tableSchemaForeignKey;
+	
+	foreach(ColumnSchema column in TablaBase.Columns) {
+	
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow)) {
+				continue;
+		}
+		
+		if(column.IsForeignKeyMember) {
+			
+			//strNameLibraries+=GetLibreriasImportFromColumn(column);
+					
+			if(ConBusquedaAnterior && GetBusquedaForeignKeyColumnFromPropertiesC(column)) {			
+				tableSchemaForeignKey=GetNombreTablaRelacionadaFromColumn(column);
+				strRelativePathNavegacion=GetRelativePathNavegacionFromTableFromPropertiesC(tableSchemaForeignKey);
+				
+				if(TablaBase.Name!=tableSchemaForeignKey.Name) {
+					strNameLibraries+=GetLibreriasImportFromColumnConBusqueda(column,strRelativePathNavegacion);
+					/*
+					foreach(ColumnSchema columnForeignKey in tableSchemaForeignKey.Columns) {
+					
+						if(columnForeignKey.Name.Equals(strIsActive)|| columnForeignKey.Name.Equals(strIsExpired)|| columnForeignKey.Name.Equals(strId)|| columnForeignKey.Name.Equals(strVersionRow)) {
+								continue;
+						}
+						
+						if(columnForeignKey.IsForeignKeyMember) {
+							strNameLibraries+="\r\n\r\n"+GetLibreriasImportFromColumn(columnForeignKey);
+						}
+					}
+					*/
+				}
+			}
+		}		
+	}
+		
+	return strNameLibraries;
+}
+
+public String GetOrderFuncionesColumns() 
+		{
+			String strTablaClaseRelacionada=string.Empty;
+										
+										
+			foreach(ColumnSchema columnSchema in TablaBase.Columns)
+			{
+				if(columnSchema.IsPrimaryKeyMember||columnSchema.IsForeignKeyMember||columnSchema.Name.Equals(strId)||columnSchema.Name.Equals(strIsActive)||columnSchema.Name.Equals(strIsExpired)||columnSchema.Name.Equals(strVersionRow))
+				{
+					continue;
+				}
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\tif(args.value==\""+GetNombreColumnaClaseMinusculaC(columnSchema)+"\")"+"\r\n\t\t\t\t\t\t\t{";					
+					strTablaClaseRelacionada+="\r\n\t\t\t\t\t\t\t\tarrData"+GetNombreClase(TablaBase.ToString())+"s.sort(orderBy"+GetNombreClase(TablaBase.ToString())+GetNombreColumnaClaseC(columnSchema)+");\r\n\t";
+					strTablaClaseRelacionada+="\t\t\t\t\t\t}\r\n";
+			}
+			return strTablaClaseRelacionada; 
+		}
+		
+
+
+public  string GetLibreriasFunctionValidationControlHtml()
+	{
+		
+	String strNameIni="\t<script type=\"text/javascript\" language=\"javascript\" src=\"JavaScript/";
+	String strNameFin="\"><//script>";
+	String strNameArchivoValidacion="";
+	String strNameLibrary="";
+	String strNameLibraries="";
+	
+	bool yaValidacionFecha=false;
+	bool yaValidacionNumero=false;
+	bool yaValidacionTexto=false;
+	bool yaValidacionOtros=false;
+	
+	
+	foreach(ColumnSchema column in TablaBase.Columns)
+	{
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strId)|| column.Name.Equals(strVersionRow))
+	{
+			continue;
+	}
+		
+	if(!column.IsForeignKeyMember)
+		{
+		
+		
+			if(column.DataType==DbType.AnsiString ||column.DataType==DbType.AnsiStringFixedLength ||column.DataType==DbType.String||column.DataType==DbType.StringFixedLength)
+			{
+				if(!yaValidacionTexto)
+				{
+				yaValidacionTexto=true;
+				strNameArchivoValidacion="ValidacionText.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Boolean)
+			{
+				continue;
+			}
+			else if(column.DataType==DbType.Decimal||column.DataType==DbType.Double)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}	
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Int32||column.DataType==DbType.Int64||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Int16||column.DataType==DbType.Single||column.DataType==DbType.UInt16||column.DataType==DbType.UInt32||column.DataType==DbType.UInt64)
+			{
+				if(!yaValidacionNumero)
+				{
+				yaValidacionNumero=true;
+				strNameArchivoValidacion="ValidacionNum.js";
+				}
+				else
+				{
+					continue;
+				}
+			}
+			else if(column.DataType==DbType.Date||column.DataType==DbType.DateTime)
+			{
+				if(!yaValidacionFecha)
+				{
+				yaValidacionFecha=true;
+				strNameArchivoValidacion="ValidacionDate.js";
+				}
+				else
+				{
+					continue;
+				}		
+			}
+		}
+		else
+		{
+		continue;
+		}
+	
+	strNameLibrary=strNameIni + strNameArchivoValidacion +strNameFin;
+	
+	strNameLibraries+="\r\n"+strNameLibrary;
+	}
+		
+	return strNameLibraries;
+}
+		
+public String GetFuncionesTablasClasesRelacionadas() 
+		{
+			String strHtmlInicial="<table style=\"width: 250px;text-align: center\">\r\n<tr>\r\n<td width=\"10%\">";
+			String strHtmlFinal="</tr>\r\n</table>";
+			String strTitulo=string.Empty;
+			String strCombo=string.Empty;
+			String strBoton=string.Empty;
+			
+			String strFuncion=string.Empty;
+			
+			
+			System.Collections.Hashtable tablasRelacionadas=GetTablasRelacionadas(TablaBase);
+										 			
+			foreach(CollectionInfo collectionInfo in tablasRelacionadas.Values)
+			{
+				
+				if(collectionInfo.CollectionRelationshipType==RelationshipType.OneToOne)
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"\" name=\"dojo.combobox\"/></td>";					
+				}
+				else
+				{
+					strTitulo=GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s</td>";
+					strBoton="<td width=\"11%\"><button onclick=\"buscar"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s()\">Buscar</button></td>";
+					strCombo="<td width=\"79%\"><a:widget id=\"djcmb"+  GetNombreClaseC("dbo."+collectionInfo.SecondaryTable)+"s\" name=\"dojo.combobox\"/></td>";								
+				}
+				
+			strFuncion+=strHtmlInicial+	strTitulo+strCombo+strBoton+strHtmlFinal+"\r\n\r\n";
+			}
+								
+			return strFuncion; 
+		}
+		
+
+
+
+
+
+
+public string GetNombreColumnaClaseTituloTablaC(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		String strParamtroInit="<td>";
+		String strParamtroEnd="</td>";
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		
+		strParamtro=strParamtroInit+GetNombreColumnaClaseTituloC(column)+strParamtroEnd;
+		return strParamtro;
+}
+
+public string GetParametroFuncionNuevoClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+		
+		if(column.Name.Equals(strId)||column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);
+		return strParamtro;
+}
+public string GetParametroFuncionActualizarClase(ColumnSchema column)
+{		String strParamtro=string.Empty;	
+
+		if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+		{
+			return strParamtro;
+		}
+		if(!column.Name.Equals(strId))
+		{
+		strParamtro=GetPrefijoTipoC(column)+GetNombreColumnaClaseC(column);		
+		}
+		else
+		{
+		strParamtro=strId;			
+		}
+		return strParamtro;
+}
+public string GetSetVariablesFormulario(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+"("+GetTipoColumnaClaseC(column)+")"+"request.getAttribute(\""+GetNombreColumnaClaseC(column)+"\""+");";
+}
+
+public string GetSetRequestVariables(ColumnSchema column,String table)
+{
+	String strInit="request.setAttribute(\"";	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strInit+strColumna+"\","+GetNombreCompletoColumnaClaseSinPrefijoTablaC(column)+GetTipoColumnaToString(column)+");";
+}
+
+public string GetSetVariablesObjetoTabla(ColumnSchema column,String table)
+{
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	String strColumnaInit="<td><!%=";	
+	String strColumnaEnd="%></td>";	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+	 strColumna=strId;
+	}
+	
+	return strColumnaInit+GetNombreClaseObjetoC(table)+".get"+GetNombreCompletoColumnaClaseC(column)+"()"+strColumnaEnd;
+}
+
+public string GetSetVariables(ColumnSchema column,String table)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"="+GetNombreClaseObjetoC(table)+".get"+GetNombreClaseC(table)+"().get"+GetNombreCompletoColumnaClaseC(column)+"();";
+}
+
+public string GetNombreVariables(ColumnSchema column)
+{
+	String strTipo=GetTipoColumnaClaseC(column);	
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strTipo+strPrefijo+strColumna+";";
+}
+public string GetNombreVariablesStringDefault(ColumnSchema column)
+{
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijo+strColumna+"=\"\""+";";
+}
+
+public string GetFormVariablesEdit(ColumnSchema column)
+{
+	String strPrefijoInit="<td><input type=\"hidden\" name=\"";
+	String strPrefijoType="txt";
+	String strPrefijoMiddle="\" value=\"<!%="; 
+	String strPrefijoEnd="%>\"></td>";
+	String strPrefijo=" "+GetPrefijoTipoC(column);	
+	String strColumna=GetNombreColumnaClaseC(column);	
+	
+	if(column.Name.Equals(strIsActive)|| column.Name.Equals(strIsExpired)|| column.Name.Equals(strVersionRow))
+	{
+			return string.Empty;
+	}
+		
+	if(column.Name.Equals(strId))
+	{
+		strPrefijo=" ";
+		strColumna=strId;
+	}
+	
+	return strPrefijoInit+strPrefijoType+strColumna+strPrefijoMiddle+strPrefijo+strColumna+strPrefijoEnd;
+}
+
+public string GetNombreClaseObjeto(string strTablaBase)
+{		
+		return GetNombreClaseObjetoC(strTablaBase);
+}
+public string GetNombreClase(string strTablaBase)
+{		
+		return GetNombreClaseC(strTablaBase);
+}
+</script>
+<%//InicializarVariablesPorTabla(TablaBase);%>
+<%//InicializarVariablesEmpresa();%>
+<%if(!ConFaces&&!ConRichFaces){%>
+<%}%>
+
+<%if(ConFaces||ConRichFaces){%>
+<%}%>
+
+<%if(ConRichFaces){%>
+<%}%>
+
+<%if(!ConRichFaces){%>
+<html>
+<%}%>	
+	
+	<%if(!ConRichFaces&&!ConRichFaces){%>
+	
+	<%=strStartPageIncludeOnly%>	
+		response.setHeader(ConstantesServlet.SCACHECONTROL,ConstantesServlet.SNOSTORE); //HTTP 1.1
+		response.setHeader(ConstantesServlet.SPRAGMA,ConstantesServlet.SNOCACHE); //HTTP 1.0
+		response.setDateHeader(ConstantesServlet.SEXPIRES, -1); 		
+	<%=strFinishPageInclude%>
+	
+	<%=strStartPageIncludeOnly%>
+	 String strPerfilArbol=ConstantesJsp.SJMAKITREEDEFAULT;
+	 String strPerfilJavaScriptArbol="";
+	 
+	 if(request.getSession().getAttribute(Constantes.SSESSIONVALUETREEAJAX)!=null)
+	 {
+		 strPerfilArbol=(String) request.getSession().getAttribute(Constantes.SSESSIONVALUETREEAJAX);
+	 }
+	 
+	 if(request.getSession().getAttribute(Constantes.SSESSIONVALUEJAVASCRIPTTREEAJAX)!=null)
+	 {
+		 strPerfilJavaScriptArbol=(String) request.getSession().getAttribute(Constantes.SSESSIONVALUEJAVASCRIPTTREEAJAX);
+	 }
+	 
+	<%=strFinishPageInclude%>
+	
+	<%}%>
+  
+	<%if(!ConRichFaces){%>
+	<head>
+	 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+	
+ 	 <title><%=GetTituloNombreTableFromPropertiesC(TablaBase)%> Mantenimiento</title>
+	<%} else {%>	
+	<!DOCTYPE html>
+ 	<html>	
+	<!-- <body id="outerBorder" pageTitle="<%=GetTituloNombreTableFromPropertiesC(TablaBase)%> Mantenimiento" markupType="html"> -->
+		<head>
+			<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+	
+<?php
+<%=GetByDanLicence()%>
+
+	include_once('<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Constantes.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Constantes;
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Funciones.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Funciones;
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/PaqueteTipo.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/PaqueteTipo;
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=Package%>/<%=Module%><%=strPackageUtils%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesCarga.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%=Package%>/<%=Module%><%=strPackageUtils%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesCarga;
+	
+	
+	if(Constantes::$BIT_CONCARGA_INICIAL_POR_ARCHIVO) {
+				
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Funciones.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/Funciones;	
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/PaqueteTipo.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackageUtils%>/PaqueteTipo;
+	
+	<%if(true) { //blnConJQueryCode){%>		
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackagePresentation%>/<%=strPackageWeb%>/SessionBase.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%=strPackageFramework%>/<%= PackageFramework%>/<%=strPackagePresentation%>/<%=strPackageWeb%>/SessionBase;			
+	
+	
+	//SIN CARGA INICIAL
+	/*
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageUtils%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones.php');		
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%= Package%>/<%= Module%><%=strPackageUtils%><%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClase(TablaBase.ToString())%>ConstantesFunciones;			
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%=Package%>/<%= Module%><%=strPackagePresentation%>/session<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>.php');
+	<%=strPhp53VersionComment%>use <%=Empresa%>/<%=Package%><%= Module%>/<%=strPackagePresentation%>/session<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>;			
+	*/
+	<%}%>
+	
+	
+	} else {
+		//CARGA ARCHIVOS FRAMEWORK
+		<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesCarga::cargarArchivosFrameworkBase(PaqueteTipo::$WEB);
+		
+		<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesCarga::cargarArchivosPaquetesBase(PaqueteTipo::$WEB);
+	}
+	
+	//ESTO SE LLAMA EN LA PRIMERA LINEA (GlobalController.php)
+	//$blnstart=session_start();
+	
+	
+<%if(!blnConJQueryCode && !ConCakePhp) {%>
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= Package%>/<%=Module%><%=strPackagePresentation%>/<%=strPackageFaces%>_basic<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetNombreClase(TablaBase.ToString())%>Controller.php');
+	
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackagePresentation%>/<%=strPackageWeb%>/Html.php');
+	include_once(Constantes::$PATH_REL.'<%=Empresa%>/<%= strPackageFramework%>/<%= PackageFramework%>/<%=strPackagePresentation%>/<%=strPackageWeb%>/Form.php');
+	
+	$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Controller=new <%=GetNombreClase(TablaBase.ToString())%>Controller();
+	
+	//view=<%=GetNombreClase(TablaBase.ToString())%>&modulo=general&sub_modulo=&strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>=onload&strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=none&strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=invitado&action=load
+	
+	if($_SERVER["REQUEST_METHOD"]=="POST" 
+		|| (array_key_exists('view',$_GET) && $_GET['view']=='<%=GetNombreClase(TablaBase.ToString())%>') 
+		|| (array_key_exists('view',$_POST) && $_POST['view']=='<%=GetNombreClase(TablaBase.ToString())%>') 
+		|| (array_key_exists('action',$_GET) && $_GET['action']=='load')
+		) {
+		
+		$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Controller->inicializarParametrosQueryString();
+		$<%=GetNombreClaseObjeto(TablaBase.ToString())%>Controller->ejecutarParametrosQueryString();
+	}
+<%}%>
+	
+	
+	$sessionBase=new SessionBase();
+	$parametroGeneralUsuarioActual=new ParametroGeneralUsuario();
+	
+	if($sessionBase->read('parametroGeneralUsuarioActual')!=null) {
+		$parametroGeneralUsuarioActual=unserialize($sessionBase->read('parametroGeneralUsuarioActual'));
+	}
+	
+	$strSufijoEstiloUsuario=Funciones::getSufijoEstiloUsuario($parametroGeneralUsuarioActual);
+	
+	$strSufijoEstiloLetraUsuario=Funciones::getParametroEstiloTipoLetraUsuario($parametroGeneralUsuarioActual);
+?>
+		
+	<%}%>
+		
+		<%=strIncludeInit%>'JavaScript/Library/General/Constantes.js' <%=strIncludeEnd%>			
+		<%=strIncludeInit%>'JavaScript/Library/General/FuncionGeneral.js' <%=strIncludeEnd%>				
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<%=strIncludeInit%>'JavaScript/Library/Ajax/AjaxBasic.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'JavaScript/Library/Ajax/AjaxFuncionGeneral.js'<%=strIncludeEnd%>
+		<%}%>
+		<%=strIncludeInit%>'JavaScript/Library/Ajax/waiter.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'JavaScript/Library/Validacion/Validacion.js'<%=strIncludeEnd%>
+				
+		<%if(!ConFaces&&!ConRichFaces){%>			
+		<%=GetLibreriasForeignKeysColumnsForCombos()%>
+		<%} else {%>
+		<%=GetLibreriasForeignKeysColumnsForCombosConBusqueda()%>
+		<%}%>
+		
+		<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>GeneralFunctionsAndConstants<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>FuncionGeneral.js'<%=strIncludeEnd%>		
+		<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>GeneralFunctionsAndConstants<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>FuncionGeneralAdditional.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>GeneralFunctionsAndConstants<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>Constante.js'<%=strIncludeEnd%>
+				
+		<%if((!blnConJQueryCode && ConCakePhp) || ConPhpBasico) {%>
+		<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>GeneralFunctionsAndConstants<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>FuncionGeneralBasico.js'<%=strIncludeEnd%>
+		<%}%>
+		
+		<%if(!blnConJQueryCode){%>
+		<script type="text/javascript">
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.BitEsParaJQuery=false;
+		</script>
+		<%} //else {%>
+		
+		<%if(true) {//blnConJQueryCode) {%>
+		<script type="text/javascript">
+			<?php 
+			$post=$_GET;
+			$view='';
+			$strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>='onload';
+			$strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>='none';
+			$strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>='none';
+			$strESPOPUP='false';
+			$strESBUSQUEDA='false';
+			$strESRELACIONES='false';
+			$strESRELACIONADO='false';
+			$strFUNCIONJS='';
+			$strSuf='';
+			$strStyleCamposOcultos='';
+			$strStyleBusqueda='display:table-row';
+			
+			<%if(blnConAdditional){%>
+			$<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoView%>Additional=new <%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoView%>Additional();
+			<%}%>
+			
+			if (isset($_POST['strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>']) || isset($_GET['strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>'])){
+				if(isset($_GET['strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>'])) {
+					$strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>=$_GET['strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>'];
+				} else {
+					$strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>=$_POST['strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>'];
+				}
+				
+				//Donce onload_aux=onload, clave 'onload' que dio problema en hosting(mod_security)
+				if($strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>=='onload_aux') {
+					$strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>='onload';
+				}
+			}
+			
+			if (isset($_POST['strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>']) || isset($_GET['strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'])){
+				if(isset($_GET['strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'])) {
+					$strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=$_GET['strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'];
+				} else {
+					$strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=$_POST['strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'];
+				}
+			}
+			
+			if (isset($_POST['strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>']) || isset($_GET['strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'])){
+				if(isset($_GET['strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'])) {
+					$strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=$_GET['strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'];
+				} else {
+					$strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>=$_POST['strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>'];
+				}
+			}
+			
+			if (isset($_POST['ESPOPUP']) || isset($_GET['ESPOPUP'])){
+				if(isset($_GET['ESPOPUP'])) {
+					$strESPOPUP=$_GET['ESPOPUP'];
+				} else {
+					$strESPOPUP=$_POST['ESPOPUP'];
+				}
+			}
+			
+			if (isset($_POST['ESBUSQUEDA']) || isset($_GET['ESBUSQUEDA'])){
+				if(isset($_GET['ESBUSQUEDA'])) {
+					$strESBUSQUEDA=$_GET['ESBUSQUEDA'];
+				} else {
+					$strESBUSQUEDA=$_POST['ESBUSQUEDA'];
+				}
+			}
+			
+			if (isset($_POST['FUNCIONJS']) || isset($_GET['FUNCIONJS'])){
+				if(isset($_GET['FUNCIONJS'])) {
+					$strFUNCIONJS=$_GET['FUNCIONJS'];
+				} else {
+					$strFUNCIONJS=$_POST['FUNCIONJS'];
+				}
+			}
+			
+			if (isset($_POST['view']) || isset($_GET['view'])){
+				if(isset($_GET['view'])) {
+					$view=$_GET['view'];
+				} else {
+					$view=$_POST['view'];
+				}
+			}
+			
+			if (isset($_POST['ESRELACIONES']) || isset($_GET['ESRELACIONES'])){
+				if(isset($_GET['ESRELACIONES'])) {
+					$strESRELACIONES=$_GET['ESRELACIONES'];
+				} else {
+					$strESRELACIONES=$_POST['ESRELACIONES'];
+				}
+			}
+			
+			if (isset($_POST['ESRELACIONADO']) || isset($_GET['ESRELACIONADO'])){
+				if(isset($_GET['ESRELACIONADO'])) {
+					$strESRELACIONADO=$_GET['ESRELACIONADO'];
+				} else {
+					$strESRELACIONADO=$_POST['ESRELACIONADO'];
+				}
+			}
+			
+			if($strESRELACIONES=='true') {
+				if($view!='<%=GetNombreClase(TablaBase.ToString())%>' && $view!='<%=GetNombreClase(TablaBase.ToString())%><%=strSufijoWeb%>') {
+					$strESRELACIONES='false';
+					
+				} else {				
+					if($strESRELACIONADO=='true') {
+						$strESRELACIONADO='false';
+					}
+				}
+			}
+			
+			if($strESRELACIONADO=='true') {
+				if($view!='<%=GetNombreClase(TablaBase.ToString())%>' && $view!='<%=GetNombreClase(TablaBase.ToString())%><%=strSufijoWeb%>') {
+					$strESRELACIONES='false';
+				}
+				
+				$strSuf='_<%=GetNombreClaseObjeto(TablaBase.ToString())%>';
+			}
+			
+			//CAMPOS OCULTOS STYLE
+			$strStyleCamposOcultos='display:none';
+			
+			if(Constantes::$ISDEVELOPING) {
+				$strStyleCamposOcultos='display:table-row';
+			}
+			
+			<%if(!TieneGlobalVariableColumnC(TablaBase)) {%>
+			//NO TIENE CAMPOS OCULTOS
+			$strStyleCamposOcultos='display:none';	
+			<%}%>
+			
+			//BUSQUEDAS STYLE
+			$strStyleBusqueda='display:table-row';
+			
+			if($strESRELACIONADO=='true') {
+				$strStyleBusqueda='display:none';
+			}
+			?>
+			
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>="<?php echo($strTypeOnLoad<%=GetNombreClase(TablaBase.ToString())%>) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>="<?php echo($strTipoPaginaAuxiliar<%=GetNombreClase(TablaBase.ToString())%>) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>="<?php echo($strTipoUsuarioAuxiliar<%=GetNombreClase(TablaBase.ToString())%>) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strESPOPUP="<?php echo($strESPOPUP) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strESBUSQUEDA="<?php echo($strESBUSQUEDA) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strFUNCIONJS="<?php echo($strFUNCIONJS) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strESRELACIONES="<?php echo($strESRELACIONES) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strESRELACIONADO="<?php echo($strESRELACIONADO) ?>";
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strSUFIJO="<?php echo($strSuf) ?>";
+			
+			//DEPENDE DE POST PARA DAR VALOR
+			//<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.BitEsLoadNormal=true;
+			//<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.BitEsLoadNormal=false;
+			
+			<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.BitEsParaJQuery=true;
+			//<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/demos.css" type="text/css"/>		
+		</script>
+		<%}%>
+		
+		<?php if($strESRELACIONADO=='false') {?>
+		
+		<%if(false){%>
+		//ESTA DESHABILITADO
+		<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>PaginaWebInteraccion/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccion.js'<%=strIncludeEnd%>							
+		}
+		<%}%>
+		
+		<%if(blnConJQueryCode){%>
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>scriptaculous/prototype.js"></script>		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>scriptaculous/scriptaculous.js"></script>
+		<%}%>
+		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/jquery-<%=GetVersionJQueryExtra("JQUERY")%>.js"></script>
+		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.form.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.popupWindow.js"></script>
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.validate.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.tooltip.js"></script>
+		<%} else if(JQueryUIVersion.Equals("1.10.4")){%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.validate.js"></script>		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.datetimepicker.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.uploadfile.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/select2.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/DataTables-1.10.0/media/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jstree3_0/jstree.js"></script>
+		<%}%>
+		
+		<%if(blnTieneDate) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.datepicker.js"></script>
+		<%}%>
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/external/jquery.bgiframe-2.1.2.js"></script>
+		<%}%>
+		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.core.js"></script>
+		<%if(JQueryUIVersion.Equals("1.10.4")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.core.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.effect.js"></script>
+		<%}%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.widget.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.tabs.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.mouse.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.draggable.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.position.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.slider.js"></script>
+		
+		<%if(JQueryUIVersion.Equals("1.10.4")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.menu.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.autocomplete.js"></script>
+		<%}%>
+		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.resizable.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.dialog.js"></script>
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.core.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.blind.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.explode.js"></script>
+		<%} else if(JQueryUIVersion.Equals("1.10.4")){%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.effect-blind.js"></script>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.effect-explode.js"></script>
+		<%}%>
+		
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.button.js"></script>
+		
+		<%if(JQueryUIVersion.Equals("1.10.4")){%>
+		<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.tooltip.js"></script>
+		<%}%>
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/themes/<?php echo(Constantes::$STRTHEME)?>/jquery.ui.all.css" type="text/css"/>
+		
+		<%} else if(JQueryUIVersion.Equals("1.10.4")){%>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/themes/<?php echo(Constantes::$STRTHEME)?>/jquery-ui.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/themes/<?php echo(Constantes::$STRTHEME)?>/jquery.ui.theme.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.datetimepicker.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/uploadfile.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/select2.css" type="text/css"/>		
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/DataTables-1.10.0/media/css/jquery.dataTables.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/DataTables-1.10.0/media/css/dataTables.jqueryui.css" type="text/css"/>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jstree3_0/themes/default/style.css" type="text/css"/>
+		
+		<script type="text/javascript">
+			<%if(conStyleOriginal) {%>
+			//<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/DataTables-1.10.0/media/css/jquery.dataTables.css" type="text/css"/>
+			<%}%>
+		</script>
+		<%}%>
+		
+		<%}%>
+		
+		<%if((!blnConJQueryCode && ConCakePhp) || ConPhpBasico){%>	
+		
+		<%if(!ConPhpBasico){%>	
+		<?php echo $this->Html->css('Css/style_layout'); ?>
+		<?php echo $this->Html->css('Css/style_shared'); ?>
+		<?php echo $this->Html->css('Css/style_defecto'); ?>
+		<?php echo $this->Html->css('Css/style_font_defecto'); ?>		
+		
+		<?php echo $this->Html->css('jquery-ui-<%=JQueryUIVersion%>/themes/base/jquery.ui.all'); ?>		
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/jquery-1.6.2'); ?>
+		<%=strJSEndJavaScript.Replace("/","")%>jQuery.noConflict();<%=strJSEndJavaScript%>
+		
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.popupWindow'); ?>
+		
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/external/jquery.bgiframe-2.1.2'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.core'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.widget'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.mouse'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.draggable'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.position'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.resizable'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.dialog'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.core'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.blind'); ?>
+		<?php echo $this->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.explode'); ?>
+		<?php echo $this->Html->css('jquery-ui-<%=JQueryUIVersion%>/demos'); ?>
+		
+		<?php echo $this->Html->css(Constantes::$strPathBaseCssToComplete.'jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.tooltip'); ?>
+		
+			<%if(blnConJQueryFuncionalidadCode) {%>
+			
+			<%}%>
+		<%} else {%>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('Css/style_layout'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('Css/style_shared'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('Css/style_defecto'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('Css/style_font_defecto'); ?>
+		
+		<%if(false) {%>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('jquery-ui-<%=JQueryUIVersion%>/themes/base/jquery.ui.all'); ?>		
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/jquery-1.6.2'); ?>
+		<%=strJSEndJavaScript.Replace("/","")%>jQuery.noConflict();<%=strJSEndJavaScript%>
+		
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.popupWindow'); ?>
+		
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/external/jquery.bgiframe-2.1.2'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.core'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.widget'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.mouse'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.draggable'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.position'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.resizable'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.ui.dialog'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.core'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.blind'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->script('jquery-ui-<%=JQueryUIVersion%>/ui/jquery.effects.explode'); ?>
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css('jquery-ui-<%=JQueryUIVersion%>/demos'); ?>
+		
+		<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->css(Constantes::$strPathBaseCssToComplete.'jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.tooltip'); ?>
+		<%}%>
+		
+		<%}%>
+		
+		<%} else {%>
+		<%if(conStyleOriginal) {%>
+		<!--		
+		<%=strIncludeCssInit%>'Css/style.css'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/jmaki-standard.css'<%=strIncludeCssEnd%>
+		
+		<%=strIncludeCssInit%>'Css/Background/main.css'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/Background/print.css'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/Background/aural.css'<%=strIncludeCssEnd%>
+		-->
+		<%}%>
+		
+		
+		<?php if(!Constantes::$BITCONCSSPHP) {?>
+		
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/style_layout.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/style_shared.css" media="screen" />
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/style<?php echo($strSufijoEstiloUsuario) ?>.css" media="screen" />		
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/style_font<?php echo($strSufijoEstiloLetraUsuario) ?>.css" media="screen" />		
+		
+		<?} else { /*NO ES USADO, TALVEZ SE DEJA*/ ?>
+		
+		<%=strIncludeCssInit%>'Css/style_layout.php'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/style_shared.php'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/style'.$strSufijoEstiloUsuario.'.php'<%=strIncludeCssEnd%>
+		<%=strIncludeCssInit%>'Css/style_font'.$strSufijoEstiloUsuario.'.php'<%=strIncludeCssEnd%>
+		
+		<?}?>
+	
+		<%if(conStyleOriginal) {%>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/jmaki-standard.css"/>
+		<%}%>
+		
+		<%if(JQueryUIVersion.Equals("1.8.16")) {%>
+		<link rel="stylesheet" type="text/css" href="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery-ui-<%=JQueryUIVersion%>/pluggin/jquery.tooltip.css"/>
+		<%}%>
+		
+		<%if(conStyleOriginal) {%>
+		<link rel="stylesheet" type="text/css" media="screen,projection" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/Background/main.css"/>		
+		<link rel="stylesheet" type="text/css" media="print" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/Background/print.css"/>
+		<link rel="stylesheet" type="text/css" media="aural" href="<?php echo(Constantes::$strPathBaseCssToComplete) ?>Css/Background/aural.css"/>
+		<%}%>
+		
+		<%}%>		
+		
+		<?php } ?>
+		
+		</head>
+		<body>
+		
+<%if(blnConJQueryCode){%>	
+<%}%>
+
+<%if(!ConRichFaces){%>
+	</head>
+
+
+ <body  onload="<%=GetNombreClaseObjeto(TablaBase.ToString())%>PaginaWebInteraccion.cargarPagina('Todos')">
+<%}%>
+	<%if((!blnConJQueryCode && ConCakePhp) || ConPhpBasico){%>
+	<%if(!ConPhpBasico) {%>
+	<a id="<%=GetNombreClase(TablaBase.ToString())%>Actual" ></a>
+	<?php echo $ajax->div('divResumen<%=GetNombreClase(TablaBase.ToString())%>Actual<%=strAjaxWebPart%>'); ?>
+	<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strAuxiliarHtmlReturn1<%=GetNombreClase(TablaBase.ToString())%>?>
+	<?php echo $ajax->divEnd('divResumen<%=GetNombreClase(TablaBase.ToString())%>Actual<%=strAjaxWebPart%>'); ?>
+	<%}else {%>
+	<a id="<%=GetNombreClase(TablaBase.ToString())%>Actual" ></a>
+	<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->div('divResumen<%=GetNombreClase(TablaBase.ToString())%>Actual<%=strAjaxWebPart%>'); ?>
+	<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strAuxiliarHtmlReturn1<%=GetNombreClase(TablaBase.ToString())%>?>
+	<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%>Controller->Html->divEnd('divResumen<%=GetNombreClase(TablaBase.ToString())%>Actual<%=strAjaxWebPart%>'); ?>
+	<%}%>
+	
+	<%}else {%>
+	<a id="<%=GetNombreClase(TablaBase.ToString())%>Actual" ></a>
+	<div id="divResumen<%=GetNombreClase(TablaBase.ToString())%>Actual<%=strAjaxWebPart%>">
+	</div>
+	<%}%>
+	<div id="outerBorder">
+		<?php if($strESRELACIONADO=='false') {?>
+		
+		<div id="header" <%if(!blnConJQueryCode){%>style="<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strStyleDivHeader ?>"<%}%>>
+		
+			<div id="banner"><?php echo(Constantes::$STR_NOMBRESISTEMA);?> <font class="titulobanner"><?php echo(Constantes::$STR_PREFIJO_TITULOTABLA);?><%=GetTituloNombreTableFromPropertiesC(TablaBase)%><%=GetPluralTituloNombreTableFromPropertiesC(TablaBase)%></font></div>
+					
+			<div id="subheader" class="links">    
+			
+						<div id="divOpcionesBanner" <%if(!blnConJQueryCode){%>style="<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strStyleDivOpcionesBanner ?>"<%}%>>
+							<%if(!ConRichFaces&&!ConFaces){%>
+							<a onclick="funcionGeneral.cerrarSesion('<%=GetRelativePathC(TablaBase)%>')">Cerrar Sesion</a> |
+							<a onclick="funcionGeneral.irLogin('<%=GetRelativePathC(TablaBase)%>')">Login</a> |
+							<a onclick="funcionGeneral.irHome('<%=GetRelativePathC(TablaBase)%>')">Home</a>
+							<%} else {%>
+								<!-- <jsp:include page="/Component/header.jsp" /> -->
+							<%}%>
+						</div>     
+						
+			</div> <!-- sub-header -->
+			
+			<%if(false){%>
+			<div id="subheaderImagesLinks"> 
+				<div id="subheaderImageTree" <%if(!blnConJQueryCode){%>style="<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strStyleDivExpandirColapsar ?>"<%}%>>    
+					<img id="imgExpandirColapsarSubHeader" align="left" title="MOSTRAR U OCULTAR ARBOL DE OPCIONES" style="visibility:visible" src="<?php echo Constantes::$strPathBaseImagenToComplete ?>Imagenes/collapse.gif" width="20" height="20"  onclick="funcionGeneral.colapsar('<%=GetRelativePathC(TablaBase)%>')"/>
+				</div>	
+				
+			</div> 
+			<%}%>
+			
+		</div> <!-- header -->
+		
+		<?php } ?>
+		
+		<div id="main">
+			<?php if($strESRELACIONADO=='false') {?>
+			
+			<%if(blnConJQueryCode){%>
+			<div id="divLeftSideSliderAux" class="leftauxleftsideslider">
+				<div id="divLeftSideSlider"></div>
+			</div>	
+			<%}%>
+			<div id="leftSidebar" class="left" <%if(!blnConJQueryCode){%>style="<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strStyleDivArbol ?>"<%}%>>
+				<%if(!ConRichFaces && !ConFaces){%>
+				<a:widget id="djdjtTreeOpciones" name="dojo.dijit.tree" service="/SistemaServlet?accionAdicional=TraerArbolTemasDesdeSession"/>
+				<% } else {%>
+					<!-- <jsp:include page="/Component/tree.jsp" /> -->
+					<%if(!blnConJQueryCode){%>	
+					<?php include 'webroot/Component/tree.php' ; ?>
+					<%}else {%>
+					<?php if($strESBUSQUEDA=='false') {?>
+					<?php include 'webroot/Component/treeforjquery.php' ; ?>
+					<?php } ?>
+					<%}%>	
+				<%}%>
+			</div> <!-- leftSidebar -->
+	
+			
+			<%if(blnConJQueryCode){%>
+			<div id="divContentSliderAux" style="width:85%;height: 15px;margin-top: -15px;float: right;">
+				<div id="divContentSlider"></div>
+			</div>
+			<%}%>
+				
+			<?php } ?>
+			
+			<div id="content" <%if(!blnConJQueryCode){%>style="<?php echo $<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFFaces%>->strStyleDivContent ?>"<%}else {%> style="width:93%;height:100%"<%}%>>							
+				<!-- <div id="divMensaje" style="display:none" class="divmensajegeneral"></div> -->								
+ <%if(ConRichFaces){%>
+ 	<!-- </head> -->
+
+	<%//<a4j:keepAlive beanName="	=GetNombreClaseObjetoC(TablaBase.ToString())%><%//=strPrefijoJSFFaces	/">%>
+	
+ <%}%>	
+
+ <%if(ConFaces){//SI ESTA BIEN SOLO CON FACES%>
+ <html>
+	
+ <%}%>
+	
+	<a id="ControlesSecciones"></a>
+	<table class="super" style="width: 100%;text-align: center">
+	
+		<%=GetWebRowTituloTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces)%> 
+	
+		<%=GetWebRowControlesBusquedasIndicesTablasClasesC(TablaBase,null,true,false,false,ConFaces,ConRichFaces,EsParaBusquedaRapida,JQueryUIVersion,false)%> 
+
+		<%=GetWebRowParametrosBusquedaTablaClaseC(TablaBase,true,false,false,false,ConFaces,ConRichFaces,EsParaBusquedaRapida) %>
+		
+		<%=GetWebRowTablaDatosTablaClaseC(TablaBase,null,null,true,false,null,false,GenerarParaImagen,ConFaces,ConRichFaces,EsParaBusquedaRapida,false)%>
+		
+		<%=GetWebRowPaginacionYNuevoTablaClaseC(TablaBase,true,false,false,ConFaces,ConRichFaces,EsParaBusquedaRapida)%>
+		
+		<%if(!EsParaBusquedaRapida) {%>
+		<%if(!conFormDetalle) {%>
+		<%=GetWebRowElementosTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces,Empresa,Package) %>
+		<%} else {%>
+		<%=GetWebRowAuxiliaresTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces,Empresa,Package)%>
+		<%}%>
+		
+		<%if(!GenerarParaImagen) { if(!ConRichFaces) {//CON RICHFACES LAS ACCIONES VAN DENTRO DEL FORM DE CAMPOS%>
+		<%=GetWebRowAccionesTablaClaseC(TablaBase,true,false,ConFaces,ConRichFaces) %>
+		<%}}%>
+		<%else{%>
+		<%=GetWebRowImagenAccionesTablaClaseC(TablaBase,ColumnaImagen,ConFaces,ConRichFaces) %>
+		<%}%>
+		
+		<%}%>
+	</table>
+	
+	<%if(!ConFaces&&!ConRichFaces){%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClase(TablaBase.ToString())%>PaginaWebInteraccionEvents.js'<%=strIncludeEnd%>
+		<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/PaginaWebInteraccion/<%=GetNombreClaseC(TablaBase.ToString())%>PaginaWebInteraccionEventsAdditional.js'<%=strIncludeEnd%>
+		<%=GetWebRowControlesBusquedasIndicesTablasClasesC(TablaBase,strIncludeInit,strIncludeEnd)%>
+
+	<script type='text/javascript' src='<%=GetRelativePathC(TablaBase)%>resources/wfactory.js'></script>
+	<script type='text/javascript' src='<%=GetRelativePathC(TablaBase)%>resources/jmaki/widgetFactory/extension-min.js'></script>
+	
+	<script type="text/javascript" language="javascript">
+		
+		jmaki.subscribe(constantes.STRJMAKITREESUBSCRIBESELECT, manejarSeleccionTree);
+							 
+		function manejarSeleccionTree(args) {
+			ajaxFuncionGeneral.manejarSeleccionTree(args,<%=GetNombreClaseObjeto(TablaBase.ToString())%>Constante.strRelativePath);				
+		}	
+	</script>
+	
+			
+
+	<%}%>
+	<%else{%>
+ 	
+ 	<%}%>
+	
+	</div> <!-- content -->    
+		
+    	</div> <!-- main -->
+	
+ 	</div> <!-- outerborder -->	
+	
+	<%if(!blnConJQueryCode){%>		
+	
+	<%if(false){//Deshabilitar directamente%>		
+	<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>PaginaWebInteraccion/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>JQueryPaginaWebInteraccion.js'<%=strIncludeEnd%>									
+	<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>PaginaWebInteraccion/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>JQueryPaginaWebInteraccionAdditional.js'<%=strIncludeEnd%>
+	<%}%>
+	
+	<? $tree->writeJavascript(); ?>
+	
+	<script type="text/javascript">
+		<?php echo $<%=GetNombreClaseObjeto(TablaBase.ToString())%>Controller->strFuncionJs ?>
+	</script>
+	
+	<%} else {%>
+	<?php 
+	if(array_key_exists('typeonload',$_REQUEST) && $_REQUEST['typeonload']!=null && $_REQUEST['typeonload']=='onloadhijos') {
+	?>
+	
+	<?php 
+	}
+	?>	
+		
+	<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>PaginaWebInteraccion<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>JQueryPaginaWebInteraccion.js'<%=strIncludeEnd%>									
+	<%=strIncludeInit%>'JavaScript/<%= Package%>/<%= Module%>PaginaWebInteraccion<%=GetEsPaqueteReporteC(TablaBase)%>/<%=GetRelativePathNavegacionFromTableFromPropertiesC(TablaBase)%><%=GetNombreClase(TablaBase.ToString())%>JQueryPaginaWebInteraccionAdditional.js'<%=strIncludeEnd%>
+	
+	
+	<%if(blnConJQueryCode) {%>
+	<%=strIncludeInit%>'JavaScript/Library/General/FuncionGeneralJQuery.js' <%=strIncludeEnd%>
+	<%}%>
+
+<?php if($strESRELACIONADO=='false') {?>
+	<? if(Constantes::$BITCONARBOLMENU) { $tree->writeJavascript(); }?>
+	<%}%>
+	
+
+<%if(blnConJQueryCode){//&& ConCakePhp%>
+<?php }?>
+<%}%>
+
+	<%if(ConFaces){%>
+	</html>
+ 	<%}%>
+	
+<%if(!ConRichFaces){%>
+</body>
+</html>
+<%} else {%>
+<!-- <div name="footer"> -->    
+<!-- </div> -->
+</body>
+<%}%>
+
+<%if(ConRichFaces){%>
+</html>
+<%}%>
+<script runat="template">
+/*
+<?php
+	$sessionBase=new SessionBase();
+	
+	$<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>=$sessionBase->read(<%=GetNombreClaseC(TablaBase.ToString())%>ConstantesFunciones::$STRSESSIONNAME);
+				
+	if($<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>==null) {
+		$<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>=new <%=GetNombreClaseC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>();
+				
+		$sessionBase->write('<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>',serialize($<%=GetNombreClaseObjetoC(TablaBase.ToString())%><%=strPrefijoJSFSessionFaces%>));							
+	}
+?>
+
+<%if(ConFaces||ConRichFaces){%>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/html" prefix="h" %>
+<%=strStartPageInclude%> taglib uri="http://java.sun.com/jsf/core" prefix="f" %>
+<%}%>
+
+<%if(ConRichFaces){%>
+<%=strStartPageInclude%> taglib uri="http://richfaces.org/rich" prefix="rich"%>
+<%=strStartPageInclude%> taglib uri="http://richfaces.org/a4j" prefix="a4j"%>
+<%}%>
+
+
+<img id="imgAreaBusquedas" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/busqueda.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Busquedas')"/>
+<img id="imgAreaControles" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/controles.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Campos')"/>
+<img id="imgAreaAcciones" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/acciones.gif" width="20" height="20"  onclick="funcionGeneral.irAreaDePagina('Acciones')"/>
+<img id="imgAtras" align="right" style="visibility:visible" src="<%=GetRelativePathC(TablaBase)%>Imagenes/atras.gif" width="20" height="20"  onclick="history.back()"/>	
+			
+*/
+
+/*
+<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/LayerCommunication/<%=GetNombreClase(TablaBase.ToString())%>LayerCommunication.js'<%=strIncludeEnd%>
+<%=strIncludeInit%>'<%=GetRelativePathC(TablaBase)%>JavaScript/GeneralFunctionsAndConstants/<%=GetNombreClase(TablaBase.ToString())%>Constante.js'<%=strIncludeEnd%>
+*/		
+
+/*
+<f:facet name="header">
+		<!-- header content -->
+		<jsp:include page="/Component/header.jsp" />
+	</f:facet>
+	
+	<f:facet name="subheader">
+		<!-- subheader content -->
+		<b>SUB-HEADER</b>
+	</f:facet>
+	
+	<f:facet name="sidebar">
+		<!-- sidebar content -->
+		<jsp:include page="/Component/tree.jsp" />
+	</f:facet>
+*/
+
+/*
+//PARA POPPUP WINDOW
+<script type="text/javascript" src="<?php echo(Constantes::$PATH_REL.Constantes::$strPathBaseJavaScriptToComplete) ?>jquery.popupWindow.js">		
+<?php echo $this->Html->script('jquery.popupWindow'); ?>
+		
+*/
+</script>
